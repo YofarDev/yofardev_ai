@@ -66,6 +66,9 @@ class _ChatDetailsPageState extends State<ChatDetailsPage> {
       },
       child: Scaffold(
         body: BlocBuilder<ChatCubit, ChatState>(
+          buildWhen: (ChatState previous, ChatState current) =>
+              previous.status != current.status ||
+              previous.openedChat != current.openedChat,
           builder: (BuildContext context, ChatState state) {
             final Chat chat = state.openedChat;
             return Stack(
@@ -82,11 +85,6 @@ class _ChatDetailsPageState extends State<ChatDetailsPage> {
                                 state.status == ChatStatus.typing;
                             final bool isStreaming =
                                 state.status == ChatStatus.streaming;
-                            AppLogger.debug(
-                              'ChatDetailsScreen: Building conversation list, '
-                              'status=${state.status}, isTyping=$isTyping, isStreaming=$isStreaming',
-                              tag: 'ChatDetails',
-                            );
                             return ChatConversationList(
                               persona: chat.persona,
                               entries: chat.entries.reversed.toList(),
@@ -104,8 +102,13 @@ class _ChatDetailsPageState extends State<ChatDetailsPage> {
                   ),
                 ),
                 const _TopLeftBackButton(),
-                BlocBuilder<ChatCubit, ChatState>(
-                  builder: (BuildContext context, ChatState actionsState) {
+                Builder(
+                  builder: (BuildContext context) {
+                    final bool functionCallingEnabled = context
+                        .select<ChatCubit, bool>(
+                          (ChatCubit cubit) =>
+                              cubit.state.functionCallingEnabled,
+                        );
                     return ChatDetailsActions(
                       showEverything: _showEverything,
                       onToggleVisibility: () {
@@ -114,8 +117,7 @@ class _ChatDetailsPageState extends State<ChatDetailsPage> {
                         });
                       },
                       onDownload: () => _downloadConversation(context),
-                      isFunctionCallingEnabled:
-                          actionsState.functionCallingEnabled,
+                      isFunctionCallingEnabled: functionCallingEnabled,
                       onFunctionCallingToggle: () =>
                           context.read<ChatCubit>().toggleFunctionCalling(),
                     );

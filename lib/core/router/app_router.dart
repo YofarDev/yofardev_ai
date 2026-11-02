@@ -85,29 +85,47 @@ class AppRouter {
           );
           return MaterialPage<void>(
             key: state.pageKey,
-            child: BlocBuilder<AvatarCubit, AvatarState>(
-              builder: (BuildContext context, AvatarState avatarState) {
-                final double computedWidth =
-                    avatarState.status == AvatarStatus.initial
-                    ? AppConstants.avatarWidth
-                    : avatarState.baseOriginalWidth * avatarState.scaleFactor;
-                final double avatarWidth =
-                    computedWidth.isFinite && computedWidth > 0
-                    ? computedWidth
-                    : AppConstants.avatarWidth;
-                return ConstrainedWidth(
-                  avatarWidth: avatarWidth,
-                  child: MultiBlocProvider(
-                    providers: <SingleChildWidget>[
-                      BlocProvider<DemoCubit>(
-                        create: (BuildContext context) => getIt<DemoCubit>(),
-                      ),
-                    ],
-                    child: home,
+            child:
+                BlocSelector<
+                  AvatarCubit,
+                  AvatarState,
+                  (AvatarStatus, double, double)
+                >(
+                  selector: (AvatarState avatarState) => (
+                    avatarState.status,
+                    avatarState.baseOriginalWidth,
+                    avatarState.scaleFactor,
                   ),
-                );
-              },
-            ),
+                  builder:
+                      (
+                        BuildContext context,
+                        (AvatarStatus, double, double) avatarSelection,
+                      ) {
+                        final AvatarStatus avatarStatus = avatarSelection.$1;
+                        final double baseOriginalWidth = avatarSelection.$2;
+                        final double scaleFactor = avatarSelection.$3;
+                        final double computedWidth =
+                            avatarStatus == AvatarStatus.initial
+                            ? AppConstants.avatarWidth
+                            : baseOriginalWidth * scaleFactor;
+                        final double avatarWidth =
+                            computedWidth.isFinite && computedWidth > 0
+                            ? computedWidth
+                            : AppConstants.avatarWidth;
+                        return ConstrainedWidth(
+                          avatarWidth: avatarWidth,
+                          child: MultiBlocProvider(
+                            providers: <SingleChildWidget>[
+                              BlocProvider<DemoCubit>(
+                                create: (BuildContext context) =>
+                                    getIt<DemoCubit>(),
+                              ),
+                            ],
+                            child: home,
+                          ),
+                        );
+                      },
+                ),
           );
         },
       ),

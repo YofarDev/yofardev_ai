@@ -55,6 +55,10 @@ class _ChatsListPageState extends State<ChatsListPage> {
       child: SafeArea(
         child: Scaffold(
           body: BlocBuilder<ChatCubit, ChatState>(
+            buildWhen: (ChatState previous, ChatState current) =>
+                previous.status != current.status ||
+                previous.chatsList != current.chatsList ||
+                previous.currentChat != current.currentChat,
             builder: (BuildContext context, ChatState state) {
               final bool isLoading = state.status == ChatStatus.loading;
               return Container(

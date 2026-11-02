@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:nested/nested.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:speech_to_text/speech_to_text.dart';
@@ -11,6 +12,7 @@ import '../../../../core/l10n/generated/app_localizations.dart';
 import '../../../../core/models/avatar_config.dart';
 import '../../../../core/models/chat.dart';
 import '../../../../core/models/chat_entry.dart';
+import '../../../../core/models/talking_phase.dart';
 import '../../../../core/utils/extensions.dart';
 import '../../../../core/utils/logger.dart';
 import '../../../../core/utils/platform_utils.dart';
@@ -83,6 +85,7 @@ class _AiTextInputState extends State<AiTextInput> {
         AppLogger.error('Failed to initialize speech-to-text', error: e);
         _speechEnabled = false;
       }
+      if (!mounted) return;
       setState(() {});
     }
   }
@@ -90,128 +93,130 @@ class _AiTextInputState extends State<AiTextInput> {
   @override
   void dispose() {
     _inputFocus.dispose();
+    _controller.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final ColorScheme colorScheme = Theme.of(context).colorScheme;
-    return BlocListener<ChatCubit, ChatState>(
-      listenWhen: (ChatState previous, ChatState current) =>
-          previous.status != current.status,
-      listener: (BuildContext context, ChatState state) {
-        if (state.status == ChatStatus.error && state.error != null) {
-          final AppLocalizations l10n = AppLocalizations.of(context);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(localizeFailure(l10n, state.error!)),
-              backgroundColor: colorScheme.error,
-            ),
-          );
-          // TalkingCubit manages its own error state
-        }
-      },
+    return MultiBlocListener(
+      listeners: <SingleChildWidget>[
+        BlocListener<ChatCubit, ChatState>(
+          listenWhen: (ChatState previous, ChatState current) =>
+              previous.status != current.status,
+          listener: (BuildContext context, ChatState state) {
+            if (state.status == ChatStatus.error && state.error != null) {
+              final AppLocalizations l10n = AppLocalizations.of(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(localizeFailure(l10n, state.error!)),
+                  backgroundColor: colorScheme.error,
+                ),
+              );
+              // TalkingCubit manages its own error state
+            }
+          },
+        ),
+        BlocListener<TalkingCubit, TalkingState>(
+          listenWhen: (TalkingState previous, TalkingState current) =>
+              previous.runtimeType != current.runtimeType,
+          listener: (BuildContext context, TalkingState talkingState) {
+            if (talkingState.phase == TalkingPhase.idle && _isSubmitting) {
+              setState(() {
+                _isSubmitting = false;
+              });
+            }
+          },
+        ),
+      ],
       child: BlocBuilder<ChatCubit, ChatState>(
+        buildWhen: (ChatState previous, ChatState current) =>
+            previous.currentChat != current.currentChat ||
+            previous.functionCallingEnabled != current.functionCallingEnabled,
         builder: (BuildContext context, ChatState state) {
-          return BlocListener<TalkingCubit, TalkingState>(
-            listenWhen: (TalkingState previous, TalkingState current) =>
-                previous.runtimeType != current.runtimeType,
-            listener: (BuildContext context, TalkingState talkingState) {
-              if (talkingState is IdleState && _isSubmitting) {
-                setState(() {
-                  _isSubmitting = false;
-                });
-              }
-            },
-            child: BlocBuilder<TalkingCubit, TalkingState>(
-              builder: (BuildContext context, TalkingState talkingState) {
-                ChatEntry? lastUserEntry;
-                final List<ChatEntry> lastFunctionCallEntries = <ChatEntry>[];
-                if (state.currentChat.entries.isNotEmpty) {
+          return BlocBuilder<TalkingCubit, TalkingState>(
+            builder: (BuildContext context, TalkingState talkingState) {
+              ChatEntry? lastUserEntry;
+              final List<ChatEntry> lastFunctionCallEntries = <ChatEntry>[];
+              if (state.currentChat.entries.isNotEmpty) {
+                for (final ChatEntry entry
+                    in state.currentChat.entries.reversed) {
+                  if (entry.entryType == EntryType.user) {
+                    lastUserEntry = entry;
+                    break;
+                  }
+                }
+                if (state.currentChat.entries.last.entryType ==
+                    EntryType.functionCalling) {
                   for (final ChatEntry entry
                       in state.currentChat.entries.reversed) {
-                    if (entry.entryType == EntryType.user) {
-                      lastUserEntry = entry;
+                    if (entry.entryType == EntryType.functionCalling) {
+                      lastFunctionCallEntries.add(entry);
+                    } else {
                       break;
                     }
                   }
-                  if (state.currentChat.entries.last.entryType ==
-                      EntryType.functionCalling) {
-                    for (final ChatEntry entry
-                        in state.currentChat.entries.reversed) {
-                      if (entry.entryType == EntryType.functionCalling) {
-                        lastFunctionCallEntries.add(entry);
-                      } else {
-                        break;
-                      }
-                    }
-                  }
                 }
+              }
 
-                return Column(
-                  children: <Widget>[
-                    if (_pickedImage != null)
-                      PickedImagePreview(imagePath: _pickedImage!.path),
-                    Stack(
-                      children: <Widget>[
-                        Opacity(
-                          opacity:
-                              widget.onlyText ||
-                                  (talkingState is! GeneratingState &&
-                                      talkingState is! SpeakingState &&
-                                      !_isSubmitting)
-                              ? 1
-                              : 0,
-                          child: _buildTextField(
-                            currentAvatar: widget.avatar ?? const Avatar(),
-                            currentLanguage: context
-                                .read<SettingsCubit>()
-                                .state
-                                .currentLanguage,
-                            currentChat: state.currentChat,
-                            functionCallingEnabled:
-                                state.functionCallingEnabled,
-                          ),
+              return Column(
+                children: <Widget>[
+                  if (_pickedImage != null)
+                    PickedImagePreview(imagePath: _pickedImage!.path),
+                  Stack(
+                    children: <Widget>[
+                      Opacity(
+                        opacity:
+                            widget.onlyText ||
+                                (!talkingState.shouldShowTalking &&
+                                    !_isSubmitting)
+                            ? 1
+                            : 0,
+                        child: _buildTextField(
+                          currentAvatar: widget.avatar ?? const Avatar(),
+                          currentLanguage: context
+                              .read<SettingsCubit>()
+                              .state
+                              .currentLanguage,
+                          currentChat: state.currentChat,
+                          functionCallingEnabled: state.functionCallingEnabled,
                         ),
-                        Column(
-                          children: <Widget>[
-                            ...lastFunctionCallEntries.map(
-                              (ChatEntry entry) => FunctionCallingWidget(
-                                functionCallingText: entry.body,
-                              ),
+                      ),
+                      Column(
+                        children: <Widget>[
+                          ...lastFunctionCallEntries.map(
+                            (ChatEntry entry) => FunctionCallingWidget(
+                              functionCallingText: entry.body,
                             ),
-                          ],
-                        ),
-                        if (lastUserEntry != null &&
-                            !widget.onlyText &&
-                            (talkingState.status != TalkingStatus.initial &&
-                                    (talkingState is SpeakingState ||
-                                        talkingState is GeneratingState) ||
-                                _isSubmitting))
-                          Padding(
-                            padding: const EdgeInsets.only(right: 82),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: <Widget>[
-                                Flexible(
-                                  child: CurrentPromptText(
-                                    prompt: lastUserEntry.body
-                                        .getVisiblePrompt(),
-                                  ),
+                          ),
+                        ],
+                      ),
+                      if (lastUserEntry != null &&
+                          !widget.onlyText &&
+                          (talkingState.shouldShowTalking || _isSubmitting))
+                        Padding(
+                          padding: const EdgeInsets.only(right: 82),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: <Widget>[
+                              Flexible(
+                                child: CurrentPromptText(
+                                  prompt: lastUserEntry.body.getVisiblePrompt(),
                                 ),
-                                if (lastUserEntry.attachedImage != null)
-                                  PickedImagePreview(
-                                    imagePath: lastUserEntry.attachedImage!,
-                                  ),
-                              ],
-                            ),
+                              ),
+                              if (lastUserEntry.attachedImage != null)
+                                PickedImagePreview(
+                                  imagePath: lastUserEntry.attachedImage!,
+                                ),
+                            ],
                           ),
-                      ],
-                    ),
-                  ],
-                );
-              },
-            ),
+                        ),
+                    ],
+                  ),
+                ],
+              );
+            },
           );
         },
       ),
@@ -269,6 +274,7 @@ class _AiTextInputState extends State<AiTextInput> {
                 ),
               );
             }
+            if (!mounted) return;
             setState(() {});
           },
         ),

@@ -1,5 +1,3 @@
-// ignore_for_file: avoid_dynamic_calls, use_build_context_synchronously
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -39,17 +37,13 @@ class SettingsPageState extends State<SettingsPage> {
   @override
   void initState() {
     super.initState();
+    // Seed from the cubit state so the toggle reflects the stored setting
+    // instead of a hardcoded default.
+    _isSoundEffectsEnabled = context
+        .read<SettingsCubit>()
+        .state
+        .soundEffectsEnabled;
     _loadSettings();
-    // Listen to state changes to update controllers and persona
-    context.read<SettingsCubit>().stream.listen((SettingsState state) {
-      if (mounted) {
-        _usernameController.text = state.username ?? '';
-        _baseSystemPromptController.text = state.systemPrompt ?? '';
-        setState(() {
-          _persona = state.persona;
-        });
-      }
-    });
   }
 
   void _loadSettings() async {
@@ -59,6 +53,7 @@ class SettingsPageState extends State<SettingsPage> {
     // Load sound effects setting
     await settingsCubit.loadSoundEffects();
 
+    if (!mounted) return;
     setState(() {});
   }
 
@@ -73,6 +68,7 @@ class SettingsPageState extends State<SettingsPage> {
     }
     await settingsCubit.setPersona(_persona);
     await settingsCubit.setSoundEffects(_isSoundEffectsEnabled);
+    if (!mounted) return;
     context.pop();
   }
 
@@ -82,102 +78,122 @@ class SettingsPageState extends State<SettingsPage> {
     for (final SoundEffects soundEffect in SoundEffects.values) {
       soundEffectsList.write("[$soundEffect], ");
     }
-    return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: <Color>[context.tokens.background, context.colors.surface],
-          ),
-        ),
-        child: Column(
-          children: <Widget>[
-            SafeArea(
-              bottom: false,
-              child: SettingsAppBar(onSave: _onSaveButtonPressed),
+    return BlocListener<SettingsCubit, SettingsState>(
+      listenWhen: (SettingsState previous, SettingsState current) =>
+          previous.username != current.username ||
+          previous.systemPrompt != current.systemPrompt ||
+          previous.persona != current.persona,
+      listener: (BuildContext context, SettingsState state) {
+        _usernameController.text = state.username ?? '';
+        _baseSystemPromptController.text = state.systemPrompt ?? '';
+        setState(() {
+          _persona = state.persona;
+        });
+      },
+      child: Scaffold(
+        body: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: <Color>[
+                context.tokens.background,
+                context.colors.surface,
+              ],
             ),
-            Expanded(
-              child: SingleChildScrollView(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      const SizedBox(height: 16),
-                      Text(
-                        AppLocalizations.of(context).settingsSubstring,
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          color: context.colors.onSurface.withValues(
-                            alpha: 0.7,
+          ),
+          child: Column(
+            children: <Widget>[
+              SafeArea(
+                bottom: false,
+                child: SettingsAppBar(onSave: _onSaveButtonPressed),
+              ),
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        const SizedBox(height: 16),
+                        Text(
+                          AppLocalizations.of(context).settingsSubstring,
+                          style: Theme.of(context).textTheme.titleLarge
+                              ?.copyWith(
+                                color: context.colors.onSurface.withValues(
+                                  alpha: 0.7,
+                                ),
+                              ),
+                        ),
+                        const SizedBox(height: 20),
+                        const ApiKeyField(),
+                        const SizedBox(height: 16),
+                        UsernameField(controller: _usernameController),
+                        const SizedBox(height: 16),
+                        PersonaDropdown(
+                          value: _persona,
+                          onChanged: (ChatPersona newValue) {
+                            _persona = newValue;
+                            setState(() {});
+                          },
+                        ),
+                        const SizedBox(height: 16),
+                        SoundEffectsToggle(
+                          value: _isSoundEffectsEnabled,
+                          onChanged: (bool value) {
+                            setState(() {
+                              _isSoundEffectsEnabled = value;
+                            });
+                          },
+                        ),
+                        if (!kIsWeb) ...<Widget>[
+                          const SizedBox(height: 16),
+                          BlocBuilder<SettingsCubit, SettingsState>(
+                            buildWhen:
+                                (
+                                  SettingsState previous,
+                                  SettingsState current,
+                                ) =>
+                                    previous.ttsEngineStatus !=
+                                    current.ttsEngineStatus,
+                            builder:
+                                (BuildContext context, SettingsState state) =>
+                                    TtsVoiceStatusTile(
+                                      status: state.ttsEngineStatus,
+                                      onInstall: () => context
+                                          .read<SettingsCubit>()
+                                          .installTtsVoice(),
+                                    ),
                           ),
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      const ApiKeyField(),
-                      const SizedBox(height: 16),
-                      UsernameField(controller: _usernameController),
-                      const SizedBox(height: 16),
-                      PersonaDropdown(
-                        value: _persona,
-                        onChanged: (ChatPersona newValue) {
-                          _persona = newValue;
-                          setState(() {});
-                        },
-                      ),
-                      const SizedBox(height: 16),
-                      SoundEffectsToggle(
-                        value: _isSoundEffectsEnabled,
-                        onChanged: (bool value) {
-                          setState(() {
-                            _isSoundEffectsEnabled = value;
-                          });
-                        },
-                      ),
-                      if (!kIsWeb) ...<Widget>[
+                        ],
                         const SizedBox(height: 16),
-                        BlocBuilder<SettingsCubit, SettingsState>(
-                          buildWhen:
-                              (SettingsState previous, SettingsState current) =>
-                                  previous.ttsEngineStatus !=
-                                  current.ttsEngineStatus,
-                          builder:
-                              (BuildContext context, SettingsState state) =>
-                                  TtsVoiceStatusTile(
-                                    status: state.ttsEngineStatus,
-                                    onInstall: () => context
-                                        .read<SettingsCubit>()
-                                        .installTtsVoice(),
-                                  ),
-                        ),
-                      ],
-                      const SizedBox(height: 16),
-                      const TaskLlmConfigTile(),
-                      const SizedBox(height: 16),
-                      const FunctionCallingConfigTile(),
-                      const SizedBox(height: 16),
-                      const MemoryConfigTile(),
-                      if (kDebugMode) ...<Widget>[
+                        const TaskLlmConfigTile(),
                         const SizedBox(height: 16),
-                        // ignore-l10n: debug-only entry points
-                        ListTile(
-                          leading: const Icon(Icons.palette_outlined),
-                          title: const Text('UI lab'),
-                          onTap: () => context.push(RouteConstants.uiLab),
-                        ),
-                        ListTile(
-                          leading: const Icon(Icons.pets_outlined),
-                          title: const Text('Rive lab'),
-                          onTap: () => context.push(RouteConstants.riveLab),
-                        ),
+                        const FunctionCallingConfigTile(),
+                        const SizedBox(height: 16),
+                        const MemoryConfigTile(),
+                        if (kDebugMode) ...<Widget>[
+                          const SizedBox(height: 16),
+                          // ignore-l10n: debug-only entry points
+                          ListTile(
+                            leading: const Icon(Icons.palette_outlined),
+                            title: const Text('UI lab'),
+                            onTap: () => context.push(RouteConstants.uiLab),
+                          ),
+                          ListTile(
+                            leading: const Icon(Icons.pets_outlined),
+                            title: const Text('Rive lab'),
+                            onTap: () => context.push(RouteConstants.riveLab),
+                          ),
+                        ],
+                        const SizedBox(height: 32),
                       ],
-                      const SizedBox(height: 32),
-                    ],
+                    ),
                   ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
