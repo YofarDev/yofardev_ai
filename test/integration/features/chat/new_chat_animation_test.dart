@@ -56,12 +56,7 @@ class NoopGlobalMemoryService implements GlobalMemoryService {
   Future<void> updateMemory(Chat chat) async {}
 }
 
-class MockAvatarRepository extends Mock implements AvatarRepository {
-  @override
-  Future<Result<void>> updateAvatar(String chatId, Avatar avatar) async {
-    return Result<void>.ok(null);
-  }
-}
+class MockAvatarRepository extends Mock implements AvatarRepository {}
 
 class MockInterruptionService implements InterruptionService {
   final StreamController<void> _controller = StreamController<void>.broadcast();

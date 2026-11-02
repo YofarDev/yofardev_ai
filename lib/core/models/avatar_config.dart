@@ -153,6 +153,20 @@ sealed class AvatarConfig with _$AvatarConfig {
   }) = _AvatarConfig;
   const AvatarConfig._();
 
+  /// Returns [base] with every field of this config that is set (non-null)
+  /// overriding the base value. The single merge rule for avatar changes:
+  /// `soundEffect` and `mood` are config-only cues and never touch [Avatar].
+  Avatar applyTo(Avatar base) => base.copyWith(
+    background: background ?? base.background,
+    hat: hat ?? base.hat,
+    top: top ?? base.top,
+    glasses: glasses ?? base.glasses,
+    specials: specials ?? base.specials,
+    costume: costume ?? base.costume,
+    topTint: topTint ?? base.topTint,
+    hatTint: hatTint ?? base.hatTint,
+  );
+
   factory AvatarConfig.fromJson(Map<String, dynamic> json) =>
       _$AvatarConfigFromJson(json);
 

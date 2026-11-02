@@ -2,9 +2,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 
 import '../../../../core/models/chat.dart';
-import '../../../../core/models/failure.dart';
-import '../../../../core/models/result.dart';
-import '../../../../core/models/avatar_config.dart';
 import '../../../../core/utils/logger.dart';
 
 /// Local datasource for Avatar-specific operations.
@@ -31,33 +28,6 @@ class AvatarLocalDatasource {
         error: e,
       );
       return null;
-    }
-  }
-
-  /// Updates the avatar configuration for a specific chat.
-  Future<Result<void>> updateAvatar(String chatId, Avatar avatar) async {
-    try {
-      final SharedPreferences prefs = await SharedPreferences.getInstance();
-      final Chat? currentChat = await getChat(chatId);
-
-      if (currentChat == null) {
-        return Result<void>.err(StorageFailure('Chat not found: $chatId'));
-      }
-
-      final Chat updatedChat = currentChat.copyWith(avatar: avatar);
-      await prefs.setString(
-        '$_chatPrefix$chatId',
-        json.encode(updatedChat.toMap()),
-      );
-
-      return Result<void>.ok(null);
-    } catch (e) {
-      AppLogger.error(
-        'Failed to update avatar',
-        tag: 'AvatarLocalDatasource',
-        error: e,
-      );
-      return Result<void>.err(StorageFailure('Failed to update avatar', e));
     }
   }
 }

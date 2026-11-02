@@ -385,11 +385,11 @@ class AvatarCubit extends Cubit<AvatarState> {
     }
     if (_pendingTransitions == 0) {
       // Nothing walking: apply right away.
-      _updateAvatar(chatId, avatarConfig);
+      _applyExternalConfig(chatId, avatarConfig);
       return;
     }
     // Land after the walk in progress so it is not undone by it.
-    _enqueueTransition(() async => _updateAvatar(chatId, avatarConfig));
+    _enqueueTransition(() async => _applyExternalConfig(chatId, avatarConfig));
   }
 
   /// Drives the Rive `presence` property: walks out (`outOfScreen`), waits
@@ -427,7 +427,7 @@ class AvatarCubit extends Cubit<AvatarState> {
     );
     final AvatarCostume before = state.avatar.costume;
     // Transition values are never persisted: the avatar ends on screen.
-    _updateAvatar(
+    _applyExternalConfig(
       chatId,
       avatarConfig.copyWith(specials: AvatarSpecials.onScreen),
     );
@@ -501,7 +501,7 @@ class AvatarCubit extends Cubit<AvatarState> {
         // No journey, but the clothes still change out of sight.
         await _walkOffAndBack(chatId, avatarConfig, clothesChange: true);
       } else {
-        _updateAvatar(chatId, landing);
+        _applyExternalConfig(chatId, landing);
       }
       return;
     }
@@ -573,7 +573,7 @@ class AvatarCubit extends Cubit<AvatarState> {
     final Future<void> shown = _waitForScene(to);
     _emitIfOpen(state.copyWith(journey: journey));
     // The scene switches with the avatar still off screen.
-    _updateAvatar(chatId, landing, presence: AvatarSpecials.outOfScreen);
+    _applyExternalConfig(chatId, landing, presence: AvatarSpecials.outOfScreen);
     await shown;
     if (gone()) return;
 
@@ -656,7 +656,7 @@ class AvatarCubit extends Cubit<AvatarState> {
     journey = _beat(journey, JourneyPhase.cut);
     final Future<void> shown = _waitForScene(to);
     _emitIfOpen(state.copyWith(journey: journey));
-    _updateAvatar(chatId, landing);
+    _applyExternalConfig(chatId, landing);
     await shown;
     if (gone()) return;
 
@@ -852,21 +852,16 @@ class AvatarCubit extends Cubit<AvatarState> {
     }
   }
 
-  void _updateAvatar(
+  /// External avatar config is persisted by ChatCubit (the requester); only
+  /// avatar-driven mutations persist here — this path, fed by the
+  /// `avatarChangeRequested` / `newChatEntry` chains, updates state and
+  /// animates only, so one change never lands in storage twice.
+  void _applyExternalConfig(
     String chatId,
     AvatarConfig avatarConfig, {
     AvatarSpecials presence = AvatarSpecials.onScreen,
   }) {
-    final Avatar avatar = state.avatar.copyWith(
-      hat: avatarConfig.hat ?? state.avatar.hat,
-      top: avatarConfig.top ?? state.avatar.top,
-      glasses: avatarConfig.glasses ?? state.avatar.glasses,
-      specials: avatarConfig.specials ?? state.avatar.specials,
-      background: avatarConfig.background ?? state.avatar.background,
-      costume: avatarConfig.costume ?? state.avatar.costume,
-      topTint: avatarConfig.topTint ?? state.avatar.topTint,
-      hatTint: avatarConfig.hatTint ?? state.avatar.hatTint,
-    );
+    final Avatar avatar = avatarConfig.applyTo(state.avatar);
     _emitIfOpen(
       state.copyWith(
         avatar: avatar,
@@ -879,7 +874,6 @@ class AvatarCubit extends Cubit<AvatarState> {
             avatarConfig.specials ?? state.previousSpecialsState,
       ),
     );
-    _avatarRepository.updateAvatar(chatId, avatar);
   }
 
   /// A tap on a scene prop triggers its local reaction only: no LLM call
@@ -987,8 +981,10 @@ class AvatarCubit extends Cubit<AvatarState> {
     _emitIfOpen(state.copyWith(backgroundTransition: transition));
   }
 
+  /// External avatar config is persisted by ChatCubit (the requester); only
+  /// avatar-driven mutations persist here. This entry only updates state and
+  /// triggers the animations based on specials.
   void updateAvatarConfig(String chatId, AvatarConfig avatarConfig) {
-    // Use onNewAvatarConfig to trigger animations based on specials
     onNewAvatarConfig(chatId, avatarConfig);
   }
 

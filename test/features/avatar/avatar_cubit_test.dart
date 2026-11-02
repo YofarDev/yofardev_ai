@@ -80,10 +80,6 @@ void main() {
       mockAnimationService = MockAvatarAnimationService();
       mockAudioPlayerService = MockAudioPlayerService();
 
-      // Stub updateAvatar to return success
-      when(
-        () => mockAvatarRepository.updateAvatar(any(), any()),
-      ).thenAnswer((_) async => Result<void>.ok(null));
       // No saved avatar for the chat (the normal case for a new chat).
       when(() => mockAvatarRepository.getChat(any())).thenAnswer(
         (_) async => Result<Chat>.err(const StorageFailure('no chat')),
@@ -431,12 +427,10 @@ void main() {
           async.elapse(JourneyTiming.close);
           expect(j().phase, JourneyPhase.cut);
           // The scene switches with the avatar still off screen.
+          // Persistence is ChatCubit's: AvatarCubit never writes the config.
           expect(avatarCubit.state.scene, AvatarScene.beach);
           expect(avatarCubit.state.avatar.top, AvatarTop.longCoat);
           expect(avatarCubit.state.presence, AvatarSpecials.outOfScreen);
-          verify(
-            () => mockAvatarRepository.updateAvatar('chat1', any()),
-          ).called(1);
 
           avatarCubit.onSceneShown(AvatarScene.beach);
           async.flushMicrotasks();
@@ -570,7 +564,6 @@ void main() {
           async.elapse(const Duration(seconds: 20));
           expect(avatarCubit.state.scene, isNot(AvatarScene.beach));
           expect(avatarCubit.state.journey, isNull);
-          verifyNever(() => mockAvatarRepository.updateAvatar(any(), any()));
         });
       });
 
@@ -793,9 +786,7 @@ void main() {
           expect(avatarCubit.state.journey, isNull);
           expect(avatarCubit.state.presence, AvatarSpecials.onScreen);
           expect(avatarCubit.state.scene, scene);
-          verify(
-            () => mockAvatarRepository.updateAvatar('chat1', any()),
-          ).called(1);
+          // Persistence is ChatCubit's: AvatarCubit never writes the config.
         });
       });
 
@@ -815,15 +806,7 @@ void main() {
           expect(avatarCubit.state.journey, isNull);
           expect(avatarCubit.state.avatar.background, AvatarScene.beach);
           expect(avatarCubit.state.avatar.specials, AvatarSpecials.onScreen);
-          final Avatar saved =
-              verify(
-                    () => mockAvatarRepository.updateAvatar(
-                      'chat1',
-                      captureAny(),
-                    ),
-                  ).captured.single
-                  as Avatar;
-          expect(saved.specials, AvatarSpecials.onScreen);
+          // Persistence is ChatCubit's: AvatarCubit never writes the config.
         });
       });
 
@@ -1332,9 +1315,6 @@ void main() {
 
     setUp(() {
       repository = MockAvatarRepository();
-      when(
-        () => repository.updateAvatar(any(), any()),
-      ).thenAnswer((_) async => Result<void>.ok(null));
       when(() => repository.getChat(any())).thenAnswer(
         (_) async => Result<Chat>.err(const StorageFailure('no chat')),
       );
@@ -1386,12 +1366,12 @@ void main() {
           async.elapse(JourneyTiming.reducedFade);
           expect(j().phase, JourneyPhase.cut);
           expect(j().fadedOut, isTrue);
-          // the scene and the clothes land with the avatar on screen, saved
+          // the scene and the clothes land with the avatar on screen;
+          // persistence is ChatCubit's, so nothing is written here
           expect(cubit.state.scene, AvatarScene.beach);
           expect(cubit.state.avatar.top, AvatarTop.longCoat);
           expect(cubit.state.presence, AvatarSpecials.onScreen);
           expect(cubit.state.statusAnimation, AvatarStatusAnimation.initial);
-          verify(() => repository.updateAvatar('chat1', any())).called(1);
 
           // the fade back waits for the new file on screen
           async.elapse(const Duration(milliseconds: 500));
@@ -1441,7 +1421,6 @@ void main() {
         async.elapse(JourneyTiming.reducedFade * 3);
         expect(cubit.state.journey, isNull);
         expect(cubit.state.scene, isNot(AvatarScene.cafe));
-        verifyNever(() => repository.updateAvatar('chat1', any()));
       });
     });
   });

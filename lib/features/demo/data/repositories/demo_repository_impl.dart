@@ -4,19 +4,15 @@ import '../../../../core/models/avatar_scene.dart';
 import '../../../../core/models/chat.dart';
 import '../../../../core/models/failure.dart';
 import '../../../../core/models/result.dart';
-import '../../../avatar/avatar.dart';
 import '../../../../core/repositories/chat_repository.dart';
 import '../../domain/repositories/demo_repository.dart';
 
-/// Implementation of DemoRepository using ChatRepository and AvatarRepository.
+/// Implementation of DemoRepository using the shared ChatRepository
+/// (the app's single avatar persistence path).
 class DemoRepositoryImpl implements DemoRepository {
-  DemoRepositoryImpl({
-    required this.chatRepository,
-    required this.avatarRepository,
-  });
+  DemoRepositoryImpl({required this.chatRepository});
 
   final ChatRepository chatRepository;
-  final AvatarRepository avatarRepository;
 
   @override
   Future<Result<void>> setAvatarBackground(
@@ -38,8 +34,12 @@ class DemoRepositoryImpl implements DemoRepository {
       // Create new avatar with updated background
       final Avatar newAvatar = chat.avatar.copyWith(background: background);
 
-      // Update avatar
-      return await avatarRepository.updateAvatar(chatId, newAvatar);
+      // Update avatar (persisted through ChatRepository — the single path)
+      final Result<void> result = await chatRepository.updateAvatar(
+        chatId,
+        newAvatar,
+      );
+      return result;
     } catch (e, st) {
       return Result<void>.err(
         mapExceptionToFailure(e, stackTrace: st, tag: 'DemoRepository'),

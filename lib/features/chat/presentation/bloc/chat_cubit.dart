@@ -333,16 +333,7 @@ class ChatCubit extends Cubit<ChatState> {
     );
     emit(state.copyWith(status: ChatStatus.updating));
     final Chat chat = state.openedChat;
-    final Avatar avatar = chat.avatar.copyWith(
-      hat: avatarConfig.hat ?? chat.avatar.hat,
-      top: avatarConfig.top ?? chat.avatar.top,
-      background: avatarConfig.background ?? chat.avatar.background,
-      glasses: avatarConfig.glasses ?? chat.avatar.glasses,
-      specials: avatarConfig.specials ?? chat.avatar.specials,
-      costume: avatarConfig.costume ?? chat.avatar.costume,
-      topTint: avatarConfig.topTint ?? chat.avatar.topTint,
-      hatTint: avatarConfig.hatTint ?? chat.avatar.hatTint,
-    );
+    final Avatar avatar = avatarConfig.applyTo(chat.avatar);
     final Chat updatedChat = chat.copyWith(avatar: avatar);
 
     // Update both openedChat and currentChat since both are used throughout the app

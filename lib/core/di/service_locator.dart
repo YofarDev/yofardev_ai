@@ -263,10 +263,7 @@ Future<void> setupServiceLocator({
   getIt.registerLazySingleton<SoundRepository>(() => SoundRepositoryImpl());
   getIt.registerLazySingleton<TalkingRepository>(() => TalkingRepositoryImpl());
   getIt.registerLazySingleton<DemoRepository>(
-    () => DemoRepositoryImpl(
-      chatRepository: getIt<ChatRepository>(),
-      avatarRepository: getIt<AvatarRepository>(),
-    ),
+    () => DemoRepositoryImpl(chatRepository: getIt<ChatRepository>()),
   );
   getIt.registerLazySingleton<HomeRepository>(() => HomeRepositoryImpl());
 

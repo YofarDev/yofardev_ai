@@ -1,5 +1,4 @@
 import '../../../../core/errors/exception_mapper.dart';
-import '../../../../core/models/avatar_config.dart';
 import '../../../../core/models/chat.dart';
 import '../../../../core/models/failure.dart';
 import '../../../../core/models/result.dart';
@@ -25,10 +24,5 @@ class AvatarRepositoryImpl implements AvatarRepository {
         mapExceptionToFailure(e, stackTrace: st, tag: 'AvatarRepository'),
       );
     }
-  }
-
-  @override
-  Future<Result<void>> updateAvatar(String chatId, Avatar avatar) async {
-    return _datasource.updateAvatar(chatId, avatar);
   }
 }
