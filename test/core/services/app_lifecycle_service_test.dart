@@ -4,13 +4,10 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:yofardev_ai/core/models/app_lifecycle_event.dart';
 import 'package:yofardev_ai/core/models/avatar_scene.dart';
-import 'package:yofardev_ai/core/models/talking_phase.dart';
 import 'package:yofardev_ai/core/models/avatar_config.dart';
 import 'package:yofardev_ai/core/models/chat.dart';
 import 'package:yofardev_ai/core/models/chat_entry.dart';
-import 'package:yofardev_ai/core/models/demo_script.dart';
 import 'package:yofardev_ai/core/services/app_lifecycle_service.dart';
-import 'package:yofardev_ai/features/avatar/presentation/bloc/avatar_state.dart';
 import 'package:yofardev_ai/features/chat/presentation/bloc/chat_state.dart';
 
 void main() {
@@ -172,56 +169,6 @@ void main() {
       });
     });
 
-    group('emitAvatarAnimationChanged', () {
-      test('emits animation events', () async {
-        final List<AvatarStatusAnimation> events = <AvatarStatusAnimation>[];
-        final StreamSubscription<AvatarStatusAnimation> subscription = service
-            .avatarAnimationChangedEvents
-            .listen(events.add);
-
-        service.emitAvatarAnimationChanged(AvatarStatusAnimation.leaving);
-        await Future<dynamic>.delayed(const Duration(milliseconds: 10));
-        expect(
-          events,
-          equals(<AvatarStatusAnimation>[AvatarStatusAnimation.leaving]),
-        );
-
-        service.emitAvatarAnimationChanged(AvatarStatusAnimation.coming);
-        await Future<dynamic>.delayed(const Duration(milliseconds: 10));
-        expect(
-          events,
-          equals(<AvatarStatusAnimation>[
-            AvatarStatusAnimation.leaving,
-            AvatarStatusAnimation.coming,
-          ]),
-        );
-
-        await subscription.cancel();
-      });
-    });
-
-    group('emitTalkingStateChanged', () {
-      test('emits talking state events', () async {
-        final List<TalkingPhase> events = <TalkingPhase>[];
-        final StreamSubscription<TalkingPhase> subscription = service
-            .talkingStateChangedEvents
-            .listen(events.add);
-
-        const TalkingPhase state1 = TalkingPhase.idle;
-        const TalkingPhase state2 = TalkingPhase.speaking;
-
-        service.emitTalkingStateChanged(state1);
-        await Future<dynamic>.delayed(const Duration(milliseconds: 10));
-        expect(events, equals(<TalkingPhase>[state1]));
-
-        service.emitTalkingStateChanged(state2);
-        await Future<dynamic>.delayed(const Duration(milliseconds: 10));
-        expect(events, equals(<TalkingPhase>[state1, state2]));
-
-        await subscription.cancel();
-      });
-    });
-
     group('emitChatChanged', () {
       test('emits chat ID events', () async {
         final List<String> events = <String>[];
@@ -252,27 +199,6 @@ void main() {
         service.emitPersonaChanged(ChatPersona.normal);
         await Future<dynamic>.delayed(const Duration(milliseconds: 10));
         expect(events, <ChatPersona>[ChatPersona.doomer, ChatPersona.normal]);
-
-        await subscription.cancel();
-      });
-    });
-
-    group('emitDemoScriptChanged', () {
-      test('emits demo script events', () async {
-        final List<DemoScript> events = <DemoScript>[];
-        final StreamSubscription<DemoScript> subscription = service
-            .demoScriptChangedEvents
-            .listen(events.add);
-
-        final DemoScript script = const DemoScript(
-          name: 'Test Demo',
-          description: 'Test',
-          responses: <FakeLlmResponse>[],
-        );
-
-        service.emitDemoScriptChanged(script);
-        await Future<dynamic>.delayed(const Duration(milliseconds: 10));
-        expect(events, equals(<DemoScript>[script]));
 
         await subscription.cancel();
       });

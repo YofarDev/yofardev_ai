@@ -19,7 +19,6 @@ import '../../features/chat/screens/chat_details_screen.dart';
 import '../../features/chat/screens/chats_list_screen.dart';
 import '../../features/chat/screens/image_full_screen.dart';
 import '../../features/demo/presentation/bloc/demo_cubit.dart';
-import '../../features/home/presentation/bloc/home_cubit.dart';
 import '../../features/home/screens/home_screen.dart';
 import '../../features/home/screens/ui_lab_screen.dart';
 import '../../features/settings/screens/function_calling_config_screen.dart';
@@ -102,10 +101,6 @@ class AppRouter {
                     providers: <SingleChildWidget>[
                       BlocProvider<DemoCubit>(
                         create: (BuildContext context) => getIt<DemoCubit>(),
-                      ),
-                      BlocProvider<HomeCubit>(
-                        create: (BuildContext context) =>
-                            getIt<HomeCubit>()..initialize(),
                       ),
                     ],
                     child: home,

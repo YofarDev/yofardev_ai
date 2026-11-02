@@ -1,9 +1,6 @@
 import '../models/avatar_config.dart';
-import '../models/avatar_status_animation.dart';
 import '../models/chat_entry.dart';
 import '../models/chat_status.dart';
-import '../models/demo_script.dart';
-import '../models/talking_phase.dart';
 
 /// Events emitted by [AppLifecycleService] for cross-feature coordination.
 ///
@@ -37,30 +34,6 @@ class ChatChangedEvent extends AppLifecycleEvent {
 class StreamingStateChangedEvent extends AppLifecycleEvent {
   const StreamingStateChangedEvent(this.status);
   final ChatStatus status;
-}
-
-/// Emitted when avatar animation state changes.
-///
-/// [HomeCubit] subscribes to control volume fade.
-class AvatarAnimationChangedEvent extends AppLifecycleEvent {
-  const AvatarAnimationChangedEvent(this.statusAnimation);
-  final AvatarStatusAnimation statusAnimation;
-}
-
-/// Emitted when talking state changes.
-///
-/// [HomeCubit] subscribes to control waiting TTS loop.
-class TalkingStateChangedEvent extends AppLifecycleEvent {
-  const TalkingStateChangedEvent(this.phase);
-  final TalkingPhase phase;
-}
-
-/// Emitted when demo script changes.
-///
-/// [ChatCubit] subscribes to activate demo mode.
-class DemoScriptChangedEvent extends AppLifecycleEvent {
-  const DemoScriptChangedEvent(this.script);
-  final DemoScript script;
 }
 
 /// Payload for new chat entry events.

@@ -50,7 +50,7 @@ class App extends StatelessWidget {
         RepositoryProvider<InterruptionService>(
           create: (BuildContext context) => getIt<InterruptionService>(),
         ),
-        // DemoCubit and HomeCubit moved to HomeScreen scope
+        // DemoCubit moved to HomeScreen scope
       ],
       child: AppView(routerConfig: AppRouter.router),
     );

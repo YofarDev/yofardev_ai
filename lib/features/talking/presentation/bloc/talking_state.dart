@@ -73,15 +73,4 @@ extension TalkingStateX on TalkingState {
       error: (Failure failure, MouthState mouthState) => TalkingStatus.error,
     );
   }
-
-  /// Backward compatibility: answer with amplitudes
-  /// Returns a dummy answer since the new API doesn't store this in state
-  AnswerData get answer => const AnswerData(amplitudes: <int>[]);
-}
-
-/// Backward compatibility: answer data class
-class AnswerData {
-  const AnswerData({required this.amplitudes});
-
-  final List<int> amplitudes;
 }

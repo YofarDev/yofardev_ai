@@ -401,36 +401,6 @@ class ChatTtsCubit extends Cubit<ChatTtsState> {
     emit(state.copyWith(audioPathsWaitingSentences: currentList));
   }
 
-  /// Shuffle the waiting sentences queue
-  void shuffleWaitingSentences() {
-    final List<Map<String, dynamic>> list = List<Map<String, dynamic>>.from(
-      state.audioPathsWaitingSentences,
-    );
-    list.shuffle();
-    emit(state.copyWith(audioPathsWaitingSentences: list));
-  }
-
-  /// Initialize TTS state (load cached sentences if available)
-  Future<void> initialize(String language) async {
-    try {
-      // This will be implemented by the caller if needed
-      emit(state.copyWith(isInitialized: true));
-    } catch (e) {
-      AppLogger.error(
-        'Failed to initialize TTS state',
-        tag: 'ChatTtsCubit',
-        error: e,
-      );
-      emit(
-        state.copyWith(
-          isInitialized: true,
-          hasError: true,
-          error: TtsFailure('Failed to initialize: $e', e),
-        ),
-      );
-    }
-  }
-
   /// Loads waiting sentences from cache for the given language
   ///
   /// On web platforms, this is a no-op since audio caching is not supported.

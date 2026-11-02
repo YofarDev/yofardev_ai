@@ -320,14 +320,6 @@ void main() {
           expect(cubit.state.isPlaying, isTrue);
         },
       );
-
-      test('answer returns empty amplitudes for all states', () {
-        cubit.setSpeakingState();
-        expect(cubit.state.answer.amplitudes, isEmpty);
-
-        cubit.init();
-        expect(cubit.state.answer.amplitudes, isEmpty);
-      });
     });
 
     group('State transitions', () {

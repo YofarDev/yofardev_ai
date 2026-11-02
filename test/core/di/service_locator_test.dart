@@ -26,13 +26,10 @@ import 'package:yofardev_ai/features/chat/data/datasources/global_memory_datasou
 import 'package:yofardev_ai/features/chat/domain/services/chat_streaming_service.dart';
 import 'package:yofardev_ai/features/chat/domain/services/global_memory_service.dart';
 import 'package:yofardev_ai/features/demo/demo.dart';
-import 'package:yofardev_ai/features/home/domain/repositories/home_repository.dart';
-import 'package:yofardev_ai/features/home/presentation/bloc/home_cubit.dart';
 import 'package:yofardev_ai/features/settings/settings.dart';
 import 'package:yofardev_ai/features/sound/data/datasources/tts_datasource.dart';
 import 'package:yofardev_ai/features/sound/domain/repositories/sound_repository.dart';
 import 'package:yofardev_ai/features/sound/domain/services/tts_queue_service.dart';
-import 'package:yofardev_ai/features/sound/presentation/bloc/sound_cubit.dart';
 import 'package:yofardev_ai/features/talking/domain/repositories/talking_repository.dart';
 import 'package:yofardev_ai/features/talking/presentation/bloc/caption_cubit.dart';
 import 'package:yofardev_ai/features/talking/presentation/bloc/talking_cubit.dart';
@@ -46,8 +43,8 @@ import 'package:yofardev_ai/features/talking/presentation/bloc/talking_cubit.dar
 /// exclude that one type here with a comment naming the plugin.
 void main() {
   test('service locator resolves the pure-Dart dependency graph', () async {
-    // HomeRepositoryImpl constructs an audioplayers AudioPlayer, which reads
-    // an EventChannel at construction; the test binding provides a mock
+    // Plugin-backed audio types construct audioplayers AudioPlayers that
+    // read EventChannels at construction; the test binding provides a mock
     // binary messenger so no real platform channel is touched.
     TestWidgetsFlutterBinding.ensureInitialized();
     SharedPreferences.setMockInitialValues(<String, Object>{});
@@ -58,8 +55,6 @@ void main() {
     expect(getIt<SettingsRepository>(), isNotNull);
     expect(getIt<AvatarRepository>(), isNotNull);
     expect(getIt<GlobalMemoryRepository>(), isNotNull);
-    expect(getIt<LocaleRepository>(), isNotNull);
-    expect(getIt<HomeRepository>(), isNotNull);
     expect(getIt<SoundRepository>(), isNotNull);
     expect(getIt<TalkingRepository>(), isNotNull);
     expect(getIt<DemoRepository>(), isNotNull);
@@ -73,7 +68,7 @@ void main() {
     expect(getIt<AvatarCueService>(), isNotNull);
     // Presence: the composer's reports, the power saver and the idle ladder
     // (started by setup on the real battery source, which reads false where
-    // there is no plugin; no await here: see HomeRepositoryImpl above).
+    // there is no plugin; no await here: see the binding note above).
     expect(getIt<ComposerActivityService>(), isNotNull);
     expect(getIt<PowerSaverSource>(), isA<BatteryPowerSaverSource>());
     expect(getIt<ParallaxSource>(), same(getIt<ParallaxSource>()));
@@ -110,8 +105,6 @@ void main() {
     expect(getIt<SettingsCubit>(), isNotNull);
     expect(getIt<AvatarCubit>(), isNotNull);
     expect(getIt<DemoCubit>(), isNotNull);
-    expect(getIt<HomeCubit>(), isNotNull);
-    expect(getIt<SoundCubit>(), isNotNull);
     expect(getIt<TalkingCubit>(), isNotNull);
     expect(getIt<CaptionCubit>(), isNotNull);
 

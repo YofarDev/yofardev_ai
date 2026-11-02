@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:yofardev_ai/core/models/talking_phase.dart';
 import 'package:yofardev_ai/core/models/avatar_mood.dart';
 import 'package:yofardev_ai/core/models/avatar_scene.dart';
 import 'package:yofardev_ai/core/models/result.dart';
@@ -22,7 +21,6 @@ import 'package:yofardev_ai/core/services/audio/audio_player_service.dart';
 import 'package:yofardev_ai/core/services/app_lifecycle_service.dart';
 import 'package:yofardev_ai/features/chat/presentation/bloc/chat_state.dart';
 import 'package:yofardev_ai/core/models/app_lifecycle_event.dart';
-import 'package:yofardev_ai/core/models/demo_script.dart';
 import 'package:yofardev_ai/features/chat/domain/services/chat_streaming_service.dart';
 import 'package:yofardev_ai/core/services/llm/llm_service.dart';
 import 'package:yofardev_ai/core/services/llm/llm_service_interface.dart';
@@ -38,15 +36,12 @@ import 'package:yofardev_ai/features/chat/domain/services/global_memory_service.
 import 'package:yofardev_ai/core/models/llm_message.dart';
 import 'package:yofardev_ai/features/chat/presentation/bloc/chat_cubit.dart';
 import 'package:yofardev_ai/core/repositories/settings_repository.dart';
-import 'package:yofardev_ai/features/demo/demo.dart';
 import 'package:yofardev_ai/features/sound/domain/tts_queue_item.dart';
 
 // Mock repositories
 class MockChatRepository extends Mock implements ChatRepository {}
 
 class MockSettingsRepository extends Mock implements SettingsRepository {}
-
-class MockDemoService extends Mock implements DemoService {}
 
 class NoopGlobalMemoryService implements GlobalMemoryService {
   @override
@@ -282,7 +277,6 @@ void main() {
         ),
         appLifecycleService: MockAppLifecycleService(),
         globalMemoryService: NoopGlobalMemoryService(),
-        demoService: MockDemoService(),
       );
 
       // Initialize the cubit
@@ -480,28 +474,10 @@ class MockAppLifecycleService extends Mock implements AppLifecycleService {
   Stream<AvatarMood> get moodEvents => const Stream<AvatarMood>.empty();
 
   @override
-  Stream<AvatarStatusAnimation> get avatarAnimationChangedEvents =>
-      const Stream<AvatarStatusAnimation>.empty();
-
-  @override
-  Stream<TalkingPhase> get talkingStateChangedEvents =>
-      const Stream<TalkingPhase>.empty();
-
-  @override
-  Stream<DemoScript> get demoScriptChangedEvents =>
-      const Stream<DemoScript>.empty();
-
-  @override
   void dispose() {}
 
   @override
-  void emitAvatarAnimationChanged(AvatarStatusAnimation statusAnimation) {}
-
-  @override
   void emitChatChanged(String chatId) {}
-
-  @override
-  void emitDemoScriptChanged(DemoScript script) {}
 
   @override
   void emitNewChatEntry(
@@ -512,9 +488,6 @@ class MockAppLifecycleService extends Mock implements AppLifecycleService {
 
   @override
   void emitStreamingStateChanged(ChatStatus status) {}
-
-  @override
-  void emitTalkingStateChanged(TalkingPhase phase) {}
 }
 
 class _FakeSoundRepository implements SoundRepository {

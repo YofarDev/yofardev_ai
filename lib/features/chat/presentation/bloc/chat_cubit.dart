@@ -5,7 +5,6 @@ import '../../../../core/models/app_lifecycle_event.dart';
 import '../../../../core/models/avatar_config.dart';
 import '../../../../core/models/avatar_scene.dart';
 import '../../../../core/models/chat_entry.dart';
-import '../../../../core/models/demo_script.dart';
 import '../../../../core/models/failure.dart';
 import '../../../../core/models/result.dart';
 import '../../../../core/repositories/settings_repository.dart';
@@ -17,7 +16,6 @@ import '../../../../core/models/chat.dart';
 import '../../../../core/repositories/chat_repository.dart';
 import '../../domain/services/chat_title_service.dart';
 import '../../domain/services/global_memory_service.dart';
-import '../../../demo/demo.dart';
 import 'chat_state.dart';
 
 /// Main coordinator cubit for chat operations.
@@ -33,7 +31,6 @@ class ChatCubit extends Cubit<ChatState> {
     required ChatStreamingService chatStreamingService,
     required AppLifecycleService appLifecycleService,
     required GlobalMemoryService globalMemoryService,
-    required DemoService demoService,
   }) : _chatRepository = chatRepository,
        _settingsRepository = settingsRepository,
        _avatarAnimationService = avatarAnimationService,
@@ -41,7 +38,6 @@ class ChatCubit extends Cubit<ChatState> {
        _chatStreamingService = chatStreamingService,
        _appLifecycleService = appLifecycleService,
        _globalMemoryService = globalMemoryService,
-       _demoService = demoService,
        super(ChatState.initial()) {
     // Subscribe to new chat entry events to persist avatar changes
     _newChatEntrySubscription = _appLifecycleService.newChatEntryEvents.listen(
@@ -54,19 +50,6 @@ class ChatCubit extends Cubit<ChatState> {
         );
       },
     );
-
-    // Subscribe to demo script changed events
-    _demoScriptSubscription = _appLifecycleService.demoScriptChangedEvents
-        .listen(
-          _handleDemoScriptChangedEvent,
-          onError: (Object error) {
-            AppLogger.error(
-              'Demo script stream error',
-              tag: 'ChatCubit',
-              error: error,
-            );
-          },
-        );
 
     // Subscribe to avatar change requests from AvatarTool
     _avatarChangeRequestedSubscription = _appLifecycleService
@@ -90,9 +73,7 @@ class ChatCubit extends Cubit<ChatState> {
   final ChatStreamingService _chatStreamingService;
   final AppLifecycleService _appLifecycleService;
   final GlobalMemoryService _globalMemoryService;
-  final DemoService _demoService;
   StreamSubscription<NewChatEntryPayload>? _newChatEntrySubscription;
-  StreamSubscription<DemoScript>? _demoScriptSubscription;
   StreamSubscription<AvatarChangeRequested>? _avatarChangeRequestedSubscription;
 
   /// Handle avatar change requests emitted by AvatarTool.
@@ -162,34 +143,9 @@ class ChatCubit extends Cubit<ChatState> {
     }
   }
 
-  /// Handle demo script changed events from app lifecycle service.
-  ///
-  /// Activates demo mode for the current chat.
-  Future<void> _handleDemoScriptChangedEvent(DemoScript script) async {
-    AppLogger.info('Demo script changed to: ${script.name}', tag: 'ChatCubit');
-
-    final Chat currentChat = state.currentChat;
-
-    AppLogger.info(
-      'Activating demo for chat: ${currentChat.id}',
-      tag: 'ChatCubit',
-    );
-
-    await _demoService.activateDemo(chatId: currentChat.id, script: script);
-
-    AppLogger.info(
-      'Demo activated, FakeLlmService isActive: ${_demoService.isActive}',
-      tag: 'ChatCubit',
-    );
-
-    // Note: Snackbar showing is now handled by the widget layer
-    // The widget should listen for state changes or use a separate notification mechanism
-  }
-
   @override
   Future<void> close() async {
     await _newChatEntrySubscription?.cancel();
-    await _demoScriptSubscription?.cancel();
     await _avatarChangeRequestedSubscription?.cancel();
     return super.close();
   }

@@ -13,7 +13,6 @@ import 'package:yofardev_ai/features/chat/domain/services/global_memory_service.
 import 'package:yofardev_ai/core/repositories/chat_repository.dart';
 import 'package:yofardev_ai/features/chat/presentation/bloc/chat_cubit.dart';
 import 'package:yofardev_ai/features/chat/presentation/bloc/chat_state.dart';
-import 'package:yofardev_ai/features/demo/demo.dart';
 
 class _MockChatRepository extends Mock implements ChatRepository {}
 
@@ -25,8 +24,6 @@ class _MockAvatarAnimationService extends Mock
 class _MockChatTitleService extends Mock implements ChatTitleService {}
 
 class _MockGlobalMemoryService extends Mock implements GlobalMemoryService {}
-
-class _MockDemoService extends Mock implements DemoService {}
 
 /// Streaming service that reports one tool, lets the test observe the
 /// cubit mid-tool, then completes the reply, or fails it when [fail] is
@@ -82,7 +79,6 @@ void main() {
       chatStreamingService: streaming,
       appLifecycleService: AppLifecycleService(),
       globalMemoryService: memory,
-      demoService: _MockDemoService(),
     );
   }
 

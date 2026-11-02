@@ -16,8 +16,6 @@ class TitleResult {
   final String title;
 }
 
-enum ChatsListStatus { initial, loading, success, error }
-
 /// Single flat state on purpose: the conversation, its list, streaming and
 /// titles are one coherent state machine (see flutter-architecture
 /// "File Cohesion"). Do NOT split into micro-cubits.
@@ -26,12 +24,9 @@ sealed class ChatState with _$ChatState {
   const factory ChatState({
     @Default(ChatStatus.initial) ChatStatus status,
     @Default(<Chat>[]) List<Chat> chatsList,
-    @Default(ChatsListStatus.initial) ChatsListStatus chatsListStatus,
     required Chat currentChat,
     required Chat openedChat,
     Failure? error,
-    @Default(<Map<String, dynamic>>[])
-    List<Map<String, dynamic>> audioPathsWaitingSentences,
     @Default(true) bool initializing,
     @Default(true) bool functionCallingEnabled,
     @Default(false) bool chatCreated,
@@ -56,7 +51,6 @@ sealed class ChatState with _$ChatState {
     currentChat: Chat(),
     openedChat: Chat(),
     status: ChatStatus.loading,
-    chatsListStatus: ChatsListStatus.initial,
     generatingTitleChatIds: <String>{},
     lastGeneratedTitle: null,
   );

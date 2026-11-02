@@ -212,28 +212,6 @@ void main() {
       expect(cubit.state.audioPathsWaitingSentences, isEmpty);
     });
 
-    // ── initialize ───────────────────────────────────────────
-
-    group('initialize', () {
-      blocTest<ChatTtsCubit, ChatTtsState>(
-        'sets isInitialized to true',
-        build: () => cubit,
-        act: (ChatTtsCubit c) => c.initialize('en'),
-        expect: () => <Matcher>[
-          predicate<ChatTtsState>((ChatTtsState s) => s.isInitialized == true),
-        ],
-      );
-
-      blocTest<ChatTtsCubit, ChatTtsState>(
-        'sets isInitialized to true even on error',
-        build: () => cubit,
-        act: (ChatTtsCubit c) => c.initialize('fr'),
-        expect: () => <Matcher>[
-          predicate<ChatTtsState>((ChatTtsState s) => s.isInitialized == true),
-        ],
-      );
-    });
-
     // ── clearAudioPaths ──────────────────────────────────────
 
     group('clearAudioPaths', () {
@@ -301,52 +279,6 @@ void main() {
         act: (ChatTtsCubit c) => c.removeWaitingSentence('nonexistent'),
         expect: () => <dynamic>[],
       );
-    });
-
-    // ── shuffleWaitingSentences ───────────────────────────────
-
-    group('shuffleWaitingSentences', () {
-      test('should shuffle audio paths waiting sentences', () {
-        final List<Map<String, dynamic>> originalList = <Map<String, dynamic>>[
-          <String, dynamic>{
-            'audioPath': 'a',
-            'amplitudes': <int>[1],
-          },
-          <String, dynamic>{
-            'audioPath': 'b',
-            'amplitudes': <int>[2],
-          },
-          <String, dynamic>{
-            'audioPath': 'c',
-            'amplitudes': <int>[3],
-          },
-        ];
-
-        cubit.emit(
-          cubit.state.copyWith(audioPathsWaitingSentences: originalList),
-        );
-
-        cubit.shuffleWaitingSentences();
-
-        // Same length
-        expect(cubit.state.audioPathsWaitingSentences.length, 3);
-
-        // All audioPaths still present
-        final List<String> audioPaths = cubit.state.audioPathsWaitingSentences
-            .map<String>(
-              (Map<String, dynamic> item) => item['audioPath'] as String,
-            )
-            .toList();
-        expect(audioPaths, containsAll(<String>['a', 'b', 'c']));
-      });
-
-      test('should handle empty list', () {
-        expect(cubit.state.audioPathsWaitingSentences, isEmpty);
-
-        cubit.shuffleWaitingSentences();
-
-        expect(cubit.state.audioPathsWaitingSentences, isEmpty);
-      });
     });
 
     // ── TTS audio stream handling ────────────────────────────

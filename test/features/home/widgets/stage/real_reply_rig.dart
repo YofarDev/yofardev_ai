@@ -22,7 +22,6 @@ import 'package:yofardev_ai/features/chat/domain/services/chat_entry_service.dar
 import 'package:yofardev_ai/features/chat/domain/services/chat_streaming_service.dart';
 import 'package:yofardev_ai/features/chat/domain/services/chat_title_service.dart';
 import 'package:yofardev_ai/features/chat/domain/services/global_memory_service.dart';
-import 'package:yofardev_ai/features/demo/demo.dart';
 import 'package:yofardev_ai/features/sound/sound.dart';
 import 'package:yofardev_ai/features/talking/data/repositories/talking_repository_impl.dart';
 import 'package:yofardev_ai/features/talking/talking.dart';
@@ -39,8 +38,6 @@ class _MockAvatarAnimationService extends Mock
 class _MockChatTitleService extends Mock implements ChatTitleService {}
 
 class _MockGlobalMemoryService extends Mock implements GlobalMemoryService {}
-
-class _MockDemoService extends Mock implements DemoService {}
 
 class _FakePromptDatasource implements PromptDatasource {
   @override
@@ -148,7 +145,6 @@ class RealReplyRig {
       ),
       appLifecycleService: lifecycle,
       globalMemoryService: memory,
-      demoService: _MockDemoService(),
     );
     talking = TalkingCubit(
       TalkingRepositoryImpl(),

@@ -3,12 +3,9 @@ import 'dart:async';
 import '../models/app_lifecycle_event.dart';
 import '../models/avatar_config.dart';
 import '../models/avatar_mood.dart';
-import '../models/avatar_status_animation.dart';
 import '../models/chat.dart';
 import '../models/chat_entry.dart';
 import '../models/chat_status.dart';
-import '../models/demo_script.dart';
-import '../models/talking_phase.dart';
 import '../utils/logger.dart';
 
 /// Service for coordinating cross-feature app lifecycle events using streams.
@@ -20,10 +17,7 @@ import '../utils/logger.dart';
 /// Responsibilities:
 /// - Avatar update coordination when new chat entries arrive
 /// - Talking state coordination during streaming
-/// - Demo mode activation
 /// - Chat change coordination
-/// - Volume fade coordination on avatar animations
-/// - Waiting TTS loop coordination
 class AppLifecycleService {
   AppLifecycleService();
 
@@ -34,13 +28,6 @@ class AppLifecycleService {
       StreamController<String>.broadcast();
   final StreamController<ChatStatus> _streamingStateChangedController =
       StreamController<ChatStatus>.broadcast();
-  final StreamController<AvatarStatusAnimation>
-  _avatarAnimationChangedController =
-      StreamController<AvatarStatusAnimation>.broadcast();
-  final StreamController<TalkingPhase> _talkingStateChangedController =
-      StreamController<TalkingPhase>.broadcast();
-  final StreamController<DemoScript> _demoScriptChangedController =
-      StreamController<DemoScript>.broadcast();
   final StreamController<AvatarChangeRequested>
   _avatarChangeRequestedController =
       StreamController<AvatarChangeRequested>.broadcast();
@@ -55,12 +42,6 @@ class AppLifecycleService {
   Stream<String> get chatChangedEvents => _chatChangedController.stream;
   Stream<ChatStatus> get streamingStateChangedEvents =>
       _streamingStateChangedController.stream;
-  Stream<AvatarStatusAnimation> get avatarAnimationChangedEvents =>
-      _avatarAnimationChangedController.stream;
-  Stream<TalkingPhase> get talkingStateChangedEvents =>
-      _talkingStateChangedController.stream;
-  Stream<DemoScript> get demoScriptChangedEvents =>
-      _demoScriptChangedController.stream;
   Stream<AvatarChangeRequested> get avatarChangeRequestedEvents =>
       _avatarChangeRequestedController.stream;
 
@@ -202,32 +183,11 @@ class AppLifecycleService {
     _streamingStateChangedController.add(status);
   }
 
-  /// Emit event when avatar animation state changes.
-  ///
-  /// [HomeCubit] subscribes to control volume fade.
-  void emitAvatarAnimationChanged(AvatarStatusAnimation statusAnimation) {
-    _avatarAnimationChangedController.add(statusAnimation);
-  }
-
-  /// Emit event when talking state changes.
-  ///
-  /// [HomeCubit] subscribes to control waiting TTS loop.
-  void emitTalkingStateChanged(TalkingPhase phase) {
-    _talkingStateChangedController.add(phase);
-  }
-
   /// Emit event when current chat changes.
   ///
   /// [TalkingCubit] and [AvatarCubit] subscribe.
   void emitChatChanged(String chatId) {
     _chatChangedController.add(chatId);
-  }
-
-  /// Emit event when demo script changes.
-  ///
-  /// [ChatCubit] subscribes to activate demo mode.
-  void emitDemoScriptChanged(DemoScript script) {
-    _demoScriptChangedController.add(script);
   }
 
   /// Emit a request to change the avatar of the currently open chat.
@@ -255,9 +215,6 @@ class AppLifecycleService {
     _newChatEntryController.close();
     _chatChangedController.close();
     _streamingStateChangedController.close();
-    _avatarAnimationChangedController.close();
-    _talkingStateChangedController.close();
-    _demoScriptChangedController.close();
     _avatarChangeRequestedController.close();
     _moodController.close();
     _personaController.close();

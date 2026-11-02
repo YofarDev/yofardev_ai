@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:yofardev_ai/core/models/talking_phase.dart';
 import 'package:yofardev_ai/core/models/result.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:yofardev_ai/core/models/avatar_config.dart';
@@ -13,9 +12,7 @@ import 'package:yofardev_ai/core/services/llm/llm_service_interface.dart';
 import 'package:yofardev_ai/features/sound/domain/services/tts_queue_service.dart';
 import 'package:yofardev_ai/core/services/app_lifecycle_service.dart';
 import 'package:yofardev_ai/features/chat/presentation/bloc/chat_state.dart';
-import 'package:yofardev_ai/features/avatar/presentation/bloc/avatar_state.dart';
 import 'package:yofardev_ai/core/models/app_lifecycle_event.dart';
-import 'package:yofardev_ai/core/models/demo_script.dart';
 import 'package:yofardev_ai/core/models/chat_entry.dart';
 import 'package:yofardev_ai/core/services/llm/llm_stream_chunk.dart';
 import 'package:yofardev_ai/core/services/prompt_datasource.dart';
@@ -29,7 +26,6 @@ import 'package:yofardev_ai/features/chat/domain/services/global_memory_service.
 import 'package:yofardev_ai/core/models/llm_message.dart';
 import 'package:yofardev_ai/features/chat/presentation/bloc/chat_cubit.dart';
 import 'package:yofardev_ai/core/repositories/settings_repository.dart';
-import 'package:yofardev_ai/features/demo/demo.dart';
 
 class NoopGlobalMemoryService implements GlobalMemoryService {
   @override
@@ -122,8 +118,6 @@ ChatStreamingService createMockChatStreamingService({
 }
 
 class MockSettingsRepository extends Mock implements SettingsRepository {}
-
-class MockDemoService extends Mock implements DemoService {}
 
 class MockAvatarAnimationService extends Mock
     implements AvatarAnimationService {}
@@ -225,7 +219,6 @@ void main() {
         chatStreamingService: mockChatStreamingService,
         appLifecycleService: MockAppLifecycleService(),
         globalMemoryService: NoopGlobalMemoryService(),
-        demoService: MockDemoService(),
       );
       // Initialize the cubit
       cubit.init();
@@ -386,28 +379,10 @@ class MockAppLifecycleService extends Mock implements AppLifecycleService {
       const Stream<ChatStatus>.empty();
 
   @override
-  Stream<AvatarStatusAnimation> get avatarAnimationChangedEvents =>
-      const Stream<AvatarStatusAnimation>.empty();
-
-  @override
-  Stream<TalkingPhase> get talkingStateChangedEvents =>
-      const Stream<TalkingPhase>.empty();
-
-  @override
-  Stream<DemoScript> get demoScriptChangedEvents =>
-      const Stream<DemoScript>.empty();
-
-  @override
   void dispose() {}
 
   @override
-  void emitAvatarAnimationChanged(AvatarStatusAnimation statusAnimation) {}
-
-  @override
   void emitChatChanged(String chatId) {}
-
-  @override
-  void emitDemoScriptChanged(DemoScript script) {}
 
   @override
   void emitNewChatEntry(
@@ -418,7 +393,4 @@ class MockAppLifecycleService extends Mock implements AppLifecycleService {
 
   @override
   void emitStreamingStateChanged(ChatStatus status) {}
-
-  @override
-  void emitTalkingStateChanged(TalkingPhase phase) {}
 }

@@ -12,7 +12,6 @@ import 'package:yofardev_ai/features/chat/domain/services/chat_streaming_service
 import 'package:yofardev_ai/features/chat/domain/services/chat_title_service.dart';
 import 'package:yofardev_ai/features/chat/domain/services/global_memory_service.dart';
 import 'package:yofardev_ai/features/chat/presentation/bloc/chat_cubit.dart';
-import 'package:yofardev_ai/features/demo/demo.dart';
 import 'package:yofardev_ai/core/models/voice_effect.dart';
 import 'package:yofardev_ai/core/services/audio/voice_effects_service.dart';
 import 'package:yofardev_ai/features/sound/sound.dart';
@@ -29,8 +28,6 @@ class _MockAvatarAnimationService extends Mock
 class _MockChatTitleService extends Mock implements ChatTitleService {}
 
 class _MockGlobalMemoryService extends Mock implements GlobalMemoryService {}
-
-class _MockDemoService extends Mock implements DemoService {}
 
 class _UnusedSynthesizer implements TtsSynthesizer {
   @override
@@ -106,7 +103,6 @@ class ReplyRig {
       chatStreamingService: streaming,
       appLifecycleService: lifecycle,
       globalMemoryService: memory,
-      demoService: _MockDemoService(),
     );
     talking = TalkingCubit(
       TalkingRepositoryImpl(),

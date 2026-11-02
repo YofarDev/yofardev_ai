@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:audio_analyzer/audio_analyzer.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:geolocator/geolocator.dart';
@@ -8,7 +7,6 @@ import 'package:get_it/get_it.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:sensors_plus/sensors_plus.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../features/avatar/presentation/bloc/avatar_cubit.dart';
 import '../../features/avatar/data/datasources/avatar_local_datasource.dart';
@@ -36,11 +34,9 @@ import '../../features/demo/presentation/bloc/demo_cubit.dart';
 import '../../features/demo/domain/services/demo_service.dart';
 import '../../features/demo/data/repositories/demo_repository_impl.dart';
 import '../../features/demo/domain/repositories/demo_repository.dart';
-import '../../features/home/presentation/bloc/home_cubit.dart';
 import '../../features/settings/presentation/bloc/settings_cubit.dart';
 import '../../features/settings/data/repositories/settings_repository_impl.dart';
 import '../repositories/settings_repository.dart';
-import '../../features/sound/presentation/bloc/sound_cubit.dart';
 import '../../features/sound/data/datasources/kokoro_tts_datasource.dart';
 import '../../features/sound/data/datasources/tts_datasource.dart';
 import '../../features/sound/data/kokoro/kokoro_engine.dart';
@@ -61,12 +57,8 @@ import '../../features/talking/domain/services/playback_clock.dart';
 import '../../features/talking/domain/services/tts_playback_service.dart';
 import '../../features/talking/presentation/bloc/caption_cubit.dart';
 import '../../features/talking/presentation/bloc/talking_cubit.dart';
-import '../../features/home/data/repositories/home_repository_impl.dart';
 import '../services/app_lifecycle_service.dart';
 import '../utils/platform_utils.dart';
-import '../../features/home/domain/repositories/home_repository.dart';
-import '../../features/settings/domain/repositories/locale_repository.dart';
-import '../../features/settings/data/repositories/locale_repository_impl.dart';
 import '../services/audio/audio_amplitude_service.dart';
 import '../services/audio/ambient_bed_service.dart';
 import '../services/audio/audio_player_service.dart';
@@ -91,8 +83,6 @@ import '../services/llm/fake_llm_service.dart';
 import '../services/llm/llm_config_manager.dart';
 import '../services/llm/llm_service.dart';
 import '../services/llm/llm_service_interface.dart';
-import '../services/llm/llm_streaming_service.dart';
-import '../services/llm/llm_streaming_service_interface.dart';
 import '../services/prompt_datasource.dart';
 import '../services/motion/parallax_source.dart';
 import '../services/motion/reduce_motion_source.dart';
@@ -129,8 +119,6 @@ Future<void> setupServiceLocator({
   FoleyPlayer Function()? foleyPlayer,
   HapticsSink? haptics,
 }) async {
-  final SharedPreferences prefs = await SharedPreferences.getInstance();
-
   // ── Data sources (register early — no dependencies) ──
   getIt.registerLazySingleton<SettingsLocalDatasource>(
     () => SettingsLocalDatasource(),
@@ -215,13 +203,6 @@ Future<void> setupServiceLocator({
     );
   }
 
-  getIt.registerLazySingleton<LlmStreamingServiceInterface>(
-    () => LlmStreamingService(
-      client: http.Client(),
-      configManager: getIt<LlmConfigManager>(),
-    ),
-  );
-
   // Agent & tool registry
   getIt.registerLazySingleton<ToolRegistry>(
     () => ToolRegistry(
@@ -265,10 +246,8 @@ Future<void> setupServiceLocator({
   getIt.registerLazySingleton<DemoRepository>(
     () => DemoRepositoryImpl(chatRepository: getIt<ChatRepository>()),
   );
-  getIt.registerLazySingleton<HomeRepository>(() => HomeRepositoryImpl());
 
   // ── Audio services ──
-  getIt.registerLazySingleton<AudioAnalyzer>(() => AudioAnalyzer());
   getIt.registerLazySingleton<AudioPlayerService>(() => AudioPlayerService());
   getIt.registerLazySingleton<AudioAmplitudeService>(
     () => AudioAmplitudeService(),
@@ -308,9 +287,6 @@ Future<void> setupServiceLocator({
   );
 
   // ── Other services ──
-  getIt.registerLazySingleton<LocaleRepository>(
-    () => LocaleRepositoryImpl(prefs: prefs),
-  );
   getIt.registerLazySingleton<StreamProcessorService>(
     () => StreamProcessorService(),
   );
@@ -445,7 +421,6 @@ Future<void> setupServiceLocator({
       chatStreamingService: getIt<ChatStreamingService>(),
       appLifecycleService: getIt<AppLifecycleService>(),
       globalMemoryService: getIt<GlobalMemoryService>(),
-      demoService: getIt<DemoService>(),
     ),
   );
 
@@ -687,9 +662,6 @@ Future<void> setupServiceLocator({
       demoService: getIt<DemoService>(),
     ),
   );
-  getIt.registerFactory<SoundCubit>(
-    () => SoundCubit(soundRepository: getIt<SoundRepository>()),
-  );
   getIt.registerFactory<SettingsCubit>(
     () => SettingsCubit(
       settingsRepository: getIt<SettingsRepository>(),
@@ -697,9 +669,6 @@ Future<void> setupServiceLocator({
       globalMemoryRepository: getIt<GlobalMemoryRepository>(),
       ttsEngineStatusService: getIt<TtsEngineStatusService>(),
     ),
-  );
-  getIt.registerFactory<HomeCubit>(
-    () => HomeCubit(getIt<HomeRepository>(), getIt<AppLifecycleService>()),
   );
 }
 

@@ -3,12 +3,10 @@ import 'dart:async';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:yofardev_ai/core/models/failure.dart';
 import 'package:yofardev_ai/core/models/avatar_scene.dart';
-import 'package:yofardev_ai/core/models/talking_phase.dart';
 import 'package:yofardev_ai/core/models/result.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:yofardev_ai/core/models/avatar_config.dart';
 import 'package:yofardev_ai/core/services/app_lifecycle_service.dart';
-import 'package:yofardev_ai/core/models/demo_script.dart';
 import 'package:yofardev_ai/core/models/chat_entry.dart';
 import 'package:yofardev_ai/core/models/app_lifecycle_event.dart';
 import 'package:yofardev_ai/core/models/chat.dart';
@@ -28,15 +26,12 @@ import 'package:yofardev_ai/features/chat/domain/services/global_memory_service.
 import 'package:yofardev_ai/features/chat/presentation/bloc/chat_cubit.dart';
 import 'package:yofardev_ai/features/chat/presentation/bloc/chat_state.dart';
 import 'package:yofardev_ai/core/repositories/settings_repository.dart';
-import 'package:yofardev_ai/features/demo/demo.dart';
 import 'package:yofardev_ai/features/sound/data/datasources/tts_datasource.dart';
 
 // Mocktail mock classes
 class MockChatRepository extends Mock implements ChatRepository {}
 
 class MockSettingsRepository extends Mock implements SettingsRepository {}
-
-class MockDemoService extends Mock implements DemoService {}
 
 class MockAvatarAnimationService extends Mock
     implements AvatarAnimationService {}
@@ -265,7 +260,6 @@ void main() {
         ),
         appLifecycleService: lifecycle,
         globalMemoryService: createMockGlobalMemoryService(),
-        demoService: MockDemoService(),
       );
     });
 
@@ -279,7 +273,6 @@ void main() {
       expect(chatsCubit.state.currentChat, const Chat());
       expect(chatsCubit.state.openedChat, const Chat());
       expect(chatsCubit.state.error, isNull);
-      expect(chatsCubit.state.audioPathsWaitingSentences, isEmpty);
       expect(chatsCubit.state.initializing, isTrue);
       expect(chatsCubit.state.functionCallingEnabled, isTrue);
     });
@@ -433,7 +426,6 @@ void main() {
         expect(state.currentChat, const Chat());
         expect(state.openedChat, const Chat());
         expect(state.error, isNull);
-        expect(state.audioPathsWaitingSentences, isEmpty);
         expect(state.initializing, isTrue);
         expect(state.functionCallingEnabled, isTrue);
       });
@@ -458,10 +450,6 @@ void main() {
         expect(newState.chatsList, state.chatsList);
         expect(newState.currentChat, state.currentChat);
         expect(newState.openedChat, state.openedChat);
-        expect(
-          newState.audioPathsWaitingSentences,
-          state.audioPathsWaitingSentences,
-        );
         expect(newState.initializing, state.initializing);
       });
 
@@ -476,17 +464,9 @@ void main() {
           const Chat(id: 'chat2'),
         ];
 
-        final List<Map<String, dynamic>> newAudioPaths = <Map<String, dynamic>>[
-          <String, dynamic>{'sentence': 'test', 'audioPath': 'path'},
-        ];
-
-        final ChatState newState = state.copyWith(
-          chatsList: newChatsList,
-          audioPathsWaitingSentences: newAudioPaths,
-        );
+        final ChatState newState = state.copyWith(chatsList: newChatsList);
 
         expect(newState.chatsList, newChatsList);
-        expect(newState.audioPathsWaitingSentences, newAudioPaths);
 
         // Unchanged fields
         expect(newState.status, state.status);
@@ -886,7 +866,6 @@ void main() {
         ),
         appLifecycleService: MockAppLifecycleService(),
         globalMemoryService: createMockGlobalMemoryService(),
-        demoService: MockDemoService(),
       );
     });
 
@@ -1003,7 +982,6 @@ void main() {
           chatStreamingService: mockChatStreamingService,
           appLifecycleService: mockAppLifecycleService,
           globalMemoryService: createMockGlobalMemoryService(),
-          demoService: MockDemoService(),
         );
 
         // Initialize with a test chat
@@ -1271,25 +1249,7 @@ class MockAppLifecycleService extends Mock implements AppLifecycleService {
       const Stream<ChatStatus>.empty();
 
   @override
-  Stream<AvatarStatusAnimation> get avatarAnimationChangedEvents =>
-      const Stream<AvatarStatusAnimation>.empty();
-
-  @override
-  Stream<TalkingPhase> get talkingStateChangedEvents =>
-      const Stream<TalkingPhase>.empty();
-
-  @override
-  Stream<DemoScript> get demoScriptChangedEvents =>
-      const Stream<DemoScript>.empty();
-
-  @override
-  void emitAvatarAnimationChanged(AvatarStatusAnimation statusAnimation) {}
-
-  @override
   void emitChatChanged(String chatId) {}
-
-  @override
-  void emitDemoScriptChanged(DemoScript script) {}
 
   @override
   void emitNewChatEntry(
@@ -1300,7 +1260,4 @@ class MockAppLifecycleService extends Mock implements AppLifecycleService {
 
   @override
   void emitStreamingStateChanged(ChatStatus status) {}
-
-  @override
-  void emitTalkingStateChanged(TalkingPhase phase) {}
 }

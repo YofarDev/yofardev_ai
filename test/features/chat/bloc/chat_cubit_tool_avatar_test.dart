@@ -33,7 +33,6 @@ import 'package:yofardev_ai/features/chat/domain/services/chat_title_service.dar
 import 'package:yofardev_ai/features/chat/domain/services/global_memory_service.dart';
 import 'package:yofardev_ai/features/chat/presentation/bloc/chat_cubit.dart';
 import 'package:yofardev_ai/features/chat/presentation/bloc/chat_state.dart';
-import 'package:yofardev_ai/features/demo/demo.dart';
 import 'package:yofardev_ai/core/services/settings_local_datasource.dart';
 
 class _MockLlmService extends Mock implements LlmServiceInterface {}
@@ -46,8 +45,6 @@ class _MockAvatarAnimationService extends Mock
 class _MockChatTitleService extends Mock implements ChatTitleService {}
 
 class _MockGlobalMemoryService extends Mock implements GlobalMemoryService {}
-
-class _MockDemoService extends Mock implements DemoService {}
 
 /// The real chat repository with [updateAvatar] stubbed, so avatar-save
 /// failures and successes are observable without touching storage.
@@ -140,7 +137,6 @@ void main() {
       ),
       appLifecycleService: lifecycle,
       globalMemoryService: memory,
-      demoService: _MockDemoService(),
     );
   }
 

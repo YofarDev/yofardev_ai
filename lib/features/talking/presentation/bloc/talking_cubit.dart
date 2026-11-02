@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/services/app_lifecycle_service.dart';
 import '../../../../core/services/audio/interruption_service.dart';
@@ -96,7 +95,7 @@ class TalkingCubit extends Cubit<TalkingState> {
         _replyDone = false;
         _idleCooldownTimer?.cancel();
         _idleCooldownTimer = null;
-        setLoadingStatus(true);
+        emit(const TalkingState.generating());
       case ChatStatus.error:
         // A reply that failed mid-stream may have sentences playing or on
         // their way (the queue is not cleared): let them finish with a
@@ -234,34 +233,6 @@ class TalkingCubit extends Cubit<TalkingState> {
     emit(const TalkingState.idle());
   }
 
-  void startAmplitudeAnimation(
-    String audioPath,
-    List<int> amplitudes,
-    Duration audioDuration,
-    VoidCallback onComplete,
-  ) {
-    AppLogger.debug(
-      'TalkingCubit: startAmplitudeAnimation called with ${amplitudes.length} frames, audioDuration: ${audioDuration.inMilliseconds}ms',
-      tag: 'TalkingCubit',
-    );
-
-    _animationCompleter = Completer<void>();
-    _animationCompleter!.future.then((_) {
-      AppLogger.debug('TalkingCubit: Animation completed', tag: 'TalkingCubit');
-      if (!isClosed) {
-        onComplete();
-      }
-    });
-
-    _playbackService.startAmplitudeAnimation(
-      audioPath,
-      amplitudes,
-      audioDuration,
-    );
-  }
-
-  Completer<void>? _animationCompleter;
-
   void _updateMouthStateFromService(int mouthState) {
     final MouthState newMouthState = _mapMouthStateFromInt(mouthState);
 
@@ -281,24 +252,6 @@ class TalkingCubit extends Cubit<TalkingState> {
 
   MouthState _mapMouthStateFromInt(int value) {
     return MouthState.values[value];
-  }
-
-  @Deprecated('Use generateSpeech() instead')
-  void setLoadingStatus(bool isLoading) {
-    if (isLoading) {
-      emit(const TalkingState.generating());
-    } else {
-      emit(const TalkingState.idle());
-    }
-  }
-
-  @Deprecated('Use stop() instead')
-  Future<void> stopTalking({
-    bool removeFile = true,
-    bool soundEffectsEnabled = false,
-    bool updateStatus = true,
-  }) async {
-    await stop();
   }
 
   @override
