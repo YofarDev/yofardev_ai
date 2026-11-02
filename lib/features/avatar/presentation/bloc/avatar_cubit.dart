@@ -266,6 +266,12 @@ class AvatarCubit extends Cubit<AvatarState> {
     if (isClosed || epoch != _loadEpoch) return;
     result.when(
       err: (Failure failure) {
+        // New chats legitimately miss a saved avatar, but a corrupt or
+        // failing read must not stay silent either.
+        AppLogger.warning(
+          'Avatar load failed for chat $chatId: $failure',
+          tag: 'AvatarCubit',
+        );
         // This is expected for new chats - no custom avatar saved yet
         // Only set status to ready if dimensions are initialized
         if (state.baseOriginalHeight > 0) {

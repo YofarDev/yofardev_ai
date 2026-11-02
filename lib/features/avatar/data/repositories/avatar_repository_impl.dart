@@ -14,11 +14,17 @@ class AvatarRepositoryImpl implements AvatarRepository {
   @override
   Future<Result<Chat>> getChat(String id) async {
     try {
-      final Chat? chat = await _datasource.getChat(id);
-      if (chat == null) {
-        return Result<Chat>.err(StorageFailure('Chat not found'));
-      }
-      return Result<Chat>.ok(chat);
+      final Result<Chat?> result = await _datasource.getChat(id);
+      final Result<Chat> mapped = result.when(
+        err: (Failure failure) => Result<Chat>.err(failure),
+        ok: (Chat? chat) {
+          if (chat == null) {
+            return Result<Chat>.err(StorageFailure('Chat not found'));
+          }
+          return Result<Chat>.ok(chat);
+        },
+      );
+      return mapped;
     } catch (e, st) {
       return Result<Chat>.err(
         mapExceptionToFailure(e, stackTrace: st, tag: 'AvatarRepository'),

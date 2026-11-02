@@ -9,9 +9,12 @@ import '../../../../core/services/settings_local_datasource.dart';
 class SettingsRepositoryImpl implements SettingsRepository {
   /// [onSoundEffectsChanged] hears every saved sound-effects value (the live
   /// setting the foley and the ambient beds follow, M8).
-  SettingsRepositoryImpl({this.onSoundEffectsChanged});
+  SettingsRepositoryImpl({
+    this.onSoundEffectsChanged,
+    SettingsLocalDatasource? datasource,
+  }) : _datasource = datasource ?? SettingsLocalDatasource();
 
-  final SettingsLocalDatasource _datasource = SettingsLocalDatasource();
+  final SettingsLocalDatasource _datasource;
   final void Function(bool enabled)? onSoundEffectsChanged;
 
   @override
@@ -140,12 +143,24 @@ class SettingsRepositoryImpl implements SettingsRepository {
 
   @override
   Future<Result<TaskLlmConfig>> getTaskLlmConfig() async {
-    return _datasource.getTaskLlmConfig();
+    try {
+      return await _datasource.getTaskLlmConfig();
+    } catch (e, st) {
+      return Result<TaskLlmConfig>.err(
+        mapExceptionToFailure(e, stackTrace: st, tag: 'SettingsRepository'),
+      );
+    }
   }
 
   @override
   Future<Result<void>> setTaskLlmConfig(TaskLlmConfig config) async {
-    return _datasource.setTaskLlmConfig(config);
+    try {
+      return await _datasource.setTaskLlmConfig(config);
+    } catch (e, st) {
+      return Result<void>.err(
+        mapExceptionToFailure(e, stackTrace: st, tag: 'SettingsRepository'),
+      );
+    }
   }
 
   // Function Calling Configuration - Google Search
