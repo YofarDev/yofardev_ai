@@ -1,0 +1,53 @@
+"""Compact tablet-only grip drawings and their occlusion, installed after wardrobe dedupe.
+
+The sleeve stays behind the slab; the curled hand silhouette stays in front. Cloning the
+existing edge artwork and its wardrobe paint keys preserves every costume's hand colour,
+without changing the edge pose used by clapping, the newspaper and costume gestures.
+"""
+
+from __future__ import annotations
+
+from copy import deepcopy
+
+from avatar_tablet import GRIP_ID_START, walk
+from rml import Doc, El
+
+
+def _clone(source: El, doc: Doc, references: dict[str, str] | None = None) -> tuple[El, dict[str, str]]:
+    result = deepcopy(source)
+    mapping = {old.ref(): doc(old.tag).ref() for old in walk(source)}
+    refs = {**(references or {}), **mapping}
+    for old, new in zip(walk(source), walk(result)):
+        new.id = mapping[old.ref()]
+        new.attrs = {k: refs.get(v, v) if isinstance(v, str) else v for k, v in new.attrs.items()}
+    return result, mapping
+
+
+def install(artboard: El, tablet: El) -> None:
+    doc = Doc(start=GRIP_ID_START)
+    parents = {id(child): parent for parent in walk(artboard) for child in parent.children}
+    # Reorder only: keep the breath/lean transforms shared with the carrying arm.
+    shoulder = parents[id(tablet)]
+    shoulder.children.remove(tablet)
+    shoulder.children.insert(0, tablet)
+    front = next(e for e in walk(tablet) if e.attrs.get("name") == "emitScreenGlare")
+    animations = [e for e in artboard.children if e.tag == "LinearAnimation"]
+    edges = [e for e in walk(artboard) if e.attrs.get("name") == "Hand_edge"]
+    assert len(edges) == 2, "Install tablet grips after the shared hand skins have been deduped"
+    for edge in edges:
+        grip, mapping = _clone(edge, doc)
+        grip.attrs.update(name="Hand_tabletGrip", scaleY=0.60)
+        target = doc("DrawTarget", drawableId=front.ref(), placementValue="before", name="OverTablet")
+        grip.add(doc("DrawRules", target, drawTargetId=target.ref(), name="TabletGripDepth"))
+        parents[id(edge)].add(grip)
+        for animation in animations:
+            # The new drawing follows the same costume paints as the original hand, including
+            # costume_none's reset. Original tracks and ids remain untouched.
+            for obj in list(animation.children):
+                if obj.attrs.get("objectId") in mapping:
+                    duplicate, _ = _clone(obj, doc, mapping)
+                    animation.add(duplicate)
+            if str(animation.attrs.get("name", "")).startswith("prop_tablet_"):
+                for key in walk(animation):
+                    if key.tag == "KeyFrameId" and key.attrs.get("value") == edge.ref():
+                        key.attrs["value"] = grip.ref()

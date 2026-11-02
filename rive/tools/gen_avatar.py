@@ -33,6 +33,7 @@ import face_rig  # noqa: E402
 import arm_rig  # noqa: E402
 import avatar_light  # noqa: E402
 import avatar_tablet  # noqa: E402
+import tablet_grip  # noqa: E402
 import hand_rig  # noqa: E402
 import jacket_art  # noqa: E402
 import wardrobe_dedupe  # noqa: E402
@@ -2562,6 +2563,8 @@ with kit.minting(d, M10S), kit.minting(arm_rig.AD, M10SA):
                       stateToId=gst.ref()))
         gesture_layer.add(gst)
     artboard.children.extend([laser_off, laser_loop, *SIG.values()])
+
+tablet_grip.install(artboard, tablet.node)
 
 out = os.path.join(os.path.dirname(__file__), "..", "avatar", "avatar.rml")
 os.makedirs(os.path.dirname(out), exist_ok=True)

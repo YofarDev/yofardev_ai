@@ -1,0 +1,4 @@
+clap max channel delta 0
+idle max channel delta 0
+cape max channel delta 0
+newspaper max channel delta 0

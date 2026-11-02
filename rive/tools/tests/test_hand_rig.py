@@ -173,7 +173,14 @@ def test_existing_ids_never_move(root: ET.Element, base_root: ET.Element) -> Non
     assert len([g for g in base_root.iter("Node") if g.get("name") == "Hand_back"]) == 2 * SKINS
     deduped = m10_dedupe_dropped(base_root, set(new))
     renamed = {g.get("id") for s in base_root.iter("Solo") if s.get("name") in WARDROBE_SOLOS for g in s}
+    # The tablet grip pass replaces these timelines' keys in a new id range.
+    # Their animation, state machine and every original drawing component keep their ids.
+    tablet_keys = {e.get("id") for a in base_root.iter("LinearAnimation")
+                   if a.get("name", "").startswith("prop_tablet_") for o in a for e in o.iter()}
+    assert not tablet_keys & new.keys()  # retired key ids must never become different components
     for i, e in old.items():
+        if i in tablet_keys:
+            continue
         if i in dropped or i in deduped:
             assert i not in new
             continue

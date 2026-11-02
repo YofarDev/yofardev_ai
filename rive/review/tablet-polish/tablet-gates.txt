@@ -1,0 +1,10 @@
+ok  hold seam: the hold clip alone, first frame vs its last key (scrolled list, closed tilt), max channel delta 0/255
+    plain clips: largest frame-to-frame change 14.03 (mean abs, 0..255, half-size crop)
+ok  short_tool: largest step 14.27 at frame 4
+ok  back_early: largest step 7.52 at frame 8
+ok  back_late: largest step 10.60 at frame 8
+ok  gesture_under_away: largest step 14.56 at frame 2
+ik prop_tablet_out   offset +0  hand max  0.27 px  elbow max  0.29 px  (22 arm-frames)
+ik prop_tablet_hold  offset +0  hand max  0.52 px  elbow max  0.44 px  (72 arm-frames)
+ik prop_tablet_away  offset +1  hand max  0.25 px  elbow max  0.42 px  (16 arm-frames)
+ok  ik: worst hand error within 2.0 px

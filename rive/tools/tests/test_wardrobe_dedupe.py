@@ -210,6 +210,9 @@ def test_m9_ids_survive_and_new_ids_take_the_m10_range(root: ET.Element, base_ro
     copies = {e.get("id") for s in base_root.iter("Solo") if s.get("name") in solos for g in s
               if g.get("id") not in new for e in g.iter()} - set(new)
     keys = {e.get("id") for o in base_root.iter("KeyedObject") if o.get("objectId") in copies for e in o.iter()}
+    # Grip correction replaces tablet motion keys, not timeline or original drawing component ids.
+    keys |= {e.get("id") for a in base_root.iter("LinearAnimation")
+             if a.get("name", "").startswith("prop_tablet_") for o in a for e in o.iter()}
     for i, e in old.items():
         if i in copies or i in keys:
             continue

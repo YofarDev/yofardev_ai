@@ -1,7 +1,8 @@
 """The tablet prop (moonshot M4 Task 5, plan rulings 7, 8, 15): `prop` = tablet on its own layer.
 
-Called by gen_avatar.py after the light rig; every element is minted from the M4 id range
-(`avatar_kit.M4_ID_START`, after the light rig's last id), so no earlier id moves.
+Called by gen_avatar.py after the light rig; original elements are minted from the M4 id range
+(`avatar_kit.M4_ID_START`, after the light rig's last id). The reading/grip pass replaces
+tablet motion keys from `READING_ID_START`, preserving original drawing, timeline and state ids.
 
 - Art: a landscape slab authored flat (`W` x `H`, corner `CORNER` = 0.2 of the short side, dark
   bezel, `emitScreen` gradient with generated search / weather / result glyphs) and projected by
@@ -9,15 +10,16 @@ Called by gen_avatar.py after the light rig; every element is minted from the M4
   of the 2x2 affine projection of the slab tipped back `TILT`, turned `YAW` toward the face and
   rolled `ROLL` (an orthographic camera), so the rounded corners and glyphs stay exact. The
   slab's thickness is a back copy offset by the projected normal (`TabletEdge`). The tablet hangs
-  in `BreathShoulderLPivot` behind the left arm (both hands draw in front of it, the head and
-  torso behind), so it follows the torso, `breath` and `lean` like the hand targets do.
+  in `BreathShoulderLPivot`, following the torso, `breath` and `lean` like the hand targets.
+  `tablet_grip.install` places the slab above the sleeves and its compact grip drawings above
+  the slab, making both contact points visible.
 - Hands: both arms key their `HandTarget`, chain lengths, art scales, `invertDirection` and hand
   rotation (arm_rig.gesture_tracks on avatar_kit.ik, as the gestures do); every frame the wrist
-  sits `HAND_REACH` behind its grip point on the slab, along the hand's finger direction, so the
-  hands never leave the slab once they hold it. The `edge` pose grips the side edges.
+  sits `READING_REACH` behind its grip point on the slab, along the hand's finger direction.
+  The compact `tabletGrip` pose wraps the side edges; the newspaper retains `edge` and `HAND_REACH`.
 - Animations: `prop_tablet_out` (the left hand pulls the tablet from the hip: anticipation,
   overshoot and settle from motion_synth.action, the right hand staggered by motion_synth.stagger),
-  `prop_tablet_hold` (2 s loop: a slow tilt and a thumb scroll of the result list, seamless: the
+  `prop_tablet_hold` (3.6 s loop: read, thumb flick, inertial scroll, then read again; seamless: the
   list is periodic), `prop_tablet_away` (the right hand lets go first, the left puts it back to
   the hip, ending exactly in the rest pose with the tablet hidden), `prop_none` (no keys).
 - `ScreenGlow`: a cool `emitScreen`-coloured light from below on the face (screen blend, clipped
@@ -30,6 +32,7 @@ Called by gen_avatar.py after the light rig; every element is minted from the M4
 
 from __future__ import annotations
 
+from copy import copy
 from dataclasses import dataclass, replace
 import math
 from typing import Callable, Iterator, Sequence
@@ -86,8 +89,15 @@ HIP_ROT, HIP_SY = -1.45, 0.7  # at the hip the slab hangs from its right edge (o
 # ---- timing (frames at 60 fps)
 OUT_BEAT = 13                 # main lift (motion_synth.action adds the 220 ms settle)
 AWAY_BEAT = 10
-HOLD_FRAMES = 120             # 2 s loop
-SCROLL = (44, 58)             # the thumb flick (frames of the hold loop)
+HOLD_FRAMES = 216             # time to read before and after a deliberate scroll
+SCROLL = (90, 102)            # thumb contact -> release; the list coasts another 18 frames
+PAPER_HOLD_FRAMES = 120       # keep the newspaper's existing page-handling cadence
+PAPER_SCROLL = (44, 58)
+READING_ID_START = 1300000     # new tablet motion keys; never shift the established M4 element ids
+GRIP_ID_START = 1320000        # compact tablet-only hands, draw rules and wardrobe paint keys
+READING_HOLD = (450.0, 812.0)
+READING_FS = {-1: (0.85, 0.70), 1: (0.85, 0.65)}
+READING_REACH = 32.0
 LIST_PERIOD = 26.0            # px: one result item (the list repeats, so the loop is seamless)
 BLEND_IN, BLEND_AWAY, BLEND_BACK, BLEND_END = 100, 120, 160, 120  # ms
 
@@ -169,11 +179,12 @@ def finger_dir(pose: Pose, side: int) -> float:
     return FINGER[side] + math.degrees(pose.rot)
 
 
-def wrist_on(pose: Pose, side: int, finger: float | None = None) -> tuple[float, float]:
+def wrist_on(pose: Pose, side: int, finger: float | None = None,
+             reach: float = HAND_REACH) -> tuple[float, float]:
     """The wrist that puts the hand's blade on its grip point."""
     fd = math.radians(finger_dir(pose, side) if finger is None else finger)
     gx, gy = grip(pose, side)
-    return gx - HAND_REACH * math.cos(fd), gy - HAND_REACH * math.sin(fd)
+    return gx - reach * math.cos(fd), gy - reach * math.sin(fd)
 
 
 def clamp_reach(side: int, w: tuple[float, float], fs: float, fs2: float) -> tuple[float, float]:
@@ -186,18 +197,19 @@ def clamp_reach(side: int, w: tuple[float, float], fs: float, fs2: float) -> tup
     return sx + dx / n * reach, sy + dy / n * reach
 
 
-def seat(side: int, wrist: tuple[float, float], finger: float, rot: float, sy: float) -> Pose:
+def seat(side: int, wrist: tuple[float, float], finger: float, rot: float, sy: float,
+         reach: float = HAND_REACH) -> Pose:
     """The tablet pose (rotation `rot`, tip `sy`) whose `side` grip sits on that hand's blade."""
     probe = Pose(0.0, 0.0, rot, sy)
     gx, gy = grip(probe, side)
     fd = math.radians(finger)
-    bx, by = wrist[0] + HAND_REACH * math.cos(fd), wrist[1] + HAND_REACH * math.sin(fd)
+    bx, by = wrist[0] + reach * math.cos(fd), wrist[1] + reach * math.sin(fd)
     return Pose(bx - gx, by - gy, rot, sy)
 
 
-def hip_pose() -> Pose:
+def hip_pose(reach: float = HAND_REACH) -> Pose:
     """The tablet at the hip, hanging from the resting left hand by its grip edge (below the frame)."""
-    return seat(1, REST_WRIST[1], FINGER[1] + math.degrees(HIP_ROT), HIP_ROT, HIP_SY)
+    return seat(1, REST_WRIST[1], FINGER[1] + math.degrees(HIP_ROT), HIP_ROT, HIP_SY, reach)
 
 
 HOLD_POSE = Pose(*HOLD)
@@ -257,22 +269,22 @@ def _settled(f: float, start: float, frames: float) -> float:
     return smoothstep((f - start) / frames)
 
 
-def out_clip() -> Clip:
+def out_clip(*, hold: Pose = HOLD_POSE, arm_scales: dict = FS, reach: float = HAND_REACH) -> Clip:
     """The left hand reaches to the hip and lifts (anticipation, overshoot, settle); the slab
     hangs from it by its edge and swings up into the reading angle one part offset later; the
     right hand follows 40 ms behind and closes on the left edge."""
     lag = stagger(["handL", "handR"])          # the tablet hand leads, the other follows 40 ms later
     n = frames_of(OUT_BEAT, lag["handR"])
-    hold = HOLD_POSE
-    w_hold = wrist_on(hold, 1)
+    w_hold = wrist_on(hold, 1, reach=reach)
     wx = _track(Beat(0, OUT_BEAT, REST_WRIST[1][0], w_hold[0]))
     wy = _track(Beat(0, OUT_BEAT, REST_WRIST[1][1], w_hold[1]))
     # the slab trails the wrist by one part offset (follow-through)
     tr = _track(Beat(lag["handR"], OUT_BEAT, HIP_ROT, hold.rot))
     ts = _track(Beat(lag["handR"], OUT_BEAT, HIP_SY, hold.sy))
     catch = _track(Beat(lag["handR"], OUT_BEAT, 0.0, 1.0))
-    ps = {1: [(0, 1.0, 1.0), (OUT_BEAT, *FS[1]), (n, *FS[1])],
-          -1: [(0, 1.0, 1.0), (lag["handR"], 1.0, 1.0), (lag["handR"] + OUT_BEAT, *FS[-1]), (n, *FS[-1])]}
+    ps = {1: [(0, 1.0, 1.0), (OUT_BEAT, *arm_scales[1]), (n, *arm_scales[1])],
+          -1: [(0, 1.0, 1.0), (lag["handR"], 1.0, 1.0),
+               (lag["handR"] + OUT_BEAT, *arm_scales[-1]), (n, *arm_scales[-1])]}
     tablet: dict[int, Pose] = {}
     arms: dict[int, dict[int, ArmFrame]] = {-1: {}, 1: {}}
     for f in range(n + 1):
@@ -280,14 +292,14 @@ def out_clip() -> Clip:
         fs, fs2 = scale_at(ps[1], f)
         if f == 0:
             arms[1][f] = ArmFrame(REST_WRIST[1], 90.0, 1.0, 1.0, rest=True)
-            pose = hip_pose()
+            pose = hip_pose(reach)
         else:
             w = clamp_reach(1, (wx(f), wy(f)), fs, fs2)
             # the hand turns from hanging onto the slab's edge while both are below the frame
             rigid = FINGER[1] + math.degrees(rot)
             fd = 90.0 + (rigid - 90.0) * _settled(f, 0, 3)
             arms[1][f] = ArmFrame(w, fd, fs, fs2)
-            pose = seat(1, w, rigid, rot, sy)
+            pose = seat(1, w, rigid, rot, sy, reach)
         tablet[f] = pose
         rs, rs2 = scale_at(ps[-1], f)
         # no wind-up (the free hand goes straight for the edge); once caught it stays on it
@@ -296,7 +308,7 @@ def out_clip() -> Clip:
             arms[-1][f] = ArmFrame(REST_WRIST[-1], 90.0, 1.0, 1.0, rest=True)
         else:
             fd = 90.0 + (finger_dir(pose, -1) - 90.0) * max(0.0, k)
-            w = clamp_reach(-1, _lerp(REST_WRIST[-1], wrist_on(pose, -1, fd), k), rs, rs2)
+            w = clamp_reach(-1, _lerp(REST_WRIST[-1], wrist_on(pose, -1, fd, reach), k), rs, rs2)
             arms[-1][f] = ArmFrame(w, fd, rs, rs2)
     return Clip("prop_tablet_out", n, False, tablet, arms, ps,
                 {1: [(0, "rest"), (2, GRIP_POSE)], -1: [(0, "rest"), (lag["handR"] + 7, GRIP_POSE)]},
@@ -305,15 +317,35 @@ def out_clip() -> Clip:
                 [(0, 0.0, "hold"), (n, 0.0, "hold")])
 
 
-def hold_tilt(f: float) -> Pose:
+def hold_tilt(f: float, *, polished: bool = True) -> Pose:
+    if not polished:
+        t = 2 * math.pi * f / PAPER_HOLD_FRAMES
+        return Pose(HOLD[0] + 1.5 * math.sin(t + 0.6), HOLD[1] + 2.0 * math.sin(t),
+                    0.026 * math.sin(t), 1.0 + 0.025 * math.sin(t + 1.1))
+    # Start on the lift's exact landing pose, at rest. The window closes both position and
+    # velocity at the loop seam; the small recoil belongs to the thumb action, not a constant bob.
     t = 2 * math.pi * f / HOLD_FRAMES
-    return Pose(HOLD[0] + 1.5 * math.sin(t + 0.6), HOLD[1] + 2.0 * math.sin(t), 0.026 * math.sin(t),
-                1.0 + 0.025 * math.sin(t + 1.1))
+    weight = math.sin(t / 2) ** 2
+    recoil = thumb(f - 3)
+    return Pose(HOLD[0] + 1.2 * weight * math.sin(t),
+                HOLD[1] + 1.4 * weight * math.sin(t + 0.4) + 0.7 * recoil,
+                0.009 * weight * math.sin(t) - 0.008 * recoil,
+                1.0 + 0.012 * weight * math.sin(t + 0.8))
 
 
-def thumb(f: float) -> float:
-    """The left thumb's flick (0..1..0) around the scroll."""
-    a, b = SCROLL
+def thumb(f: float, *, polished: bool = True) -> float:
+    """The left thumb's flick, with a small preparation before contact."""
+    if polished:
+        a, b = SCROLL
+        # A short approach, brisk contact stroke, then a slower relaxed recovery.
+        if f < a - 8 or f > b + 22:
+            return 0.0
+        if f < a:
+            return -0.18 * smoothstep((f - (a - 8)) / 8)
+        if f < b:
+            return -0.18 + 1.18 * smoothstep((f - a) / (b - a))
+        return 1.0 - smoothstep((f - b) / 22)
+    a, b = PAPER_SCROLL
     if f < a - 4 or f > b + 10:
         return 0.0
     if f < a + 4:
@@ -321,44 +353,73 @@ def thumb(f: float) -> float:
     return 1.0 - smoothstep((f - (a + 4)) / (b + 10 - (a + 4)))
 
 
-def hold_clip() -> Clip:
-    n = HOLD_FRAMES
+def scroll_progress(f: float) -> float:
+    """One page row: drag under the thumb, then coast to rest without a velocity jump."""
+    a, b = SCROLL
+    coast = 18
+    if f <= a:
+        return 0.0
+    if f >= b + coast:
+        return 1.0
+    if f >= b:
+        return 0.72 + 0.28 * (1 - (1 - (f - b) / coast) ** 3)
+    u = (f - a) / (b - a)
+    release_velocity = 3 * 0.28 / coast
+    return 0.72 * smoothstep(u) + (b - a) * release_velocity * (u ** 3 - u ** 2)
+
+
+def hold_clip(*, polished: bool = True, hold: Pose = HOLD_POSE, arm_scales: dict = FS,
+              reach: float = HAND_REACH) -> Clip:
+    n = HOLD_FRAMES if polished else PAPER_HOLD_FRAMES
     tablet: dict[int, Pose] = {}
     arms: dict[int, dict[int, ArmFrame]] = {-1: {}, 1: {}}
     for f in range(n + 1):
-        pose = hold_tilt(f % n)
+        pose = hold_tilt(f % n, polished=polished)
+        if hold != HOLD_POSE:
+            pose = replace(pose, x=pose.x + hold.x - HOLD[0], y=pose.y + hold.y - HOLD[1])
         tablet[f] = pose
         for side in (-1, 1):
-            fs, fs2 = FS[side]
-            fd = finger_dir(pose, side) - (7.0 * thumb(f % n) if side == 1 else 0.0)
-            w = wrist_on(pose, side, finger_dir(pose, side))
+            fs, fs2 = arm_scales[side]
+            flick = thumb(f % n, polished=polished)
+            fd = finger_dir(pose, side) - (7.0 * flick if side == 1 else 0.0)
+            # Rotate about the grip instead of the wrist: the supporting fingers stay seated.
+            w = wrist_on(pose, side, fd if polished else finger_dir(pose, side), reach)
             if side == 1:  # the thumb pushes up the screen: the hand rocks up along the slab
-                up = math.radians(finger_dir(pose, side))
-                w = (w[0] + 4.0 * thumb(f % n) * math.cos(up), w[1] + 4.0 * thumb(f % n) * math.sin(up))
+                up = math.radians(fd if polished else finger_dir(pose, side))
+                travel = (3.0 if polished else 4.0) * flick
+                w = (w[0] + travel * math.cos(up), w[1] + travel * math.sin(up))
             arms[side][f] = ArmFrame(clamp_reach(side, w, fs, fs2), fd, fs, fs2)
-    ps = {s: [(0, *FS[s]), (n, *FS[s])] for s in (-1, 1)}
-    a, b = SCROLL
+    ps = {s: [(0, *arm_scales[s]), (n, *arm_scales[s])] for s in (-1, 1)}
+    a, b = SCROLL if polished else PAPER_SCROLL
+    if polished:
+        scroll = [(0, 0.0, "hold")]
+        scroll += [(f, -LIST_PERIOD * scroll_progress(f), "linear") for f in range(a, b + 19)]
+        scroll.append((n, -LIST_PERIOD, "hold"))
+        glow = [(0, 1.0, "hold"), (a, 1.0, "easeInOut"), (b, 0.98, "easeInOut"),
+                (b + 22, 1.0, "hold"), (n, 1.0, "hold")]
+    else:
+        scroll = [(0, 0.0, "linear"), (a, 0.0, "easeInOut"), (b, -LIST_PERIOD, "hold"),
+                  (n, -LIST_PERIOD, "hold")]
+        glow = [(0, 1.0, "linear"), (a, 0.94, "linear"), (b, 1.0, "linear"), (n, 1.0, "hold")]
     return Clip("prop_tablet_hold", n, True, tablet, arms, ps, {1: [(0, GRIP_POSE)], -1: [(0, GRIP_POSE)]},
                 [(0, 1.0, "hold"), (n, 1.0, "hold")],
-                [(0, 1.0, "linear"), (a, 0.94, "linear"), (b, 1.0, "linear"), (n, 1.0, "hold")],
-                [(0, 0.0, "linear"), (a, 0.0, "easeInOut"), (b, -LIST_PERIOD, "hold"), (n, -LIST_PERIOD, "hold")])
+                glow, scroll)
 
 
-def away_clip() -> Clip:
+def away_clip(*, hold: Pose = HOLD_POSE, arm_scales: dict = FS, reach: float = HAND_REACH) -> Clip:
     """The right hand lets go first; 40 ms later the left lowers the slab (a small lift first,
     then down past the hip and settle), the slab swinging back onto its edge; ends in the exact
     rest pose with the tablet hidden below the frame."""
     lag = stagger(["handR", "handL"])          # the free hand lets go first, the tablet hand follows
     n = frames_of(AWAY_BEAT, lag["handL"])
     s0 = lag["handL"]
-    hold = HOLD_POSE
-    w_hold = wrist_on(hold, 1)
+    w_hold = wrist_on(hold, 1, reach=reach)
     wx = _track(Beat(s0, AWAY_BEAT, w_hold[0], REST_WRIST[1][0]))
     wy = _track(Beat(s0, AWAY_BEAT, w_hold[1], REST_WRIST[1][1]))
     tr, ts = _track(Beat(s0, AWAY_BEAT, hold.rot, HIP_ROT)), _track(Beat(s0, AWAY_BEAT, hold.sy, HIP_SY))
     let_go = _track(Beat(0, AWAY_BEAT, 1.0, 0.0))
-    ps = {1: [(0, *FS[1]), (s0, *FS[1]), (s0 + AWAY_BEAT, 1.0, 1.0), (n, 1.0, 1.0)],
-          -1: [(0, *FS[-1]), (AWAY_BEAT, 1.0, 1.0), (n, 1.0, 1.0)]}
+    ps = {1: [(0, *arm_scales[1]), (s0, *arm_scales[1]), (s0 + AWAY_BEAT, 1.0, 1.0), (n, 1.0, 1.0)],
+          -1: [(0, *arm_scales[-1]), (AWAY_BEAT, 1.0, 1.0), (n, 1.0, 1.0)]}
     tablet: dict[int, Pose] = {}
     arms: dict[int, dict[int, ArmFrame]] = {-1: {}, 1: {}}
     for f in range(n + 1):
@@ -367,13 +428,13 @@ def away_clip() -> Clip:
         rigid = FINGER[1] + math.degrees(rot)
         if f >= s0 + AWAY_BEAT:  # the main move ends on the rest pose: the settle stays below the frame
             arms[1][f] = ArmFrame(REST_WRIST[1], 90.0, 1.0, 1.0, rest=True)
-            pose = hip_pose()
+            pose = hip_pose(reach)
         else:
             w = clamp_reach(1, (wx(f), wy(f)), fs, fs2)
             # the hand turns back to hanging as it drops below the frame
             fd = rigid + (90.0 - rigid) * smoothstep((w[1] - 990.0) / 45.0)
             arms[1][f] = ArmFrame(w, fd, fs, fs2)
-            pose = seat(1, w, rigid, rot, sy)
+            pose = seat(1, w, rigid, rot, sy, reach)
         tablet[f] = pose
         rs, rs2 = scale_at(ps[-1], f)
         k = max(0.0, min(1.0, let_go(f)))
@@ -381,7 +442,7 @@ def away_clip() -> Clip:
             arms[-1][f] = ArmFrame(REST_WRIST[-1], 90.0, 1.0, 1.0, rest=True)
         else:
             fd = 90.0 + (finger_dir(pose, -1) - 90.0) * k
-            w = clamp_reach(-1, _lerp(REST_WRIST[-1], wrist_on(pose, -1, fd), k), rs, rs2)
+            w = clamp_reach(-1, _lerp(REST_WRIST[-1], wrist_on(pose, -1, fd, reach), k), rs, rs2)
             arms[-1][f] = ArmFrame(w, fd, rs, rs2)
     return Clip("prop_tablet_away", n, False, tablet, arms, ps,
                 {-1: [(0, GRIP_POSE), (4, "rest")], 1: [(0, GRIP_POSE), (s0 + AWAY_BEAT, "rest")]},
@@ -391,6 +452,12 @@ def away_clip() -> Clip:
 
 
 CLIPS: tuple[Callable[[], Clip], ...] = (out_clip, hold_clip, away_clip)
+
+
+def reading_clips() -> tuple[Clip, ...]:
+    """Tablet-specific reach and elbows; the newspaper retains the original long edge hands."""
+    return tuple(make(hold=Pose(*READING_HOLD), arm_scales=READING_FS, reach=READING_REACH)
+                 for make in CLIPS)
 
 
 # ------------------------------------------------------------------ the generator side
@@ -637,10 +704,19 @@ class Tablet:
         d = self.d
         out = {"prop_none": d("LinearAnimation", duration=1, fps=FPS, name="prop_none")} if with_none else {}
         for make in CLIPS:
-            clip = make()
+            # Allocate the original clips first: later artwork, clips and states depend on this
+            # id stream. Tablet key trees are replaced in their own new range.
+            clip = hold_clip(polished=False) if make is hold_clip else make()
             clip = replace(clip, name=clip.name.replace("tablet", self.KIND))
             out[clip.name] = d("LinearAnimation", *self.clip_tracks(clip, arms), duration=clip.frames, fps=FPS,
                                loopValue="loop" if clip.loop else None, name=clip.name)
+        if self.KIND == "tablet":
+            writer = copy(self)
+            writer.d = Doc(start=READING_ID_START)
+            for clip in reading_clips():
+                animation = out[clip.name]
+                animation.children = writer.clip_tracks(clip, arms)
+                animation.attrs["duration"] = clip.frames
         return out
 
     # ---- state machine

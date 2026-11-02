@@ -13,7 +13,7 @@ import avatar_tablet as tb
 from avatar_kit import L1, L2, ik
 from rml import Doc
 
-CLIPS = {c.name: c for c in (make() for make in tb.CLIPS)}
+CLIPS = {c.name: c for c in tb.reading_clips()}
 
 
 def test_slab_corners_follow_the_shape_language() -> None:
@@ -42,14 +42,15 @@ def test_screen_faces_the_eyes_and_the_viewer() -> None:
     assert nz < 0  # toward the viewer: the screen shows
     assert ny < -0.5  # mostly up, toward the face above it
     assert nx < 0  # and toward the face (the viewer's left of the tablet)
-    assert tb.HOLD[0] > 400  # held toward the viewer's right, where the 3/4 gaze lands
+    assert tb.READING_HOLD[0] > 400  # held toward the viewer's right, where the 3/4 gaze lands
 
 
 def test_clip_lengths() -> None:
     out, hold, away = (CLIPS[f"prop_tablet_{c}"] for c in ("out", "hold", "away"))
     assert 400 <= out.frames * 1000 / 60 <= 500  # ~450 ms
     assert 350 <= away.frames * 1000 / 60 <= 450  # ~400 ms
-    assert hold.frames == 120 and hold.loop
+    assert hold.frames == 216 and hold.loop
+    assert tb.hold_clip(polished=False).frames == 120
 
 
 def test_clips_start_and_end_in_the_gesture_rest_pose() -> None:
@@ -68,8 +69,8 @@ def test_hands_stay_on_the_slab() -> None:
 
     def off(clip: tb.Clip, side: int, f: int) -> float:
         a = clip.arms[side][f]
-        fd = math.radians(tb.finger_dir(clip.tablet[f], side))
-        blade = (a.wrist[0] + tb.HAND_REACH * math.cos(fd), a.wrist[1] + tb.HAND_REACH * math.sin(fd))
+        fd = math.radians(a.finger)
+        blade = (a.wrist[0] + tb.READING_REACH * math.cos(fd), a.wrist[1] + tb.READING_REACH * math.sin(fd))
         return math.dist(blade, tb.grip(clip.tablet[f], side))
 
     for f in range(3, out.frames + 1):  # the left hand holds it from the hip (turning onto it by frame 3)
@@ -78,7 +79,7 @@ def test_hands_stay_on_the_slab() -> None:
         assert off(out, -1, f) < 0.5, f
     for f in range(hold.frames + 1):
         assert off(hold, -1, f) < 0.5
-        assert off(hold, 1, f) < 4.5  # the thumb flick rocks the left hand by at most 4 px
+        assert off(hold, 1, f) < 3.5  # fingers stay seated while the thumb travels 3 px
     for f in range(0, 3):
         assert off(away, 1, f) < 0.5 and off(away, -1, f) < 0.5
 
@@ -105,6 +106,34 @@ def test_hold_loop_is_seamless() -> None:
         assert math.dist(a.wrist, b.wrist) < 1e-9 and math.isclose(a.finger, b.finger)
     # the list scrolls by exactly one item: the scrolled list draws like the unscrolled one
     assert hold.scroll[0][1] == 0.0 and hold.scroll[-1][1] == -tb.LIST_PERIOD
+
+
+def test_lift_lands_on_the_hold_pose_without_a_pop() -> None:
+    out, hold = CLIPS["prop_tablet_out"], CLIPS["prop_tablet_hold"]
+    assert math.dist((out.tablet[out.frames].x, out.tablet[out.frames].y),
+                     (hold.tablet[0].x, hold.tablet[0].y)) < 1e-9
+    assert out.tablet[out.frames].rot == hold.tablet[0].rot
+    assert out.tablet[out.frames].sy == hold.tablet[0].sy
+    for side in (-1, 1):
+        assert math.dist(out.arms[side][out.frames].wrist, hold.arms[side][0].wrist) < 1e-9
+        assert math.isclose(out.arms[side][out.frames].finger, hold.arms[side][0].finger)
+    # The first and last hold steps are almost stationary, not just matching endpoints.
+    for f in (1, hold.frames - 1):
+        assert math.dist((hold.tablet[f].x, hold.tablet[f].y), tb.READING_HOLD) < 0.01
+
+
+def test_scroll_waits_for_contact_then_coasts_without_reversing() -> None:
+    a, b = tb.SCROLL
+    values = [tb.scroll_progress(f / 10) for f in range(tb.HOLD_FRAMES * 10 + 1)]
+    assert all(0 <= x <= y <= 1 for x, y in zip(values, values[1:]))
+    assert tb.scroll_progress(a) == 0
+    assert 0 < tb.scroll_progress(b) < tb.scroll_progress(b + 5) < 1
+    assert tb.scroll_progress(b + 18) == 1
+    # The list inherits the release speed instead of stopping then suddenly accelerating.
+    epsilon = 1e-4
+    before = (tb.scroll_progress(b) - tb.scroll_progress(b - epsilon)) / epsilon
+    after = (tb.scroll_progress(b + epsilon) - tb.scroll_progress(b)) / epsilon
+    assert abs(before - after) < 1e-5
 
 
 def test_pull_out_anticipates_and_overshoots() -> None:
@@ -191,11 +220,12 @@ def test_newspaper_states_join_the_prop_layer_and_never_show_with_the_tablet() -
                                                ("prop_newspaper_hold", "newspaper", None)]
 
 
-def test_newspaper_shares_the_tablets_footprint_and_clips() -> None:
-    """The newspaper reuses the tablet's grips, hand targets and timing: same W x H, same clip data,
-    only the names (and no screen glow / reflections) differ."""
+def test_newspaper_shares_the_footprint_and_keeps_its_reading_cadence() -> None:
+    """The newspaper reuses the grips and out / away clips, with its original two-second hold
+    and page shadow instead of the tablet's screen light."""
     assert tb.Newspaper.KIND == "newspaper" and tb.Newspaper.REFLECT_PEAK == 0.0
     assert 0 < tb.Newspaper.GLOW_PEAK <= 0.6  # the page shadow, not a light
+    assert tb.hold_clip(polished=False).frames == tb.PAPER_HOLD_FRAMES
     d = Doc(start=10)
     paper = tb.Newspaper(d, "0:1-0:2", {}, d("CubicEaseInterpolator"))
     art = paper.art()
