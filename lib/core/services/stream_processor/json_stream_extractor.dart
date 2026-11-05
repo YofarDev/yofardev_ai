@@ -1,19 +1,9 @@
 import 'dart:convert';
 
-import '../../../../core/utils/logger.dart';
-
-/// Incrementally extracts the text field of a streamed JSON object.
+/// Incrementally extracts a root reply text field, never nested metadata.
 ///
-/// Each chunk is scanned once (only the new characters plus a small carry
-/// window), structure state (depth / string / escape) is advanced
-/// character-by-character, and a single `json.decode` is attempted per
-/// top-level object close — instead of re-copying the buffer and re-parsing
-/// the whole text field on every chunk (which was quadratic in reply length).
-///
-/// One extractor instance tracks exactly one reply: call [clear] between
-/// replies (production does this via per-stream instances). Feeding a second
-/// top-level object into a non-cleared extractor drops its text, since
-/// capture state (`_captureDone`) is already spent on the first object.
+/// Each character is scanned once. Keys, escapes and structure can cross any
+/// chunk boundary. One instance handles one reply; call [clear] before reuse.
 class JsonStreamExtractor {
   static const List<String> _textKeys = <String>[
     'text',
@@ -22,345 +12,178 @@ class JsonStreamExtractor {
     'response',
   ];
 
-  /// Raw stream content, appended once per chunk (read once at stream end).
   final StringBuffer _rawBuffer = StringBuffer();
-
-  /// Window not yet consumed: a chunk tail that may grow into a key, an
-  /// escape, or the field opening. Bounded by the longest key + quotes.
-  String _carry = '';
-
-  /// Structure state, advanced once per character.
+  final StringBuffer _key = StringBuffer();
   int _depth = 0;
+  int _rootStart = -1;
+  bool _done = false;
   bool _inString = false;
-  bool _escaped = false;
-  bool _sawOpenBrace = false;
-
-  /// Text-field capture state (set when the opening quote of the value is
-  /// found; capture ends at its unescaped closing quote).
+  bool _readingKey = false;
+  bool _expectKey = false;
+  bool _expectColon = false;
+  bool _expectValue = false;
   bool _capturing = false;
   bool _captureDone = false;
-  final StringBuffer _captured = StringBuffer();
-
+  bool _escaped = false;
+  String? _unicode;
   String? _lastFullJson;
-  String _lastExtractedText = '';
 
-  /// Process a chunk and return the newly extracted text delta, if any.
+  /// Returns only newly decoded speech. Null means no new speech, including
+  /// chunks containing just JSON punctuation or avatar settings.
   String? extractText(String chunk, {bool expectJson = true}) {
+    final int offset = _rawBuffer.length;
     _rawBuffer.write(chunk);
     if (!expectJson) {
-      // Non-JSON streams pass the chunk through untouched: do NOT route
-      // through _emitDelta, whose dedupe state stays reserved for the JSON
-      // path.
       return chunk;
     }
-
-    final String window = '$_carry$chunk';
-    if (_capturing) {
-      _unflushedWindowStart = 0;
-    }
-    _carry = '';
-    String? delta;
-
-    int i = 0;
-    while (i < window.length) {
-      if (!_capturing && !_captureDone) {
-        // Looking for the value opening of the first text key.
-        final int valueQuote = _findValueQuote(window, i);
-        if (valueQuote < 0) {
-          // Nothing complete yet: keep the ENTIRE window. A partial tail
-          // (e.g. from the last quote only) would evict the `": ` connector
-          // when a later `"` arrives before the key reassembles, and the
-          // value would never be found. The pre-capture prologue is tiny
-          // (key + punctuation), so this stays bounded.
-          _carry = window;
-          return delta;
-        }
-        _capturing = true;
-        _unflushedWindowStart = valueQuote + 1;
-        // Braces before the value were never fed to _advanceStructure (the
-        // key-matching phase skips them), so seed the depth by scanning the
-        // prefix once — this is the only non-incremental scan per stream.
-        // Because the pre-capture carry is always the full window, the
-        // prefix includes the outer `{` even when it arrived in an earlier
-        // chunk.
-        _seedDepth(window, valueQuote);
-        i = valueQuote + 1;
-        continue;
+    final StringBuffer output = StringBuffer();
+    for (int i = 0; i < chunk.length; i++) {
+      final String char = chunk[i];
+      if (_done) {
+        break;
       }
-
-      final String char = window[i];
-      if (_capturing) {
-        if (_escaped) {
-          if (char == 'u') {
-            // Hex digits not fully arrived: stop scanning and hold the
-            // whole escape (from its backslash) for the next chunk.
-            if (i + 5 > window.length) {
-              // Rewind the unflushed tail into the carry: the whole region
-              // (including the partial escape, from its backslash) is
-              // re-parsed once the hex digits arrive.
-              _rewindUnflushed(window);
-              _escaped = false;
-              return delta;
+      if (_inString) {
+        if (_unicode != null) {
+          _unicode = '${_unicode!}$char';
+          if (_unicode!.length == 4) {
+            final int? code = int.tryParse(_unicode!, radix: 16);
+            if (code != null) {
+              _writeStringChar(String.fromCharCode(code), output);
             }
-            final String hex = window.substring(i + 1, i + 5);
-            final int? codePoint = int.tryParse(hex, radix: 16);
-            if (codePoint != null) {
-              _captured.write(String.fromCharCode(codePoint));
-            }
-            _escaped = false;
-            i += 5;
-            continue;
+            _unicode = null;
           }
-          _captured.write(_decodeSimpleEscape(char));
+        } else if (_escaped) {
           _escaped = false;
-          i++;
-          continue;
-        }
-        if (char == r'\') {
-          if (i + 1 >= window.length) {
-            // Lone trailing backslash: hold the unflushed region (including
-            // this backslash) for the next chunk.
-            _rewindUnflushed(window);
-            return delta;
+          if (char == 'u') {
+            _unicode = '';
+          } else {
+            _writeStringChar(_decodeSimpleEscape(char), output);
           }
+        } else if (char == r'\') {
           _escaped = true;
-          i++;
-          continue;
+        } else if (char == '"') {
+          _inString = false;
+          if (_readingKey) {
+            _readingKey = false;
+            _expectColon = true;
+          }
+          if (_capturing) {
+            _capturing = false;
+            _captureDone = true;
+          }
+        } else {
+          _writeStringChar(char, output);
         }
-        if (char == '"') {
-          _capturing = false;
-          _captureDone = true;
-          delta = _mergeDelta(delta, _emitDelta(_captured.toString()));
-          _flushedLength = _captured.length;
-          i++;
-          continue;
+        continue;
+      }
+
+      if (_rootStart < 0) {
+        // Allow surrounding Markdown fences, but never speak the wrapper.
+        if (char == '{') {
+          _rootStart = offset + i;
+          _depth = 1;
+          _expectKey = true;
         }
-        _captured.write(char);
-        i++;
         continue;
       }
-
-      // _captureDone: track structure only, to spot the top-level close.
-      delta = _mergeDelta(delta, _advanceStructure(char));
-      i++;
-    }
-
-    // Stream the captured prefix as it arrives: _emitDelta's prefix dedupe
-    // makes this emit only the newly captured tail. (The escape-pending early
-    // returns above skip this on purpose: a trailing partial escape is held.)
-    if (_capturing) {
-      delta = _mergeDelta(delta, _emitDelta(_captured.toString()));
-      _flushedLength = _captured.length;
-    }
-
-    // No carry is kept here: while capturing, scanned characters are
-    // consumed (split escapes are carried explicitly by the early returns
-    // above), and once the value is done, structure state (_inString /
-    // _escaped) already persists across chunks — re-feeding a quote tail
-    // would toggle it twice.
-
-    return delta;
-  }
-
-  /// Rewinds every captured-but-unemitted character (plus the pending escape)
-  /// into [_carry] so the next chunk re-parses them from a complete escape.
-  void _rewindUnflushed(String window) {
-    if (_captured.length > _flushedLength) {
-      final String kept = _captured.toString().substring(0, _flushedLength);
-      _captured
-        ..clear()
-        ..write(kept);
-    }
-    _carry = window.substring(_unflushedWindowStart);
-  }
-
-  /// Length of [_captured] already emitted as a delta; the tail is rewound
-  /// into [_carry] when a split escape forces a re-parse.
-  int _flushedLength = 0;
-
-  /// Index in the current window of the first captured character that has
-  /// not been emitted yet (start of the rewinding region).
-  int _unflushedWindowStart = 0;
-
-  /// Counts braces/strings in [window] before [endIndex] and seeds
-  /// [_depth]/_inString so the post-capture structure tracking is exact.
-  void _seedDepth(String window, int endIndex) {
-    _depth = 0;
-    _inString = false;
-    _escaped = false;
-    _sawOpenBrace = false;
-    for (int i = 0; i < endIndex; i++) {
-      _advanceStructure(window[i]);
-    }
-  }
-
-  /// Finds the opening quote of the value for the first of [_textKeys]
-  /// appearing at or after [from] in [window]. Returns -1 when none is
-  /// complete yet (the caller then keeps the whole window in [_carry]).
-  int _findValueQuote(String window, int from) {
-    int best = -1;
-    for (final String key in _textKeys) {
-      final int keyIndex = window.indexOf('"$key"', from);
-      if (keyIndex < 0) {
+      if (char.trim().isEmpty) {
         continue;
       }
-      final int colonIndex = window.indexOf(':', keyIndex + key.length + 2);
-      if (colonIndex < 0) {
-        continue;
-      }
-      int cursor = colonIndex + 1;
-      while (cursor < window.length &&
-          (window[cursor] == ' ' ||
-              window[cursor] == '\n' ||
-              window[cursor] == '\r' ||
-              window[cursor] == '\t')) {
-        cursor++;
-      }
-      if (cursor >= window.length) {
-        continue; // opening quote not arrived yet
-      }
-      if (window[cursor] != '"') {
-        continue; // not a string field
-      }
-      if (best < 0 || keyIndex < best) {
-        best = cursor;
-      }
-    }
-    return best;
-  }
-
-  String? _advanceStructure(String char) {
-    if (_inString) {
-      if (_escaped) {
-        _escaped = false;
-      } else if (char == r'\') {
-        _escaped = true;
-      } else if (char == '"') {
-        _inString = false;
-      }
-      return null;
-    }
-    switch (char) {
-      case '"':
+      if (char == '"') {
         _inString = true;
-      case '{':
+        _readingKey = _depth == 1 && _expectKey;
+        if (_readingKey) {
+          _key.clear();
+          _expectKey = false;
+        } else {
+          _capturing =
+              _depth == 1 &&
+              _expectValue &&
+              !_captureDone &&
+              _textKeys.contains(_key.toString());
+          _expectValue = false;
+        }
+      } else if (char == ':' && _depth == 1 && _expectColon) {
+        _expectColon = false;
+        _expectValue = true;
+      } else if (char == '{' || char == '[') {
+        _expectValue = false;
         _depth++;
-        _sawOpenBrace = true;
-      case '}':
+      } else if (char == '}' || char == ']') {
         _depth--;
-        if (_sawOpenBrace && _depth <= 0) {
-          final String? closeDelta = _onTopLevelClose();
-          _depth = 0;
-          _sawOpenBrace = false;
-          return closeDelta;
+        if (_depth == 0) {
+          _done = true;
+          final String json = _rawBuffer.toString().substring(
+            _rootStart,
+            offset + i + 1,
+          );
+          try {
+            if (jsonDecode(json) is Map<String, dynamic>) {
+              _lastFullJson = json;
+            }
+          } on FormatException {
+            // An incomplete or malformed reply must never fall back to raw
+            // JSON as speech. Already streamed text cannot be retracted.
+          }
         }
-    }
-    return null;
-  }
-
-  /// One json.decode attempt per completed top-level object (was: per chunk).
-  String? _onTopLevelClose() {
-    final String raw = _rawBuffer.toString();
-    final int start = raw.indexOf('{');
-    final int end = raw.lastIndexOf('}');
-    if (start < 0 || end <= start) {
-      return null;
-    }
-    final String jsonStr = raw.substring(start, end + 1);
-    try {
-      final Map<String, dynamic> decoded =
-          json.decode(jsonStr) as Map<String, dynamic>;
-      _lastFullJson = jsonStr;
-      for (final String key in _textKeys) {
-        final dynamic value = decoded[key];
-        if (value is String && value.isNotEmpty) {
-          // Complete JSON wins; if it differs from the streamed prefix, the
-          // _emitDelta fallback re-emits the full value once.
-          return _emitDelta(value);
-        }
+      } else if (char == ',' && _depth == 1) {
+        _expectKey = true;
+        _expectColon = false;
+        _expectValue = false;
+      } else {
+        // A non-string value cannot become a speech field when a later
+        // metadata string arrives.
+        _expectValue = false;
       }
-    } on FormatException {
-      AppLogger.debug(
-        'Top-level close without valid JSON; continuing to buffer',
-        tag: 'JsonStreamExtractor',
-      );
-    } catch (e) {
-      AppLogger.warning(
-        'Error extracting JSON at top-level close: $e',
-        tag: 'JsonStreamExtractor',
-      );
     }
-    return null;
+    return output.isEmpty ? null : output.toString();
   }
 
-  String _decodeSimpleEscape(String escaped) {
-    return switch (escaped) {
-      'n' => '\n',
-      'r' => '\r',
-      't' => '\t',
-      'b' => '\b',
-      'f' => '\f',
-      '"' => '"',
-      r'\' => r'\',
-      '/' => '/',
-      _ => escaped,
-    };
+  void _writeStringChar(String char, StringBuffer output) {
+    if (_readingKey) {
+      _key.write(char);
+    } else if (_capturing) {
+      output.write(char);
+    }
   }
 
-  String? _mergeDelta(String? accumulated, String? latest) {
-    if (latest == null) {
-      return accumulated;
-    }
-    return accumulated == null ? latest : '$accumulated$latest';
-  }
+  String _decodeSimpleEscape(String escaped) => switch (escaped) {
+    'n' => '\n',
+    'r' => '\r',
+    't' => '\t',
+    'b' => '\b',
+    'f' => '\f',
+    '"' => '"',
+    r'\' => r'\',
+    '/' => '/',
+    _ => escaped,
+  };
 
-  String? _emitDelta(String candidateText) {
-    if (candidateText.isEmpty) {
-      return null;
-    }
-    if (candidateText == _lastExtractedText) {
-      return null;
-    }
-    if (candidateText.startsWith(_lastExtractedText)) {
-      final String delta = candidateText.substring(_lastExtractedText.length);
-      _lastExtractedText = candidateText;
-      return delta.isEmpty ? null : delta;
-    }
-    // Fallback when extraction context shifts: emit full candidate once.
-    _lastExtractedText = candidateText;
-    return candidateText;
-  }
-
-  /// Get the last complete full JSON that was extracted.
   String? getLastFullJson() => _lastFullJson;
-
-  /// Get the full raw content received so far.
   String getRawContent() => _rawBuffer.toString();
+  String getBufferedContent() => getRawContent();
 
-  /// Clear the stored JSON.
   void clearJson() {
     _lastFullJson = null;
   }
 
-  /// Get any remaining buffered content (for cleanup).
-  String getBufferedContent() => _rawBuffer.toString();
-
-  /// Clear the buffer.
   void clear() {
     _rawBuffer.clear();
-    _carry = '';
+    _key.clear();
     _depth = 0;
+    _rootStart = -1;
+    _done = false;
     _inString = false;
-    _escaped = false;
-    _sawOpenBrace = false;
+    _readingKey = false;
+    _expectKey = false;
+    _expectColon = false;
+    _expectValue = false;
     _capturing = false;
     _captureDone = false;
-    _captured.clear();
-    _flushedLength = 0;
-    _unflushedWindowStart = 0;
-    _lastExtractedText = '';
+    _escaped = false;
+    _unicode = null;
+    _lastFullJson = null;
   }
 
-  /// Whether buffer contains content that might be partial JSON.
   bool get hasBufferedContent => _rawBuffer.isNotEmpty;
 }

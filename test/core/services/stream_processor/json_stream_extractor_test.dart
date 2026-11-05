@@ -3,6 +3,65 @@ import 'package:yofardev_ai/core/services/stream_processor/json_stream_extractor
 
 void main() {
   group('JsonStreamExtractor (incremental)', () {
+    test('only root speech is emitted at every chunk boundary', () {
+      const String json =
+          r'```json'
+          '\n'
+          r'{"meta":{"text":"secret","items":[{"message":"hidden"}]},'
+          r'"note":"a quoted \"message\": \"trap\"",'
+          r'"message":"Bonjour \"ami\". \u00e9\nFin \\ ok!",'
+          r'"mood":"happy","background":"beach"}'
+          '\n```';
+      for (int size = 1; size <= json.length; size++) {
+        final JsonStreamExtractor extractor = JsonStreamExtractor();
+        final StringBuffer spoken = StringBuffer();
+        for (int start = 0; start < json.length; start += size) {
+          final int end = start + size > json.length
+              ? json.length
+              : start + size;
+          spoken.write(extractor.extractText(json.substring(start, end)) ?? '');
+        }
+        expect(
+          spoken.toString(),
+          'Bonjour "ami". é\nFin \\ ok!',
+          reason: 'chunk size $size',
+        );
+        expect(extractor.getLastFullJson(), isNotNull);
+      }
+    });
+
+    test('non-speech replies never expose raw metadata', () {
+      for (final String json in <String>[
+        '{"mood":"happy","meta":{"message":"secret"}}',
+        '{"message":null,"mood":"happy"}',
+        '{"message":{"text":"secret"},"mood":"happy"}',
+        '{"message":["secret"],"mood":"happy"}',
+        '{"message":"","mood":"happy"}',
+      ]) {
+        final JsonStreamExtractor extractor = JsonStreamExtractor();
+        expect(extractor.extractText(json), isNull);
+        expect(extractor.getLastFullJson(), json);
+        extractor.clear();
+        expect(extractor.getLastFullJson(), isNull);
+      }
+    });
+
+    test('each supported root text key streams once', () {
+      for (final String key in <String>[
+        'text',
+        'content',
+        'message',
+        'response',
+      ]) {
+        final JsonStreamExtractor extractor = JsonStreamExtractor();
+        expect(
+          extractor.extractText('{"$key":"Hello!","mood":"happy"}'),
+          'Hello!',
+        );
+        expect(extractor.extractText('{"message":"another reply"}'), isNull);
+      }
+    });
+
     test('streams text deltas across chunks', () {
       final JsonStreamExtractor extractor = JsonStreamExtractor();
       expect(extractor.extractText('{"text": "Hel'), 'Hel');
@@ -19,11 +78,10 @@ void main() {
       final JsonStreamExtractor extractor = JsonStreamExtractor();
       expect(
         extractor.extractText('{"text": "a\\'),
-        isNull,
-      ); // lone backslash held
-      // JSON-correct: the held tail re-parses from the first unflushed char,
-      // so the "a" buffered before the split backslash is emitted here once.
-      expect(extractor.extractText('nb'), 'a\nb');
+        'a',
+      ); // only the incomplete escape is held
+      // The escape completes without repeating the previously emitted prefix.
+      expect(extractor.extractText('nb'), '\nb');
       expect(extractor.extractText('c"}'), 'c');
     });
 
@@ -48,9 +106,9 @@ void main() {
       expect(extractor.extractText('!"}'), '!');
     });
 
-    test('nested objects: outer text wins at close', () {
+    test('nested objects never emit metadata text', () {
       final JsonStreamExtractor extractor = JsonStreamExtractor();
-      expect(extractor.extractText('{"meta": {"text": "inner"}, "te'), 'inner');
+      expect(extractor.extractText('{"meta": {"text": "inner"}, "te'), isNull);
       expect(extractor.extractText('xt": "outer"}'), 'outer');
       expect(
         extractor.getLastFullJson(),
@@ -111,7 +169,7 @@ void main() {
       expect(extractor.getLastFullJson(), '{"text": "Done"}');
     });
 
-    test('regression: nested text in small chunks emits inner then outer', () {
+    test('regression: nested text in small chunks emits only outer', () {
       final JsonStreamExtractor extractor = JsonStreamExtractor();
       const String json = '{"meta": {"text": "inner"}, "text": "outer value"}';
       final List<String> deltas = <String>[];
@@ -122,7 +180,7 @@ void main() {
           deltas.add(delta);
         }
       }
-      expect(deltas.join(), 'innerouter value');
+      expect(deltas.join(), 'outer value');
       expect(extractor.getLastFullJson(), json);
     });
   });

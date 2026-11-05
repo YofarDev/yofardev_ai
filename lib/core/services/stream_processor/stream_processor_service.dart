@@ -33,7 +33,9 @@ class StreamProcessorService {
             expectJson: expectJson,
           );
 
-          final String textToProcess = extractedText ?? content;
+          // No delta in JSON mode means punctuation, metadata, or a
+          // partial key/escape. None of those are speakable.
+          final String textToProcess = extractedText ?? '';
 
           // Extract complete sentences
           final List<String> sentences = sentenceSplitter

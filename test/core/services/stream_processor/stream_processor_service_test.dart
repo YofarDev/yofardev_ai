@@ -13,6 +13,39 @@ void main() {
       processor = StreamProcessorService();
     });
 
+    test('JSON structure and avatar metadata never reach speech', () async {
+      const List<String> pieces = <String>[
+        '```json\n{',
+        '"mes',
+        'sage":',
+        ' "Hello.',
+        ' How are you?',
+        '"',
+        ', "mood": "happy",',
+        ' "background": "beach"}',
+        '\n```',
+      ];
+      final List<SentenceChunk> results = await processor
+          .processStream(
+            Stream<LlmStreamChunk>.fromIterable(<LlmStreamChunk>[
+              for (final String piece in pieces)
+                LlmStreamChunk.text(content: piece, isComplete: false),
+              const LlmStreamChunk.complete(),
+            ]),
+          )
+          .toList();
+      final List<String> spoken = <String>[];
+      for (final SentenceChunk result in results) {
+        result.when(
+          sentence: (String text, int _) => spoken.add(text),
+          metadata: (_) {},
+          complete: () {},
+          error: (_) {},
+        );
+      }
+      expect(spoken, <String>['Hello.', 'How are you?']);
+    });
+
     test('reasoning chunks carry no speakable content', () async {
       final Stream<LlmStreamChunk> chunks =
           Stream<LlmStreamChunk>.fromIterable(<LlmStreamChunk>[
