@@ -88,7 +88,7 @@ void main() {
     (_FakeBed b) => b.log.any((String l) => l.contains(name)),
   );
 
-  test('campfire: the crackle eases in to 0.18 × (0.6 + 0.4 × flicker)', () {
+  test('campfire: the crackle eases in to 0.072 × (0.6 + 0.4 × flicker)', () {
     fakeAsync((FakeAsync async) {
       final AmbientBedService service = build(
         async,
@@ -96,25 +96,25 @@ void main() {
       );
       expect(service.crackleVolumeNow, 0);
       async.elapse(const Duration(milliseconds: 400));
-      expect(service.crackleVolumeNow, closeTo(0.09, 0.01));
+      expect(service.crackleVolumeNow, closeTo(0.036, 0.01));
       async.elapse(const Duration(milliseconds: 450));
-      expect(service.crackleVolumeNow, closeTo(0.18, 1e-9));
-      expect(bed('crackle').volume, closeTo(0.18, 1e-9));
+      expect(service.crackleVolumeNow, closeTo(0.072, 1e-9));
+      expect(bed('crackle').volume, closeTo(0.072, 1e-9));
       expect(service.rainPlaying, isFalse);
       service.dispose();
     });
   });
 
-  test('rain volume per scene: outdoors 0.25 ×, indoors 0.12 ×, space 0', () {
+  test('rain volume per scene: outdoors 0.10 ×, indoors 0.048 ×, space 0', () {
     fakeAsync((FakeAsync async) {
       rain.value = 0.8;
       final AmbientBedService service = build(async);
       async.elapse(const Duration(seconds: 1));
-      expect(service.rainVolumeNow, closeTo(0.096, 1e-9));
+      expect(service.rainVolumeNow, closeTo(0.0384, 1e-9));
       expect(service.crackleVolumeNow, 0);
       service.setScene(AvatarScene.beach);
       async.elapse(const Duration(seconds: 1));
-      expect(service.rainVolumeNow, closeTo(0.2, 1e-9));
+      expect(service.rainVolumeNow, closeTo(0.08, 1e-9));
       service.setScene(AvatarScene.deepSpace);
       async.elapse(const Duration(seconds: 1));
       expect(service.rainVolumeNow, 0);
@@ -124,17 +124,17 @@ void main() {
     });
   });
 
-  test('cafe and rooftop rain beds: 0.12 × and 0.25 ×; mountainHut has none '
+  test('cafe and rooftop rain beds: 0.048 × and 0.10 ×; mountainHut has none '
       '(it snows)', () {
     fakeAsync((FakeAsync async) {
       rain.value = 1;
       final AmbientBedService service = build(async, scene: AvatarScene.cafe);
       async.elapse(const Duration(seconds: 1));
-      expect(service.rainVolumeNow, closeTo(0.12, 1e-9));
+      expect(service.rainVolumeNow, closeTo(0.048, 1e-9));
       expect(service.crackleVolumeNow, 0);
       service.setScene(AvatarScene.rooftop);
       async.elapse(const Duration(seconds: 1));
-      expect(service.rainVolumeNow, closeTo(0.25, 1e-9));
+      expect(service.rainVolumeNow, closeTo(0.10, 1e-9));
       expect(service.crackleVolumeNow, 0);
       service.setScene(AvatarScene.mountainHut);
       async.elapse(const Duration(seconds: 1));
@@ -144,8 +144,8 @@ void main() {
     });
   });
 
-  test('the v14 scenes: forestCabin is outdoors (0.25 ×), the train and the '
-      'library hear it behind glass (0.12 ×); none crackles', () {
+  test('the v14 scenes: forestCabin is outdoors (0.10 ×), the train and the '
+      'library hear it behind glass (0.048 ×); none crackles', () {
     fakeAsync((FakeAsync async) {
       rain.value = 1;
       final AmbientBedService service = build(
@@ -153,7 +153,7 @@ void main() {
         scene: AvatarScene.forestCabin,
       );
       async.elapse(const Duration(seconds: 1));
-      expect(service.rainVolumeNow, closeTo(0.25, 1e-9));
+      expect(service.rainVolumeNow, closeTo(0.10, 1e-9));
       expect(service.crackleVolumeNow, 0);
       for (final AvatarScene scene in <AvatarScene>[
         AvatarScene.trainCompartment,
@@ -161,7 +161,7 @@ void main() {
       ]) {
         service.setScene(scene);
         async.elapse(const Duration(seconds: 1));
-        expect(service.rainVolumeNow, closeTo(0.12, 1e-9), reason: scene.name);
+        expect(service.rainVolumeNow, closeTo(0.048, 1e-9), reason: scene.name);
         expect(service.crackleVolumeNow, 0, reason: scene.name);
         expect(service.cracklePlaying, isFalse, reason: scene.name);
       }
@@ -181,11 +181,11 @@ void main() {
         scene: AvatarScene.mountainHut,
       );
       async.elapse(const Duration(seconds: 1));
-      expect(service.crackleVolumeNow, closeTo(0.6 * 0.18, 1e-9));
+      expect(service.crackleVolumeNow, closeTo(0.6 * 0.072, 1e-9));
       expect(service.cracklePlaying, isTrue);
       flares.add(null);
       async.elapse(const Duration(milliseconds: 900));
-      expect(service.crackleVolumeNow, closeTo(0.6 * 0.35, 1e-9));
+      expect(service.crackleVolumeNow, closeTo(0.6 * 0.14, 1e-9));
       service.setScene(AvatarScene.cafe);
       async.elapse(const Duration(seconds: 1));
       expect(service.crackleVolumeNow, 0);
@@ -193,7 +193,7 @@ void main() {
     });
   });
 
-  test('a flare swells the crackle to 0.35 for 2 s', () {
+  test('a flare swells the crackle to 0.14 for 2 s', () {
     fakeAsync((FakeAsync async) {
       final AmbientBedService service = build(
         async,
@@ -202,11 +202,11 @@ void main() {
       async.elapse(const Duration(seconds: 1));
       flares.add(null);
       async.elapse(const Duration(milliseconds: 900));
-      expect(service.crackleVolumeNow, closeTo(0.35, 1e-9));
+      expect(service.crackleVolumeNow, closeTo(0.14, 1e-9));
       async.elapse(const Duration(milliseconds: 1200));
       // past the 2 s: easing back
       async.elapse(const Duration(milliseconds: 900));
-      expect(service.crackleVolumeNow, closeTo(0.18, 1e-9));
+      expect(service.crackleVolumeNow, closeTo(0.072, 1e-9));
       // a flare elsewhere does nothing
       service.setScene(AvatarScene.beach);
       flares.add(null);
@@ -226,11 +226,11 @@ void main() {
       async.elapse(const Duration(seconds: 1));
       speaking.add(true);
       async.elapse(const Duration(seconds: 1));
-      expect(service.crackleVolumeNow, closeTo(0.09, 1e-9));
-      expect(service.rainVolumeNow, closeTo(0.125, 1e-9));
+      expect(service.crackleVolumeNow, closeTo(0.036, 1e-9));
+      expect(service.rainVolumeNow, closeTo(0.05, 1e-9));
       speaking.add(false);
       async.elapse(const Duration(seconds: 1));
-      expect(service.rainVolumeNow, closeTo(0.25, 1e-9));
+      expect(service.rainVolumeNow, closeTo(0.10, 1e-9));
       service.dispose();
     });
   });
@@ -245,12 +245,12 @@ void main() {
       async.elapse(const Duration(seconds: 1));
       service.setScene(AvatarScene.livingRoom);
       async.elapse(const Duration(milliseconds: 400));
-      expect(service.crackleVolumeNow, closeTo(0.09, 0.01));
-      expect(service.rainVolumeNow, closeTo(0.185, 0.01));
+      expect(service.crackleVolumeNow, closeTo(0.036, 0.01));
+      expect(service.rainVolumeNow, closeTo(0.074, 0.01));
       async.elapse(const Duration(milliseconds: 450));
       expect(service.crackleVolumeNow, 0);
       expect(service.cracklePlaying, isFalse);
-      expect(service.rainVolumeNow, closeTo(0.12, 1e-9));
+      expect(service.rainVolumeNow, closeTo(0.048, 1e-9));
       service.dispose();
     });
   });
@@ -272,7 +272,7 @@ void main() {
       service.setPaused(false);
       async.elapse(const Duration(seconds: 1));
       expect(service.cracklePlaying, isTrue);
-      expect(service.crackleVolumeNow, closeTo(0.18, 1e-9));
+      expect(service.crackleVolumeNow, closeTo(0.072, 1e-9));
       service.dispose();
     });
   });
@@ -308,7 +308,7 @@ void main() {
   });
 
   group('wind bed (M11 ruling 11)', () {
-    test('forestCabin: 0.22 × 0.5 without a report, × (0.5 + 0.5 × wind) '
+    test('forestCabin: 0.088 × 0.5 without a report, × (0.5 + 0.5 × wind) '
         'with one', () {
       fakeAsync((FakeAsync async) {
         final AmbientBedService service = build(
@@ -316,19 +316,19 @@ void main() {
           scene: AvatarScene.forestCabin,
         );
         async.elapse(const Duration(seconds: 1));
-        expect(service.windVolumeNow, closeTo(0.11, 1e-9));
+        expect(service.windVolumeNow, closeTo(0.044, 1e-9));
         expect(service.windPlaying, isTrue);
         expect(bed('wind').log.first, 'start foley/bed_wind.wav');
         wind.value = 1;
         async.elapse(const Duration(seconds: 1));
-        expect(service.windVolumeNow, closeTo(0.22, 1e-9));
-        expect(bed('wind').volume, closeTo(0.22, 1e-9));
+        expect(service.windVolumeNow, closeTo(0.088, 1e-9));
+        expect(bed('wind').volume, closeTo(0.088, 1e-9));
         wind.value = 0.5;
         async.elapse(const Duration(seconds: 1));
-        expect(service.windVolumeNow, closeTo(0.165, 1e-9));
+        expect(service.windVolumeNow, closeTo(0.066, 1e-9));
         wind.value = 0;
         async.elapse(const Duration(seconds: 1));
-        expect(service.windVolumeNow, closeTo(0.11, 1e-9));
+        expect(service.windVolumeNow, closeTo(0.044, 1e-9));
         service.dispose();
       });
     });
@@ -341,11 +341,11 @@ void main() {
           scene: AvatarScene.rooftop,
         );
         final Map<AvatarScene, double> base = <AvatarScene, double>{
-          AvatarScene.rooftop: 0.18,
-          AvatarScene.beach: 0.12,
-          AvatarScene.campfire: 0.10,
-          AvatarScene.mountainHut: 0.06,
-          AvatarScene.forestCabin: 0.22,
+          AvatarScene.rooftop: 0.072,
+          AvatarScene.beach: 0.048,
+          AvatarScene.campfire: 0.04,
+          AvatarScene.mountainHut: 0.024,
+          AvatarScene.forestCabin: 0.088,
           AvatarScene.livingRoom: 0,
           AvatarScene.deepSpace: 0,
           AvatarScene.cafe: 0,
@@ -376,10 +376,10 @@ void main() {
         async.elapse(const Duration(seconds: 1));
         gusts.add(null);
         async.elapse(const Duration(milliseconds: 900));
-        expect(service.windVolumeNow, closeTo(0.22 * 1.5, 1e-9));
+        expect(service.windVolumeNow, closeTo(0.088 * 1.5, 1e-9));
         async.elapse(const Duration(milliseconds: 1200));
         async.elapse(const Duration(milliseconds: 900));
-        expect(service.windVolumeNow, closeTo(0.11, 1e-9));
+        expect(service.windVolumeNow, closeTo(0.044, 1e-9));
         expect(async.pendingTimers, isEmpty);
         service.setScene(AvatarScene.library);
         async.elapse(const Duration(seconds: 1));
@@ -402,11 +402,11 @@ void main() {
         async.elapse(const Duration(milliseconds: 500));
         gusts.add(null);
         async.elapse(const Duration(milliseconds: 900));
-        expect(service.crackleVolumeNow, closeTo(0.35, 1e-9));
-        expect(service.windVolumeNow, closeTo(0.10 * 1.5, 1e-9));
+        expect(service.crackleVolumeNow, closeTo(0.14, 1e-9));
+        expect(service.windVolumeNow, closeTo(0.04 * 1.5, 1e-9));
         async.elapse(const Duration(seconds: 4));
-        expect(service.crackleVolumeNow, closeTo(0.18, 1e-9));
-        expect(service.windVolumeNow, closeTo(0.05, 1e-9));
+        expect(service.crackleVolumeNow, closeTo(0.072, 1e-9));
+        expect(service.windVolumeNow, closeTo(0.02, 1e-9));
         expect(async.pendingTimers, isEmpty);
         service.dispose();
       });
@@ -424,7 +424,7 @@ void main() {
           async.elapse(const Duration(seconds: 1));
           speaking.add(true);
           async.elapse(const Duration(seconds: 1));
-          expect(service.windVolumeNow, closeTo(0.11, 1e-9));
+          expect(service.windVolumeNow, closeTo(0.044, 1e-9));
           service.setPaused(true);
           expect(service.windPlaying, isFalse);
           expect(bed('wind').playing, isFalse);
@@ -477,7 +477,7 @@ void main() {
         found.complete(true);
         async.elapse(const Duration(seconds: 1));
         expect(service.windPlaying, isTrue);
-        expect(service.windVolumeNow, closeTo(0.11, 1e-9));
+        expect(service.windVolumeNow, closeTo(0.044, 1e-9));
         service.dispose();
       });
     });
