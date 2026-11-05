@@ -1,0 +1,51 @@
+PODS:
+  - audio_analyzer (0.0.1):
+    - Flutter
+  - Flutter (1.0.0)
+  - flutter_inappwebview_ios (0.0.1):
+    - Flutter
+    - flutter_inappwebview_ios/Core (= 0.0.1)
+    - OrderedSet (~> 6.0.3)
+  - flutter_inappwebview_ios/Core (0.0.1):
+    - Flutter
+    - OrderedSet (~> 6.0.3)
+  - OrderedSet (6.0.3)
+  - sherpa_onnx_ios (1.13.3):
+    - Flutter
+  - supertonic_flutter (0.0.1):
+    - Flutter
+
+DEPENDENCIES:
+  - audio_analyzer (from `.symlinks/plugins/audio_analyzer/ios`)
+  - Flutter (from `Flutter`)
+  - flutter_inappwebview_ios (from `.symlinks/plugins/flutter_inappwebview_ios/ios`)
+  - sherpa_onnx_ios (from `.symlinks/plugins/sherpa_onnx_ios/ios`)
+  - supertonic_flutter (from `.symlinks/plugins/supertonic_flutter/ios`)
+
+SPEC REPOS:
+  trunk:
+    - OrderedSet
+
+EXTERNAL SOURCES:
+  audio_analyzer:
+    :path: ".symlinks/plugins/audio_analyzer/ios"
+  Flutter:
+    :path: Flutter
+  flutter_inappwebview_ios:
+    :path: ".symlinks/plugins/flutter_inappwebview_ios/ios"
+  sherpa_onnx_ios:
+    :path: ".symlinks/plugins/sherpa_onnx_ios/ios"
+  supertonic_flutter:
+    :path: ".symlinks/plugins/supertonic_flutter/ios"
+
+SPEC CHECKSUMS:
+  audio_analyzer: 7c8a8a84d878a45d428e3824ded43025c3108169
+  Flutter: 71a624a5bc0c04062bf19101d501e466baf2fb47
+  flutter_inappwebview_ios: 6f63631e2c62a7c350263b13fa5427aedefe81d4
+  OrderedSet: e539b66b644ff081c73a262d24ad552a69be3a94
+  sherpa_onnx_ios: 385d34da9ade98f8e012d9b518f1440bd8ba3636
+  supertonic_flutter: e76006bfbe41d7f49911bc365666bbf073b4ab53
+
+PODFILE CHECKSUM: e417faa45e83fb3e273def7d26a08005fe888911
+
+COCOAPODS: 1.16.2

@@ -40,10 +40,14 @@ import 'package:yofardev_ai/features/chat/chat.dart';
 import 'package:yofardev_ai/features/home/widgets/home_content_stack.dart';
 import 'package:yofardev_ai/features/home/widgets/stage/stage_caption.dart';
 import 'package:yofardev_ai/features/home/widgets/stage/stage_caption_bubble.dart';
+import 'dart:typed_data';
+
+import 'package:yofardev_ai/features/sound/sound.dart';
 import 'package:yofardev_ai/features/talking/talking.dart';
 
 import 'support/canned_weather_tool.dart';
 import 'support/frame_grabber.dart';
+import 'support/kokoro_capture_synthesizer.dart';
 import 'support/say_tts_synthesizer.dart';
 
 /// The wows played by the real app (moonshot M6 Task 6, rulings 1–7; M7–M9
@@ -101,6 +105,30 @@ const bool _capture = bool.fromEnvironment('CAPTURE', defaultValue: true);
 /// run (`QualityTierService.forceTier`); empty (the default) leaves the app's
 /// own tier, as before M12. A tier other than ultra suffixes the run name.
 const String _tierArg = String.fromEnvironment('TIER');
+
+/// Showcase (2026-11-02): `VOICE=kokoro` swaps `say` for the app's real voice
+/// (KokoroTtsDatasource through the capture synthesizer, which keeps a copy of
+/// each WAV for the mux). `KOKORO_SRC` is an installed model folder on the
+/// host (`.../tts`), copied into the app's fresh container on iOS before the
+/// app boots. `PXR` is the frame grab's pixel ratio (1 = as before; the
+/// simulator capture grabs at 3 = the device's backing scale).
+const String _voiceArg = String.fromEnvironment('VOICE', defaultValue: 'say');
+const String _kokoroSrc = String.fromEnvironment('KOKORO_SRC');
+const String _pxrArg = String.fromEnvironment('PXR', defaultValue: '1');
+final double _pixelRatio = double.tryParse(_pxrArg) ?? 1;
+
+/// Showcase (2026-11-02): `SHOW_OUT` redirects the run's output directory
+/// (default: the app's cache dir). The iOS simulator wipe's its container
+/// when the test tears down, so the simulator capture writes straight to a
+/// host directory instead.
+const String _showOut = String.fromEnvironment('SHOW_OUT');
+
+/// Showcase (2026-11-02): on macOS, `WIN_POS` parks the capture window
+/// (`{x, y}` via System Events) so the window stays visible — a covered
+/// window stops rendering and the grabs freeze. `WIN_SIZE` restores its
+/// content size (macOS remembers the last frame). Nothing changes when empty.
+const String _winPos = String.fromEnvironment('WIN_POS');
+const String _winSize = String.fromEnvironment('WIN_SIZE');
 
 /// M9 `scene`: what the run says and pokes in one scene.
 class _SceneRun {
@@ -567,6 +595,125 @@ final Map<String, _Script> _scripts = <String, _Script>{
   'caption': _captionScript(),
 };
 
+/// Showcase scripts (2026-11-02), one short beat each, for the 9:16 showcase
+/// cut: the same machinery as the wows, grabbing at ~30 fps. They live in
+/// their own map because two of them re-time entries of [_scripts].
+final Map<String, _Script> _showcaseScripts = <String, _Script>{
+  // The greeting: a warm close-up moment with a wave.
+  'show_hook': _showScript(
+    scene: AvatarScene.livingRoom,
+    rain: 0,
+    clock: (hour: 19, minute: 30),
+    user: 'Hi!',
+    responses: <FakeLlmResponse>[
+      FakeLlmResponse(
+        jsonBody: _answer(
+          "[g:wave] Oh, hi! You're just in time. "
+              'The film is about to start.',
+          'happy',
+        ),
+      ),
+    ],
+  ),
+  // The weather beat: wow2's proven exchange, unchanged.
+  'show_weather': _scriptAt(_scripts['wow2']!),
+  // The journey beat: wow3's proven exchange, unchanged.
+  'show_journey': _scriptAt(_scripts['wow3']!),
+  // Rainy night by the fire, the owl out.
+  'show_campfire': _showScript(
+    scene: AvatarScene.campfire,
+    rain: 1,
+    clock: (hour: 22, minute: 0),
+    user: "It's really coming down out there.",
+    responses: <FakeLlmResponse>[
+      FakeLlmResponse(
+        jsonBody: _answer(
+          'Listen to the rain on the leaves. '
+              "The owl doesn't mind one bit.",
+          'happy',
+        ),
+      ),
+    ],
+  ),
+  // The train: the landscape scrolls by while it answers.
+  'show_train': _showScript(
+    scene: AvatarScene.trainCompartment,
+    rain: 0,
+    clock: (hour: 19, minute: 30),
+    user: 'Where is this train going?',
+    responses: <FakeLlmResponse>[
+      FakeLlmResponse(
+        jsonBody: _answer(
+          'Somewhere green. The ladybug is riding with us.',
+          'happy',
+        ),
+      ),
+    ],
+  ),
+  // Deep space: pokes the UFO, spins the stars, then a short reply.
+  'show_space': _showScript(
+    scene: AvatarScene.deepSpace,
+    rain: 0,
+    clock: (hour: 19, minute: 30),
+    user: 'Anyone else out here?',
+    sceneRun: _sceneRuns[AvatarScene.deepSpace]!,
+    responses: <FakeLlmResponse>[
+      FakeLlmResponse(
+        jsonBody: _answer(_sceneRuns[AvatarScene.deepSpace]!.reply, 'happy'),
+      ),
+    ],
+  ),
+  // The emotional finish: the beach at dusk, a calm complete sentence.
+  'show_finish': _showScript(
+    scene: AvatarScene.beach,
+    rain: 0,
+    clock: (hour: 18, minute: 40),
+    user: "I'm glad we came.",
+    responses: <FakeLlmResponse>[
+      FakeLlmResponse(
+        jsonBody: _answer(
+          "Me too. Soon the moon will take the sun's place.",
+          'happy',
+        ),
+      ),
+    ],
+  ),
+};
+
+/// Everything the WOW define can select (the showcase beats included).
+final Map<String, _Script> _allScripts = <String, _Script>{
+  ..._scripts,
+  ..._showcaseScripts,
+};
+
+/// A showcase script: the wows' defaults at a 33 ms grab interval (~30 fps).
+_Script _showScript({
+  required AvatarScene scene,
+  required double rain,
+  required String user,
+  required List<FakeLlmResponse> responses,
+  ({int hour, int minute})? clock,
+  _SceneRun? sceneRun,
+}) => _Script(
+  scene: scene,
+  rain: rain,
+  clock: clock,
+  user: user,
+  sceneRun: sceneRun,
+  frameInterval: const Duration(milliseconds: 33),
+  responses: responses,
+);
+
+/// Re-times an existing script at the showcase grab interval.
+_Script _scriptAt(_Script script) => _Script(
+  scene: script.scene,
+  rain: script.rain,
+  clock: script.clock,
+  user: script.user,
+  responses: script.responses,
+  frameInterval: const Duration(milliseconds: 33),
+);
+
 /// M10: `change_avatar` for the harness's tool list (which replaces the
 /// app's): the real [AvatarTool], built on first use (the lifecycle service
 /// it talks to exists only once the service locator ran).
@@ -787,7 +934,7 @@ void main() {
   testWidgets(
     'wow capture: $runName',
     (WidgetTester tester) async {
-      final _Script script = _scripts[_wow]!;
+      final _Script script = _allScripts[_wow]!;
       final _NoNetwork network = _NoNetwork();
       HttpOverrides.global = network;
       // A failing step still restores the process (the explicit cleanup below
@@ -798,8 +945,8 @@ void main() {
       });
 
       final Directory root = Directory(
-        '${(await getTemporaryDirectory()).path}/wow/'
-        '$runName${_capture ? '' : '_timing'}',
+        '${_showOut.isEmpty ? (await getTemporaryDirectory()).path : _showOut}'
+        '/wow/$runName${_capture ? '' : '_timing'}',
       );
       if (root.existsSync()) {
         root.deleteSync(recursive: true);
@@ -824,12 +971,21 @@ void main() {
       });
 
       final SayTtsSynthesizer tts = SayTtsSynthesizer(audioDir);
+      final KokoroCaptureSynthesizer? kokoro = _voiceArg == 'kokoro'
+          ? KokoroCaptureSynthesizer(audioDir, modelSource: _kokoroSrc)
+          : null;
+      final TtsSynthesizer captureTts = kokoro ?? tts;
       final List<({DateTime at, String asset})> foleyLog =
           <({DateTime at, String asset})>[];
       final List<({DateTime at, String kind})> hapticLog =
           <({DateTime at, String kind})>[];
+      if (kokoro != null) {
+        // The fresh container has no model and the harness blocks network:
+        // copy the host's installed model in before the app boots.
+        await kokoro.ensureModel();
+      }
       await setupServiceLocator(
-        ttsSynthesizer: tts,
+        ttsSynthesizer: captureTts,
         tools: <AgentTool>[
           CannedWeatherTool(
             onReport: (WeatherReport r) =>
@@ -843,6 +999,33 @@ void main() {
       );
       await bootstrapApp();
       await tester.pumpWidget(const App());
+      if (Platform.isMacOS && _winPos.isNotEmpty) {
+        // Keep the window visible: macOS stops rendering covered windows and
+        // the grabs freeze (M12 execution notes). Park it on the second
+        // display's free corner, where nothing covers it.
+        final List<String> xy = _winPos
+            .replaceAll('{', '')
+            .replaceAll('}', '')
+            .split(',');
+        await Process.run('osascript', <String>[
+          '-e',
+          'tell application "System Events" to set position of window 1 of '
+              '(first application process whose unix id is $pid) to '
+              '{${xy[0].trim()}, ${xy[1].trim()}}',
+        ]);
+        if (_winSize.isNotEmpty) {
+          final List<String> wh = _winSize
+              .replaceAll('{', '')
+              .replaceAll('}', '')
+              .split(',');
+          await Process.run('osascript', <String>[
+            '-e',
+            'tell application "System Events" to set size of window 1 of '
+                '(first application process whose unix id is $pid) to '
+                '{${wh[0].trim()}, ${wh[1].trim()}}',
+          ]);
+        }
+      }
       await _settle(tester, const Duration(seconds: 6));
 
       final BuildContext home = tester.element(find.byType(HomeContentStack));
@@ -940,6 +1123,7 @@ void main() {
       bool spoke = false;
       int lastStop = 0;
       int lastStart = -1;
+      int lastSpeechActivity = -1;
       final StreamSubscription<PlaybackEvent> playback =
           getIt<TtsPlaybackService>().events.listen((PlaybackEvent e) {
             switch (e) {
@@ -947,12 +1131,18 @@ void main() {
                 speaking = true;
                 spoke = true;
                 lastStart = clock.elapsedMilliseconds;
+                lastSpeechActivity = clock.elapsedMilliseconds;
                 log('start');
               case SpeakingStoppedEvent(:final bool interrupted):
                 speaking = false;
                 lastStop = clock.elapsedMilliseconds;
+                lastSpeechActivity = clock.elapsedMilliseconds;
                 log('stop', <String, Object?>{'interrupted': interrupted});
               case SpeechPrerollEvent(:final Duration lead):
+                // the inhale before a sentence: while it settles the next
+                // sentence is still synthesising, so the final wait measures
+                // from the last speech activity, not the last stop
+                lastSpeechActivity = clock.elapsedMilliseconds;
                 log('preroll', <String, Object?>{'lead': lead.inMilliseconds});
               case CaptionEvent(:final String text):
                 log('caption', <String, Object?>{'text': text});
@@ -1140,6 +1330,7 @@ void main() {
         view,
         frameDir,
         interval: script.frameInterval,
+        pixelRatio: _pixelRatio,
       );
       final List<FrameTiming> timings = <FrameTiming>[];
       void onTimings(List<FrameTiming> t) => timings.addAll(t);
@@ -1330,7 +1521,8 @@ void main() {
             spoke &&
             !speaking &&
             avatar.state.journey == null &&
-            clock.elapsedMilliseconds - lastStop > 1800) {
+            clock.elapsedMilliseconds - lastStop > 1800 &&
+            clock.elapsedMilliseconds - lastSpeechActivity > 1800) {
           break;
         }
       }
@@ -1350,49 +1542,13 @@ void main() {
       }
       sampler.cancel();
       await grabber.stop();
-      if (_capture && script.rain > 0) {
-        // the front layer's proof: the same pose wet, then dry, both in the
-        // wide shot (M7: the camera pulls back 2.5 s after the reply, in 1.5 s)
-        final int wideBy = clock.elapsedMilliseconds + 8000;
-        while (camera.shot.value.shot != Shot.wide &&
-            clock.elapsedMilliseconds < wideBy) {
-          await _settle(tester, const Duration(milliseconds: 200));
-        }
-        await _settle(tester, const Duration(milliseconds: 1800));
-        await grabber.grabOnce('wet');
-        world.setRain(0);
-        await _settle(tester, const Duration(milliseconds: 1200));
-        await grabber.grabOnce('dry');
-      }
-      if (!_capture) {
-        SchedulerBinding.instance.removeTimingsCallback(onTimings);
-      }
-      await playback.cancel();
-      await sceneEvents.cancel();
-      for (final ({DateTime at, String asset}) f in foleyLog) {
-        final String name = f.asset.split('/').last;
-        events.add(<String, Object?>{
-          'ms': f.at.difference(clockStart).inMilliseconds,
-          'type': 'foley',
-          'kind': name.substring(0, name.lastIndexOf('_')),
-          'file': 'assets/${f.asset}',
-        });
-      }
-      for (final ({DateTime at, String kind}) h in hapticLog) {
-        events.add(<String, Object?>{
-          'ms': h.at.difference(clockStart).inMilliseconds,
-          'type': 'haptic',
-          'kind': h.kind,
-        });
-      }
-      events.sort(
-        (Map<String, Object?> a, Map<String, Object?> b) =>
-            (a['ms']! as int).compareTo(b['ms']! as int),
-      );
-      FakeLlmService().deactivate();
-      HttpOverrides.global = null;
+      _printLiveness(root, grabber);
 
-      final Map<String, Object?> timeline = <String, Object?>{
+      // The timeline is written twice: this early snapshot, and the final one
+      // after the foley log and the wet / dry grabs below. The early one is
+      // what a host-side sync reads when the app's container is wiped at the
+      // end of the test (iOS simulator installs are removed on teardown).
+      Map<String, Object?> timelineSnapshot() => <String, Object?>{
         'wow': runName,
         'kind': _wow,
         'capture': _capture,
@@ -1437,7 +1593,8 @@ void main() {
         'samples': samples,
         'events': events,
         'audio': <Map<String, String>>[
-          for (final ({String text, String file}) a in tts.spoken)
+          for (final ({String text, String file}) a
+              in (kokoro?.spoken ?? tts.spoken))
             <String, String>{'text': a.text, 'file': a.file},
         ],
         'network_attempts': network.attempts,
@@ -1450,9 +1607,54 @@ void main() {
             },
         ],
       };
-      File(
-        '${root.path}/timeline.json',
-      ).writeAsStringSync(const JsonEncoder.withIndent(' ').convert(timeline));
+      File('${root.path}/timeline.json').writeAsStringSync(
+        const JsonEncoder.withIndent(' ').convert(timelineSnapshot()),
+      );
+      if (_capture && script.rain > 0) {
+        // the front layer's proof: the same pose wet, then dry, both in the
+        // wide shot (M7: the camera pulls back 2.5 s after the reply, in 1.5 s)
+        final int wideBy = clock.elapsedMilliseconds + 8000;
+        while (camera.shot.value.shot != Shot.wide &&
+            clock.elapsedMilliseconds < wideBy) {
+          await _settle(tester, const Duration(milliseconds: 200));
+        }
+        await _settle(tester, const Duration(milliseconds: 1800));
+        await grabber.grabOnce('wet');
+        world.setRain(0);
+        await _settle(tester, const Duration(milliseconds: 1200));
+        await grabber.grabOnce('dry');
+      }
+      if (!_capture) {
+        SchedulerBinding.instance.removeTimingsCallback(onTimings);
+      }
+      await playback.cancel();
+      await sceneEvents.cancel();
+      for (final ({DateTime at, String asset}) f in foleyLog) {
+        final String name = f.asset.split('/').last;
+        events.add(<String, Object?>{
+          'ms': f.at.difference(clockStart).inMilliseconds,
+          'type': 'foley',
+          'kind': name.substring(0, name.lastIndexOf('_')),
+          'file': 'assets/${f.asset}',
+        });
+      }
+      for (final ({DateTime at, String kind}) h in hapticLog) {
+        events.add(<String, Object?>{
+          'ms': h.at.difference(clockStart).inMilliseconds,
+          'type': 'haptic',
+          'kind': h.kind,
+        });
+      }
+      events.sort(
+        (Map<String, Object?> a, Map<String, Object?> b) =>
+            (a['ms']! as int).compareTo(b['ms']! as int),
+      );
+      FakeLlmService().deactivate();
+      HttpOverrides.global = null;
+
+      File('${root.path}/timeline.json').writeAsStringSync(
+        const JsonEncoder.withIndent(' ').convert(timelineSnapshot()),
+      );
       // ignore: avoid_print
       print('WOW_DIR ${root.path}');
 
@@ -1467,6 +1669,33 @@ void main() {
           : const Duration(minutes: 5),
     ),
   );
+}
+
+/// Prints how many of five sampled grabs are byte-distinct, so a frozen
+/// window (macOS occlusion) or a stalled simulator shows up in the log.
+void _printLiveness(Directory root, FrameGrabber grabber) {
+  final int count = grabber.frames.length;
+  if (count == 0) {
+    // ignore: avoid_print
+    print('LIVENESS 0 of 5 (no frames)');
+    return;
+  }
+  final Set<String> seen = <String>{};
+  for (int k = 0; k < 5; k++) {
+    final ({int index, int ms}) frame =
+        grabber.frames[count * (2 * k + 1) ~/ 10];
+    final File file = File(
+      '${root.path}/frames/${frame.index.toString().padLeft(4, '0')}.rgba',
+    );
+    final RandomAccessFile handle = file.openSync();
+    final Uint8List head = handle.readSync(8192);
+    handle.setPositionSync(handle.lengthSync() ~/ 2);
+    final Uint8List middle = handle.readSync(8192);
+    handle.closeSync();
+    seen.add(base64Encode(head) + base64Encode(middle));
+  }
+  // ignore: avoid_print
+  print('LIVENESS distinct ${seen.length} of 5');
 }
 
 /// M9 `scene`: drags the scene's handle with a synthesised touch on the real

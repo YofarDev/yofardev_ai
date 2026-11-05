@@ -9,11 +9,9 @@ import UIKit
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
-    // Register custom voice effects plugin
     guard let controller = window?.rootViewController as? FlutterViewController else {
       fatalError("rootViewController is not type FlutterViewController")
     }
-    VoiceEffectsHandler.register(with: controller.registrar(forPlugin: "VoiceEffectsHandler"))
     thermal = ThermalStreamHandler.register(with: controller.binaryMessenger)
 
     GeneratedPluginRegistrant.register(with: self)
