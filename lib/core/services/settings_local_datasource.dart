@@ -178,11 +178,18 @@ class SettingsLocalDatasource {
     await prefs.setString('baseSystemPrompt', baseSystemPrompt);
   }
 
+  /// The user's custom base prompt when one is saved, else the bundled
+  /// default for [languageCode]. Placeholders (`$PERSONA`, …) stay in —
+  /// the prompt datasource replaces them.
   Future<String> getBaseSystemPrompt(String languageCode) async {
-    final String baseSystemPrompt = await rootBundle.loadString(
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    final String? custom = prefs.getString('baseSystemPrompt');
+    if (custom != null && custom.isNotEmpty) {
+      return custom;
+    }
+    return rootBundle.loadString(
       AppUtils.fixAssetsPath('assets/txt/system_prompt_$languageCode.txt'),
     );
-    return baseSystemPrompt;
   }
 
   Future<void> setSoundEffects(bool soundEffects) async {

@@ -33,16 +33,21 @@ class SettingsPageState extends State<SettingsPage> {
   final TextEditingController _usernameController = TextEditingController();
   bool _isSoundEffectsEnabled = true;
   ChatPersona _persona = ChatPersona.assistant;
+  bool _personaSelected = false;
 
   @override
   void initState() {
     super.initState();
-    // Seed from the cubit state so the toggle reflects the stored setting
-    // instead of a hardcoded default.
-    _isSoundEffectsEnabled = context
-        .read<SettingsCubit>()
-        .state
-        .soundEffectsEnabled;
+    // Seed from the cubit state so the fields reflect the stored settings
+    // instead of hardcoded defaults. The app-root cubit (app.dart) has
+    // already loaded them, and Cubit.emit skips equal states — so the
+    // BlocListener below never fires on a plain reopen, and an unseeded
+    // field would be saved back over the stored value.
+    final SettingsState settingsState = context.read<SettingsCubit>().state;
+    _isSoundEffectsEnabled = settingsState.soundEffectsEnabled;
+    _persona = settingsState.persona;
+    _usernameController.text = settingsState.username ?? '';
+    _baseSystemPromptController.text = settingsState.systemPrompt ?? '';
     _loadSettings();
   }
 
@@ -79,6 +84,10 @@ class SettingsPageState extends State<SettingsPage> {
       soundEffectsList.write("[$soundEffect], ");
     }
     return BlocListener<SettingsCubit, SettingsState>(
+      // The persona only follows the state while the user has not picked
+      // one: a late load (page opened before the app-root cubit finished
+      // loading) still seeds the dropdown, but a pending selection is
+      // never clobbered mid-save.
       listenWhen: (SettingsState previous, SettingsState current) =>
           previous.username != current.username ||
           previous.systemPrompt != current.systemPrompt ||
@@ -86,9 +95,11 @@ class SettingsPageState extends State<SettingsPage> {
       listener: (BuildContext context, SettingsState state) {
         _usernameController.text = state.username ?? '';
         _baseSystemPromptController.text = state.systemPrompt ?? '';
-        setState(() {
-          _persona = state.persona;
-        });
+        if (!_personaSelected) {
+          setState(() {
+            _persona = state.persona;
+          });
+        }
       },
       child: Scaffold(
         body: Container(
@@ -134,6 +145,7 @@ class SettingsPageState extends State<SettingsPage> {
                           value: _persona,
                           onChanged: (ChatPersona newValue) {
                             _persona = newValue;
+                            _personaSelected = true;
                             setState(() {});
                           },
                         ),
