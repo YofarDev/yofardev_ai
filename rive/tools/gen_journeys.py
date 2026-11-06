@@ -426,9 +426,11 @@ def ribbon() -> El:
 # All of it is lit by the scene NOT on screen (VIGNETTE_LIGHTS): the contrast with the room is the beat.
 
 UNFOLD_FLAPS = ((0.00, 0.18), (0.06, 0.27), (0.14, 0.38))             # the riffle: three pages, staggered
-# the pop-up, tallest first; Near's touchdown ends by unfold 0.89 = the open beat's 1400 ms on the plan's
-# ramp(850, 750, easeOut), so the app's snap to 1 at the grab skips nothing (0.95 would still be mid-touchdown)
-UNFOLD_PANELS = {"Far": (0.10, 0.55), "Mid": (0.22, 0.72), "Near": (0.38, 0.89)}
+# No snap at the grab boundary: the open beat ramps `unfold` 850-1600 ms (easeOut) but hands over to the grab at
+# 1400 ms, which writes 1. By then `unfold` is 0.895, so everything that would show a jump lands by UNFOLD_LANDED: the
+# panels and the floor spill. (The shaft's fade ends at 0.9; the last 0.8 % of it is invisible.)
+UNFOLD_LANDED = 0.89
+UNFOLD_PANELS = {"Far": (0.10, 0.55), "Mid": (0.22, 0.72), "Near": (0.38, UNFOLD_LANDED)}   # the pop-up, tallest first
 UNFOLD_SHAFT = (0.3, 0.9)                                             # the light shaft and its motes
 VIG_FLOOR = 500.0           # artboard y of the vignette's floor at the gutter: the panels' pivot, the shaft's mouth
 VIG_LEFT = 520.0            # the panels' left extent (artboard x)
@@ -509,6 +511,15 @@ def window(a: float, b: float) -> El:
     key = ("window", round(a, 3), round(b, 3))
     if key not in _windows:
         _windows[key] = conv_tokens(*window_tokens(a, b))
+    return _windows[key]
+
+
+def windowed(a: float, b: float, k: float, c: float = 0.0) -> El:
+    """`c + k window(a, b)`: from c to c + k over the window (one shared converter per form)."""
+    key = ("linear", round(a, 3), round(b, 3), round(k, 3), round(c, 3))
+    if key not in _windows:
+        head = [] if key[4] == 0 else [F.val(c), F.op("+")]
+        _windows[key] = conv_tokens(*head, F.val(k), F.op("*"), *window_tokens(a, b))
     return _windows[key]
 
 
@@ -1123,6 +1134,12 @@ def book() -> El:
     for name in ("emitVignetteDeepSpaceStar", "emitHeroDeepSpaceStar"):
         amb_tracks.append(track(d, named(root, name), {"opacity": [
             (0, 1.0), (50, 0.5), (110, 1.0), (170, 0.65), (240, 1.0)]}, ease=EASE))
+    # The floor spill widens and brightens with the vignette and lands with it, by UNFOLD_LANDED: its two binds take
+    # windowed converters (an attribute change on the book's own binds, the converters minted last, like `relit`'s
+    # binds, so no id moves; the two linear ones they replace keep their ids, unused).
+    binds = {int(b.attrs["propertyKey"]): b for b in spill.children if b.tag == "DataBindContext"}
+    binds[18].attrs["converterId"] = windowed(0.0, UNFOLD_LANDED, SPILL_PEAK).ref()
+    binds[16].attrs["converterId"] = windowed(0.0, UNFOLD_LANDED, 0.6, 0.4).ref()
     return root
 
 

@@ -140,8 +140,8 @@
             <GradientStop colorValue="00FFF4E4" position="1" id="0:6025"/>
           </RadialGradient>
         </Fill>
-        <DataBindContext sourcePathIds="0:27-0:6002" propertyKey="18" converterId="0:6031" id="0:6032"/>
-        <DataBindContext sourcePathIds="0:27-0:6002" propertyKey="16" converterId="0:6038" id="0:6039"/>
+        <DataBindContext sourcePathIds="0:27-0:6002" propertyKey="18" converterId="0:9538" id="0:6032"/>
+        <DataBindContext sourcePathIds="0:27-0:6002" propertyKey="16" converterId="0:9556" id="0:6039"/>
       </Shape>
       <Node x="430" y="0" name="emitCoverEdge" opacity="0" id="0:6134">
         <Shape x="0" y="0" name="emitCoverEdgeLine" id="0:6131">
@@ -6116,5 +6116,43 @@
     <FormulaTokenValue operationValue="-6.25" id="0:8566"/>
     <FormulaTokenParenthesisClose id="0:8571"/>
     <FormulaTokenParenthesisClose id="0:8574"/>
+  </DataConverterFormula>
+
+  <DataConverterFormula id="0:9538">
+    <FormulaTokenValue operationValue="0.533" id="0:9523"/>
+    <FormulaTokenOperation operationType="2" id="0:9524"/>
+    <FormulaTokenFunction functionType="0" id="0:9535"/>
+    <FormulaTokenValue operationValue="1" id="0:9530"/>
+    <FormulaTokenArgumentSeparator id="0:9536"/>
+    <FormulaTokenFunction functionType="1" id="0:9532"/>
+    <FormulaTokenValue operationValue="0" id="0:9531"/>
+    <FormulaTokenArgumentSeparator id="0:9533"/>
+    <FormulaTokenValue operationValue="1.124" id="0:9525"/>
+    <FormulaTokenOperation operationType="2" id="0:9526"/>
+    <FormulaTokenInput id="0:9527"/>
+    <FormulaTokenOperation operationType="0" id="0:9528"/>
+    <FormulaTokenValue operationValue="0" id="0:9529"/>
+    <FormulaTokenParenthesisClose id="0:9534"/>
+    <FormulaTokenParenthesisClose id="0:9537"/>
+  </DataConverterFormula>
+
+  <DataConverterFormula id="0:9556">
+    <FormulaTokenValue operationValue="0.4" id="0:9539"/>
+    <FormulaTokenOperation operationType="0" id="0:9540"/>
+    <FormulaTokenValue operationValue="0.6" id="0:9541"/>
+    <FormulaTokenOperation operationType="2" id="0:9542"/>
+    <FormulaTokenFunction functionType="0" id="0:9553"/>
+    <FormulaTokenValue operationValue="1" id="0:9548"/>
+    <FormulaTokenArgumentSeparator id="0:9554"/>
+    <FormulaTokenFunction functionType="1" id="0:9550"/>
+    <FormulaTokenValue operationValue="0" id="0:9549"/>
+    <FormulaTokenArgumentSeparator id="0:9551"/>
+    <FormulaTokenValue operationValue="1.124" id="0:9543"/>
+    <FormulaTokenOperation operationType="2" id="0:9544"/>
+    <FormulaTokenInput id="0:9545"/>
+    <FormulaTokenOperation operationType="0" id="0:9546"/>
+    <FormulaTokenValue operationValue="0" id="0:9547"/>
+    <FormulaTokenParenthesisClose id="0:9552"/>
+    <FormulaTokenParenthesisClose id="0:9555"/>
   </DataConverterFormula>
 </Rive>

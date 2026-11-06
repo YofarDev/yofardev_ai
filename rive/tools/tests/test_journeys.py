@@ -21,7 +21,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 import art_bible  # noqa: E402
 import gen_journeys  # noqa: E402
 import jacket_art  # noqa: E402
-from rml import render  # noqa: E402
+from rml import render, write  # noqa: E402
 
 FAMILY_ROOT = {"book": "Book", "path": "Path", "portal": "Portal", "rocket": "Rocket"}
 DEST = ("destLivingRoom", "destCampfire", "destBeach", "destDeepSpace", "destCafe", "destRooftop", "destMountainHut",
@@ -320,6 +320,34 @@ def test_the_unfold_windows(root: ET.Element) -> None:
         [0, 0, 0.5, 1, 1], abs=2e-3)
 
 
+HANDOVER = 0.895   # `unfold` when the grab beat takes over: the plan's open ramp(850, 750, easeOut) at 1400 ms
+
+
+def test_nothing_snaps_at_the_grab(root: ET.Element) -> None:
+    """The grab beat writes `unfold` 1 while the open beat's ramp is at HANDOVER, so every staged part has landed by
+    UNFOLD_LANDED (below it): what it draws there is what it draws at 1 (the panels, the floor spill — opacity and
+    width — and the rest). Only the shaft and the motes still fade in (their window ends at 0.9): from 0.992, unseen."""
+    props = _props(root)
+    landed = gen_journeys.UNFOLD_LANDED
+    assert landed == gen_journeys.UNFOLD_PANELS["Near"][1] == 0.89 < HANDOVER
+    convs = {c.get("id"): c for c in root.findall("DataConverterFormula")}
+    for el in _node(root, "Book").iter():
+        for b in el.findall("DataBindContext"):
+            if props[b.get("sourcePathIds").split("-")[1]] != "unfold":
+                continue
+            conv = convs[b.get("converterId")]
+            if el.get("name") in ("emitBookShaft", "emitBookMotes"):
+                assert abs(_eval(conv, 1.0) - _eval(conv, HANDOVER)) < 0.01, el.get("name")
+            else:
+                assert _eval(conv, 1.0) == pytest.approx(_eval(conv, landed), abs=1e-6), (el.get("name"),
+                                                                                          b.get("propertyKey"))
+    spill = {int(b.get("propertyKey")): convs[b.get("converterId")] for b in _node(root, "emitBookSpill")
+             .findall("DataBindContext")}
+    assert [_eval(spill[18], x) for x in (0, landed / 2, landed, 1)] == pytest.approx(
+        [0, gen_journeys.SPILL_PEAK / 2, gen_journeys.SPILL_PEAK, gen_journeys.SPILL_PEAK], abs=1e-3)
+    assert [_eval(spill[16], x) for x in (0, landed / 2, landed, 1)] == pytest.approx([0.4, 0.7, 1, 1], abs=1e-3)
+
+
 def test_the_touchdown(root: ET.Element) -> None:
     """Inside the last fifth of its window a panel takes the last few degrees of its turn, much slower than it rose,
     while its scale comes down onto 1: the only spring the eye gets, since the app's curve never overshoots into
@@ -496,11 +524,28 @@ def _drawn(root: ET.Element, top: str, over: dict[str, dict[str, float]]) -> lis
     return out
 
 
-def _rise() -> list[tuple[float, float]]:
-    """Each panel's (turn, scale) from flat to its rest pose, through the touchdown."""
-    flat, turn, dip = gen_journeys.PANEL_FLAT, gen_journeys.SETTLE_TURN, gen_journeys.SETTLE_DIP
-    return [(flat + (turn - flat) * k / 8, 1 + dip) for k in range(8)] + [
-        (turn * (1 - k / 4), 1 + dip * (1 - k / 4)) for k in range(5)]
+POSE_GRID = (0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.86, 0.9, 1.0)
+"""Sample unfolds through the staging, with each touchdown inside (Far 0.47-0.55, Mid 0.62-0.72, Near 0.79-0.89,
+the hero's fold 0.45-0.77 and touchdown 0.77-0.85)."""
+
+
+def _bound_at(root: ET.Element, node: str, keys: dict[int, str], u: float) -> dict[str, float]:
+    """`node`'s bound transforms (property key -> attribute) at `unfold` u, through its converters."""
+    return {attr: _eval(_converter(root, node, key), u) for key, attr in keys.items()}
+
+
+def _panel_poses(root: ET.Element) -> list[dict[str, dict[str, float]]]:
+    """The panels' and floor's bound transforms at each sample unfold, read through `_eval` — the converters
+    themselves are the only model of the motion, so a converter change cannot outrun these tests."""
+    panel = {15: "rotation", 16: "scaleX", 17: "scaleY"}
+    return [{**{f"Panel{n}": _bound_at(root, f"Panel{n}", panel, u) for n in ("Far", "Mid", "Near")},
+             "VignetteFloor": _bound_at(root, "VignetteFloor", {16: "scaleX"}, u)}
+            for u in POSE_GRID]
+
+
+def _flap_poses(root: ET.Element, i: int) -> list[dict[str, dict[str, float]]]:
+    """The riffle page's projected width at each sample unfold."""
+    return [{f"RiffleFlap{i}": _bound_at(root, f"RiffleFlap{i}", {16: "scaleX"}, u)} for u in (0.0, *POSE_GRID)]
 
 
 def test_the_vignette_keeps_off_the_avatar(root: ET.Element) -> None:
@@ -511,18 +556,16 @@ def test_the_vignette_keeps_off_the_avatar(root: ET.Element) -> None:
     fx0, fx1, fy0, fy1 = gen_journeys.FACE_BOX
     hook_top = gen_journeys.HOOK_ZONE[2]
     assert gen_journeys.VIG_FLOOR < hook_top and gen_journeys.VIG_LEFT == fx1
-    for turn, scale in _rise():
-        over = {f"Panel{n}": {"rotation": turn, "scaleX": scale, "scaleY": scale} for n in ("Far", "Mid", "Near")}
-        over["VignetteFloor"] = {"scaleX": 1.0}
+    for over in _panel_poses(root):
         for name, x, y, half in _drawn(root, "BookVignette", over):
             if name.startswith("emitBookMote"):
                 continue
-            assert x - half >= fx1 or y + half <= fy0 or y - half >= fy1, (name, turn, x, y)
+            assert x - half >= fx1 or y + half <= fy0 or y - half >= fy1, (name, over, x, y)
             # right of the gutter it is behind the page block (and, at the rest pose, the cover's stub)
-            assert x - half >= gen_journeys.HOOK_ZONE[1] or y + half < hook_top, (name, turn, x, y)
+            assert x - half >= gen_journeys.HOOK_ZONE[1] or y + half < hook_top, (name, over, x, y)
             # VIG_LEFT guards the face box's band; below it (the ground strip) the rise's 2 % inflation may lean 2 px
             if not name.startswith("emit") and y - half < fy1:
-                assert x - half >= gen_journeys.VIG_LEFT - 0.5, (name, turn, x, y)
+                assert x - half >= gen_journeys.VIG_LEFT - 0.5, (name, over, x, y)
     # each mote drifts MOTE_RISE px up from its MOTES position, right of the face box and above the hook zone
     for i, (mx, my, size) in enumerate(gen_journeys.MOTES):
         mote = _node(root, f"emitBookMote{i}")
@@ -532,18 +575,17 @@ def test_the_vignette_keeps_off_the_avatar(root: ET.Element) -> None:
     # the riffle stays right of the cover's resting stub edge (it folds onto the stub, never over the avatar) and
     # above the reach zone
     for i, (w, _, _) in enumerate(gen_journeys.FLAPS):
-        for sx in (1.0, 0.5, 0.0, gen_journeys.COVER_REST):
-            pts = _drawn(root, f"RiffleFlap{i}", {f"RiffleFlap{i}": {"scaleX": sx}})
+        for over in _flap_poses(root, i):
+            pts = _drawn(root, f"RiffleFlap{i}", over)
             assert min(x - half for _, x, _, half in pts) >= gen_journeys.BLOCK_X0 + w * gen_journeys.COVER_REST - 1.5
             assert max(y + half for _, _, y, half in pts) <= gen_journeys.REACH_ZONE[2]
 
 
-def _hero_poses() -> list[dict[str, dict[str, float]]]:
-    """The hero's (rise, turn, scale) from folded to rest, through the touchdown."""
-    folded, turn, dip = gen_journeys.HERO_FOLDED, gen_journeys.SETTLE_TURN, gen_journeys.SETTLE_DIP
-    steps = [(folded + (1 - folded) * k / 8, turn, 1 + dip) for k in range(8)]
-    steps += [(1.0, turn * (1 - k / 4), 1 + dip * (1 - k / 4)) for k in range(5)]
-    return [{"HeroRise": {"scaleY": h}, "VignetteHero": {"rotation": t, "scaleX": s, "scaleY": s}} for h, t, s in steps]
+def _hero_poses(root: ET.Element) -> list[dict[str, dict[str, float]]]:
+    """The hero's bound transforms at each sample unfold, read through `_eval` (see `_panel_poses`)."""
+    return [{"HeroRise": _bound_at(root, "HeroRise", {17: "scaleY"}, u),
+             "VignetteHero": _bound_at(root, "VignetteHero", {15: "rotation", 16: "scaleX", 17: "scaleY"}, u)}
+            for u in POSE_GRID]
 
 
 def test_the_hero_keeps_off_the_reach_zone(root: ET.Element) -> None:
@@ -553,7 +595,7 @@ def test_the_hero_keeps_off_the_reach_zone(root: ET.Element) -> None:
     x0, x1, y0, _ = gen_journeys.REACH_ZONE
     clip = _node(root, "HeroClip").find("ClippingShape")
     assert clip.get("sourceId") == _node(root, "HeroSky").get("id")   # the flats' glows stop at the card's sky
-    for over in _hero_poses():
+    for over in _hero_poses(root):
         for name, x, y, half in _drawn(root, "VignetteHero", over):
             assert x - half >= x1 or y + half <= y0, (name, over, x, y)
             assert x - half >= gen_journeys.FACE_BOX[1], (name, over, x, y)
@@ -565,7 +607,7 @@ def test_the_hero_occupies_the_upper_right_page(root: ET.Element) -> None:
     """At rest the card stands in x 645-795, y 205-560 (inside the portrait band), rising above the block's top edge,
     its foot falling away to the right; each emblem stands inside the card's width and is 100 pt or more tall or wide
     on a phone (the artboard's 800 px fill about 390 pt), or as large as the card lets it be."""
-    rest = {"HeroRise": {"scaleY": 1.0}, "VignetteHero": {"rotation": 0.0, "scaleX": 1.0, "scaleY": 1.0}}
+    rest = _hero_poses(root)[-1]   # unfold 1, read from the converters like every other pose
     card = _drawn(root, "HeroMat", rest)
     xs, ys = [x for _, x, _, _ in card], [y for _, _, y, _ in card]
     assert 645 <= min(xs) - 1.5 and max(xs) + 1.5 <= 795
@@ -660,7 +702,8 @@ def test_paper_and_foil_keep_their_tones_under_the_light(root: ET.Element) -> No
 def test_the_vignette_paints_behind_the_block_and_the_riffle_over_it(root: ET.Element) -> None:
     """The vignette is the book's back-most child (a panel lying flat is hidden behind the block); the riffle pages
     and the hero lie on the block's face, under the cover and the ribbon; inside the vignette, front to back: motes,
-    floor, near, mid, far, the light (RML paints the first child in front)."""
+    floor, near, mid, far, the light (RML paints the first child in front). Every root of the vignette system (the
+    vignette, the hero, each medallion glyph) reads only the vignette's lights, never the scene's."""
     kids = [e.get("name") for e in _node(root, "Book")]
     assert kids.index("Ribbon") < kids.index("BookCover") < kids.index("BookRiffle") < kids.index("VignetteHero")
     assert kids.index("VignetteHero") < kids.index("emitBookGlow") < kids.index("BookBlock")
@@ -670,8 +713,13 @@ def test_the_vignette_paints_behind_the_block_and_the_riffle_over_it(root: ET.El
     assert order == ["emitBookMotes", "VignetteFloor", "PanelNear", "PanelMid", "PanelFar", "emitBookShaft"]
     assert float(_node(root, "PanelFar").get("opacity")) == 0.55
     props = _props(root)
-    lights = {p for e in _node(root, "BookVignette").iter() for p, k in _binds(e, props) if k in (37, 38)}
-    assert lights == set(gen_journeys.VIGNETTE_LIGHTS)
+    vignette_lights = set(gen_journeys.VIGNETTE_LIGHTS)
+    caps = [s[0].upper() + s[1:] for s in art_bible.SCENES]
+    for name in ("BookVignette", "VignetteHero", *(f"MedallionGlyph{cap}" for cap in caps)):
+        lights = {p for e in _node(root, name).iter() for p, k in _binds(e, props) if k in (37, 38)}
+        assert lights and lights <= vignette_lights, (name, lights)
+        if name in ("BookVignette", "VignetteHero"):
+            assert lights == vignette_lights, name
     hero = [e.get("name") for e in _node(root, "HeroRise") if e.tag != "DataBindContext"]
     assert hero == ["HeroGround", "HeroClip", "HeroSky", "HeroMat"]
 
@@ -700,11 +748,25 @@ def test_the_ambient_loop_is_seamless(root: ET.Element) -> None:
 needs_rive = pytest.mark.skipif(shutil.which("rive") is None, reason="rive CLI not on PATH")
 
 
-def _shot(png: Path, *args: str) -> np.ndarray:
+def _project(tmp: Path, hidden: tuple[str, ...] = ()) -> Path:
+    """A scratch journeys project from a fresh `gen_journeys.build()`, so a stale RML on disk cannot flatter a run.
+    `hidden` zero the opacity of named emit shapes (soft light that would haze a measured box)."""
+    tmp.mkdir(parents=True, exist_ok=True)
+    shutil.copy(ROOT / "rive" / "journeys" / "rive.yaml", tmp / "rive.yaml")
+    rml = tmp / "journeys.rml"
+    write(str(rml), gen_journeys.build())   # exactly as `gen_journeys.main()` writes it (key decimation included)
+    body = rml.read_text()
+    for name in hidden:
+        body, count = re.subn(rf'(<Shape [^>]*name="{name}"[^>]*?)opacity="[\d.]+"', r'\1opacity="0"', body)
+        assert count == 1, name
+    rml.write_text(body)
+    return tmp
+
+
+def _shot(proj: Path, png: Path, *args: str) -> np.ndarray:
     """The data writes come before the advance: after it, each is a step with a frame of its own, so two poses with
     different numbers of writes would land on different frames of the ambient loop."""
-    subprocess.run(["rive", str(ROOT / "rive" / "journeys"), f"--screenshot={png}", *args, "--advance=2"], check=True,
-                   capture_output=True)
+    subprocess.run(["rive", str(proj), f"--screenshot={png}", *args, "--advance=2"], check=True, capture_output=True)
     return np.asarray(Image.open(png).convert("RGB")).astype(np.int16)
 
 
@@ -714,13 +776,15 @@ def _data(**numbers: object) -> list[str]:
 
 @needs_rive
 def test_the_vignette_draws_off_the_face_and_the_reach_zone() -> None:
-    """Rendered, for all ten flats, through the rise: no change on the face box, the hook zone or the reach zone, none
-    on the leather below HERO_FLOOR down to the floor spill, and the vignette and the hero show."""
+    """Rendered, for all ten flats, through the rise (0.7 and 0.8 are Mid's touchdown): no change on the face box,
+    the hook zone or the reach zone, none on the leather below HERO_FLOOR down to the floor spill, and the vignette
+    and the hero show."""
     with tempfile.TemporaryDirectory() as t:
-        base = _shot(Path(t) / "base.png", *_data(book=1, open=1, unfold=0))
+        proj = _project(Path(t) / "proj")
+        base = _shot(proj, Path(t) / "base.png", *_data(book=1, open=1, unfold=0))
         for dest in DEST:
-            for unfold in (0.47, 0.6, 0.85, 1):
-                full = _shot(Path(t) / "full.png", *_data(book=1, open=1, unfold=unfold, **{dest: 1}))
+            for unfold in (0.47, 0.6, 0.7, 0.8, 0.85, 1):
+                full = _shot(proj, Path(t) / "full.png", *_data(book=1, open=1, unfold=unfold, **{dest: 1}))
                 diff = np.abs(full - base).max(axis=2)
                 for x0, x1, y0, y1 in (gen_journeys.FACE_BOX, gen_journeys.HOOK_ZONE, gen_journeys.REACH_ZONE):
                     assert diff[int(y0):int(y1), int(x0):int(x1)].max() == 0, (dest, unfold)
@@ -733,21 +797,12 @@ def test_the_vignette_draws_off_the_face_and_the_reach_zone() -> None:
 def test_the_card_stands_in_its_box() -> None:
     """Rendered, its soft light hidden: the card's real pixels stand in x 645-795, y 205-560, for flats with and
     without a glow (the sky clips the flats' glows, so all of them share the card's outline)."""
-    proj = ROOT / "rive" / "journeys"
-    rml = (proj / "journeys.rml").read_text()
-    for name in ("emitHeroGlowPool", "emitBookShaftBeam", "emitBookHaloGlow"):
-        rml, hidden = re.subn(rf'(<Shape [^>]*name="{name}"[^>]*?)opacity="[\d.]+"', r'\1opacity="0"', rml)
-        assert hidden == 1, name
     with tempfile.TemporaryDirectory() as t:
-        bare = Path(t) / "bare"
-        bare.mkdir()
-        shutil.copy(proj / "rive.yaml", bare / "rive.yaml")
-        (bare / "journeys.rml").write_text(rml)
+        bare = _project(Path(t) / "bare",
+                        hidden=("emitHeroGlowPool", "emitBookShaftBeam", "emitBookHaloGlow"))
 
         def shot(png: str, *args: str) -> np.ndarray:
-            subprocess.run(["rive", str(bare), f"--screenshot={t}/{png}", *args, "--advance=2"], check=True,
-                           capture_output=True)
-            return np.asarray(Image.open(f"{t}/{png}").convert("RGB")).astype(np.int16)
+            return _shot(bare, Path(t) / png, *args)
 
         base = shot("base.png", *_data(book=1, open=1, unfold=0))
         for dest in ("destBeach", "destCampfire", "destLivingRoom", "destCafe"):
@@ -767,17 +822,18 @@ def test_the_lights_render_unwritten_and_written() -> None:
     box = (300, 480, 665, 775)      # y0, y1, x0, x1: inside the card
     with tempfile.TemporaryDirectory() as t:
         tmp = Path(t)
-        plain = _shot(tmp / "a.png", *pose)
-        same = _shot(tmp / "b.png", *pose, *_data(vignetteKey=living.key, vignetteAmbient=living.ambient))
+        proj = _project(tmp / "proj")
+        plain = _shot(proj, tmp / "a.png", *pose)
+        same = _shot(proj, tmp / "b.png", *pose, *_data(vignetteKey=living.key, vignetteAmbient=living.ambient))
         assert (plain == same).all()   # unwritten draws the instance's defaults, the living room's light
-        lit = _shot(tmp / "c.png", *pose, *_data(vignetteKey="FF60A0FF", vignetteAmbient="FF102040"))
+        lit = _shot(proj, tmp / "c.png", *pose, *_data(vignetteKey="FF60A0FF", vignetteAmbient="FF102040"))
         assert np.abs(lit - plain)[box[0]:box[1], box[2]:box[3]].max() > 40
-        rim = _shot(tmp / "d.png", *pose, *_data(lightKey="FF60A0FF", lightAmbient="FF102040"))
+        rim = _shot(proj, tmp / "d.png", *pose, *_data(lightKey="FF60A0FF", lightAmbient="FF102040"))
         assert np.abs(rim - plain)[box[0]:box[1], box[2]:box[3]].max() == 0
         assert np.abs(rim - plain).max() > 40   # the book's own rim and shade did change
         closed = _data(book=1, destBeach=1)
-        shut = _shot(tmp / "e.png", *closed)
-        relit = _shot(tmp / "f.png", *closed, *_data(vignetteKey="FF60A0FF", vignetteAmbient="FF102040"))
+        shut = _shot(proj, tmp / "e.png", *closed)
+        relit = _shot(proj, tmp / "f.png", *closed, *_data(vignetteKey="FF60A0FF", vignetteAmbient="FF102040"))
         delta = np.abs(relit - shut).max(axis=2)
         ys, xs = np.nonzero(delta)
         mx, my, r = gen_journeys.MEDALLION_X, gen_journeys.MEDALLION_Y, gen_journeys.MEDALLION_R

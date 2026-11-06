@@ -20,7 +20,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import gen_journeys  # noqa: E402
 import hand_rig  # noqa: E402
 import jacket_art  # noqa: E402
-from rml import render  # noqa: E402
+from rml import render, write  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[3]
 AVATAR_RML = ROOT / "rive" / "avatar" / "avatar.rml"
@@ -195,7 +195,12 @@ def test_path_portal_rocket_draw_as_in_m7() -> None:
     with tempfile.TemporaryDirectory() as t:
         tmp = Path(t)
         ref = _base(tmp / "ref", "rive/journeys/journeys.rml", proj / "rive.yaml")
+        # the file as the generator builds it now, never a stale journeys.rml on disk
+        now = tmp / "now"
+        now.mkdir()
+        shutil.copy(proj / "rive.yaml", now / "rive.yaml")
+        write(str(now / "journeys.rml"), gen_journeys.build())
         for fam in ("path", "portal", "rocket"):
             a = _shot(ref, tmp / "a.png", f"--data={fam}=1", "--advance=2")
-            b = _shot(proj, tmp / "b.png", f"--data={fam}=1", "--advance=2")
+            b = _shot(now, tmp / "b.png", f"--data={fam}=1", "--advance=2")
             assert not (np.abs(a - b) > 0).any(), fam
