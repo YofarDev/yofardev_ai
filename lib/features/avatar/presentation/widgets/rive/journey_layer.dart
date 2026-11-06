@@ -1,30 +1,36 @@
 import 'dart:async';
 import 'dart:math' as math;
 
-import 'package:flutter/foundation.dart' show ValueListenable;
+import 'package:flutter/foundation.dart'
+    show ValueListenable, visibleForTesting;
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:rive/rive.dart';
 
 import '../../../../../core/design/rive/rive_vm_binding.dart';
 import '../../../../../core/design/tokens/scene_lights.dart';
+import '../../../../../core/models/avatar_scene.dart';
 import '../../../../../core/models/performance/light_rig.dart';
 import '../../../../../core/utils/logger.dart';
 import '../../../domain/models/journey.dart';
+import '../../rive/avatar_face_writer.dart';
 import '../../rive/avatar_rive_contract.dart';
 import '../../rive/journey_choreography.dart';
 import '../stage_camera.dart';
 
-/// The avatar with a scene journey's threshold over it (contract v10, M7
-/// rulings 5–9): [avatar] at a fixed index (never remounted), clipped right
-/// of the threshold while a journey runs, and the `Journey` artboard drawn
-/// above it with the avatar's fit (contain, bottom-centre).
+/// The avatar with a scene journey's threshold over it (contract v15, the
+/// storybook; M7 rulings 5–9 with the v15 staging): [avatar] at a fixed
+/// index (never remounted), clipped right of the threshold while a journey
+/// runs, and the `Journey` artboard drawn above it with the avatar's fit
+/// (contain, bottom-centre).
 ///
 /// The threshold file loads when a [journey] starts and is disposed when it
 /// ends. A ticker turns the journey's beat and the time spent in it into the
 /// `JourneyVM` numbers ([JourneyChoreography]) and idles once the beat's
 /// moves are done. The light colours follow the scene the avatar is in at
-/// [daylight].
+/// [daylight]; the book also writes its vignette number (`dest<Scene>`, the
+/// scene NOT on screen) and the vignette's own light (`vignetteKey` /
+/// `vignetteAmbient`) in that other scene's rig.
 ///
 /// [jacket] (v11 `JourneyVM.jacket`, book only) comes from the cubit's
 /// state, and is written as soon as the widget updates, not on the next
@@ -36,6 +42,7 @@ class JourneyLayer extends StatefulWidget {
     required this.journey,
     this.daylight,
     this.jacket = 0,
+    this.vmSink,
   });
 
   final Widget avatar;
@@ -44,6 +51,11 @@ class JourneyLayer extends StatefulWidget {
 
   /// The jacket on the book's ribbon, 0..1 (`AvatarState.journeyJacket`).
   final double jacket;
+
+  /// A fake binding the numbers are written through instead of the Rive
+  /// view model (tests: no `journey.riv` needed).
+  @visibleForTesting
+  final AvatarVmSink? vmSink;
 
   /// The ribbon's jacket written for [journey]: [jacket] on the book, 0 on
   /// the other thresholds (they have no ribbon).
@@ -67,9 +79,11 @@ class _JourneyLayerState extends State<JourneyLayer>
   File? _file;
   RiveWidgetController? _controller;
   RiveVmBinding? _binding;
+  AvatarVmSink? _bindingSink;
   bool _loading = false;
   final Map<String, double> _written = <String, double>{};
   LightRig? _writtenLight;
+  LightRig? _writtenVignetteLight;
 
   @override
   void initState() {
@@ -161,12 +175,15 @@ class _JourneyLayerState extends State<JourneyLayer>
           AvatarRiveContract.journeyStateMachine,
         ),
       );
+      final RiveVmBinding binding = RiveVmBinding(controller);
       setState(() {
         _file = file;
         _controller = controller;
-        _binding = RiveVmBinding(controller);
+        _binding = binding;
+        _bindingSink = _BindingSink(binding);
         _written.clear();
         _writtenLight = null;
+        _writtenVignetteLight = null;
       });
       _write(force: true);
     } on Exception catch (e) {
@@ -187,10 +204,12 @@ class _JourneyLayerState extends State<JourneyLayer>
     final File? file = _file;
     final RiveVmBinding? binding = _binding;
     _binding = null;
+    _bindingSink = null;
     _controller = null;
     _file = null;
     _written.clear();
     _writtenLight = null;
+    _writtenVignetteLight = null;
     binding?.dispose();
     controller?.dispose();
     file?.dispose();
@@ -225,8 +244,8 @@ class _JourneyLayerState extends State<JourneyLayer>
       reduceMotion: _reduceMotion,
     );
     _apply(frame.clip);
-    final RiveVmBinding? binding = _binding;
-    if (binding == null || journey == null) {
+    final AvatarVmSink? sink = widget.vmSink ?? _bindingSink;
+    if (sink == null || journey == null) {
       return;
     }
     void number(String name, double value) {
@@ -235,13 +254,20 @@ class _JourneyLayerState extends State<JourneyLayer>
         return;
       }
       _written[name] = value;
-      binding.setNumber(name, value);
+      sink.setNumber(name, value);
     }
 
     for (final JourneyFamily family in JourneyFamily.values) {
       number(_familyProp(family), family == frame.family ? frame.show : 0);
     }
     number(AvatarRiveContract.journeyPropOpen, frame.open);
+    number(AvatarRiveContract.journeyPropUnfold, frame.unfold);
+    for (final AvatarScene scene in AvatarScene.values) {
+      number(
+        AvatarRiveContract.journeyDestProp(scene),
+        frame.destination == scene ? frame.show : 0,
+      );
+    }
     number(AvatarRiveContract.journeyPropLift, frame.lift);
     number(
       AvatarRiveContract.journeyPropJacket,
@@ -253,13 +279,32 @@ class _JourneyLayerState extends State<JourneyLayer>
     );
     if (force || rig != _writtenLight) {
       _writtenLight = rig;
-      binding.setColor(
-        AvatarRiveContract.journeyPropLightKey,
-        Color(rig.keyColor),
-      );
-      binding.setColor(
+      sink.setColor(AvatarRiveContract.journeyPropLightKey, rig.keyColor);
+      sink.setColor(
         AvatarRiveContract.journeyPropLightAmbient,
-        Color(rig.ambientColor),
+        rig.ambientColor,
+      );
+    }
+    // The vignette's light is the OTHER scene's rig (v15): the destination
+    // before the cut, the origin from it. Off the book the vignette stays at
+    // its file default, so nothing is written.
+    final AvatarScene? vignetteScene = frame.destination;
+    if (vignetteScene == null) {
+      return;
+    }
+    final LightRig vignette = SceneLights.at(
+      vignetteScene,
+      widget.daylight?.value ?? 0,
+    );
+    if (force || vignette != _writtenVignetteLight) {
+      _writtenVignetteLight = vignette;
+      sink.setColor(
+        AvatarRiveContract.journeyPropVignetteKey,
+        vignette.keyColor,
+      );
+      sink.setColor(
+        AvatarRiveContract.journeyPropVignetteAmbient,
+        vignette.ambientColor,
       );
     }
   }
@@ -292,6 +337,25 @@ class _JourneyLayerState extends State<JourneyLayer>
       ],
     );
   }
+}
+
+/// [AvatarVmSink] over the journey's Rive view-model binding.
+class _BindingSink implements AvatarVmSink {
+  const _BindingSink(this._binding);
+
+  final RiveVmBinding _binding;
+
+  @override
+  void setNumber(String name, double value) => _binding.setNumber(name, value);
+
+  @override
+  void setBool(String name, bool value) => _binding.setBool(name, value);
+
+  @override
+  void setColor(String name, int argb) => _binding.setColor(name, Color(argb));
+
+  @override
+  void fireTrigger(String name) => _binding.fireTrigger(name);
 }
 
 /// Clips the avatar right of the journey threshold (artboard x
