@@ -16,7 +16,8 @@ unfold 1 with destBeach, and the jacket on the ribbon - over every scene's poste
 rest render, in the phone framing the app uses (the scene `Fit.cover`, the avatar and the journey
 `Fit.contain` at the bottom); the other families keep their columns (the rocket adds lift 0.08 and
 1). Plus `sheet.png`, `gates.txt`, and with `--beat` the open and close beats at the app's curves
-(`JourneyChoreography`, mirrored here) as sheets of 1:1 crops: `beat_open.png`, `beat_close.png`.
+(`JourneyChoreography`, mirrored here; every `out` ease is Flutter's `Curves.easeOut` =
+Cubic(0, 0, 0.58, 1), evaluated on its bezier) as sheets of 1:1 crops: `beat_open.png`, `beat_close.png`.
 
 Gates (one line each, `ok` or `FAIL`):
 - every number 0 draws nothing, and so does every staged number at 1 with no family shown;
@@ -56,6 +57,7 @@ sys.path.insert(0, os.path.dirname(__file__))
 import art_bible  # noqa: E402
 import gen_journeys  # noqa: E402
 import world_kit  # noqa: E402
+from ik_check import bezier_ease  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[2]
 PROJ = ROOT / "rive" / "journeys"
@@ -339,10 +341,11 @@ FALL_START_MS, CLOSE_MS, FOLD_LEN_MS = 200, 640, 200
 
 
 def _ease(t: float, kind: str) -> float:
-    """The Flutter curves the choreography uses: `out` easeOut, `io` easeInOutCubic, `in` easeInCubic."""
+    """The Flutter curves the choreography uses: `out` = `Curves.easeOut` = Cubic(0, 0, 0.58, 1),
+    evaluated on its bezier (the app's own curve, not easeOutCubic), `io` easeInOutCubic, `in` easeInCubic."""
     t = min(1.0, max(0.0, t))
     if kind == "out":
-        return 1 - (1 - t) ** 3
+        return bezier_ease(0.0, 0.0, 0.58, 1.0, t)
     if kind == "in":
         return t ** 3
     return 4 * t ** 3 if t < 0.5 else 1 - 4 * (1 - t) ** 3
