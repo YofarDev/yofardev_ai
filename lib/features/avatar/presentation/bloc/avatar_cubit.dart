@@ -482,12 +482,12 @@ class AvatarCubit extends Cubit<AvatarState> {
   /// [JourneyTiming.waitTimeout]. The same scene: no journey, the config
   /// lands as it is.
   ///
-  /// The door (M8 rulings 5–6) adds two jacket beats: `grab` after `open`
-  /// (the jacket hangs on the peg from the door's appear; the `grab` gesture
-  /// reaches for it and, at its contact, the jacket moves to the hand:
-  /// [AvatarState.jacket] true and [AvatarState.journeyJacket] 0 in one
+  /// The book (M8 rulings 5–6) adds two jacket beats: `grab` after `open`
+  /// (the jacket hangs on the ribbon from the book's appear; the `grab`
+  /// gesture reaches for it and, at its contact, the jacket moves to the
+  /// hand: [AvatarState.jacket] true and [AvatarState.journeyJacket] 0 in one
   /// state) and `hang` after `enter` (the reverse). The jacket leaves with
-  /// the door at the end.
+  /// the book at the end.
   Future<void> _journey(String chatId, AvatarConfig avatarConfig) async {
     final AvatarScene from = state.scene;
     final AvatarScene to = avatarConfig.background ?? from;
@@ -536,7 +536,7 @@ class AvatarCubit extends Cubit<AvatarState> {
       state.copyWith(
         journey: journey,
         headTarget: journeyLead,
-        // the jacket hangs on the peg from the door's appear
+        // the jacket hangs on the ribbon from the book's appear
         journeyJacket: journey.hasJacket ? 1 : 0,
       ),
     );

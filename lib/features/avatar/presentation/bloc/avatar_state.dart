@@ -58,11 +58,11 @@ sealed class AvatarState with _$AvatarState {
     AvatarScene? preloadScene,
 
     /// The avatar holds the storybook jacket (contract v11 `jacket`): true
-    /// from a door journey's grab contact to its hang contact.
+    /// from a book journey's grab contact to its hang contact.
     @Default(false) bool jacket,
 
-    /// The jacket on the journey door's peg (`JourneyVM.jacket`, 0..1). It
-    /// flips with [jacket] in the same state, so one jacket always shows.
+    /// The jacket on the journey book's ribbon (`JourneyVM.jacket`, 0..1).
+    /// It flips with [jacket] in the same state, so one jacket always shows.
     @Default(0.0) double journeyJacket,
 
     /// The tablet's weather card, from the director's intent (v11).

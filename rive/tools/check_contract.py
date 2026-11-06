@@ -131,7 +131,7 @@ def parse_contract() -> dict:
             "sm": ticks(re.search(r"\*\*State machine:\*\*.*", j_sec).group(0))[0],
             "vm": ticks(re.search(r"\*\*View model:\*\*.*", j_sec).group(0))[0],
             "props": {ticks(prop)[0]: typ for prop, typ, _ in table_after(j_sec, r"^\| JourneyVM property")},
-            "max": int(re.search(r"`journey.riv` \(v10\) must stay at or under (\d+) KB", text).group(1)) * 1024,
+            "max": int(re.search(r"`journey.riv` \(v\d+\) must stay at or under (\d+) KB", text).group(1)) * 1024,
         }
     c["ui_max"] = int(re.search(r"`ui_kit.riv` must stay at or under (\d+) KB", text).group(1)) * 1024
     m = re.search(r"\*\*Scene posters:\*\* `assets/rive/posters/<sceneId>.webp`.*?(\d+)×(\d+), at most (\d+) KB", text, re.S)

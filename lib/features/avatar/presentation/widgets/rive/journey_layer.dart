@@ -26,7 +26,7 @@ import '../stage_camera.dart';
 /// moves are done. The light colours follow the scene the avatar is in at
 /// [daylight].
 ///
-/// [jacket] (v11 `JourneyVM.jacket`, door only) comes from the cubit's
+/// [jacket] (v11 `JourneyVM.jacket`, book only) comes from the cubit's
 /// state, and is written as soon as the widget updates, not on the next
 /// tick: it flips in the same frame as the avatar's `jacket`.
 class JourneyLayer extends StatefulWidget {
@@ -42,11 +42,11 @@ class JourneyLayer extends StatefulWidget {
   final JourneyState? journey;
   final ValueListenable<double>? daylight;
 
-  /// The jacket on the door's peg, 0..1 (`AvatarState.journeyJacket`).
+  /// The jacket on the book's ribbon, 0..1 (`AvatarState.journeyJacket`).
   final double jacket;
 
-  /// The peg's jacket written for [journey]: [jacket] on the door, 0 on the
-  /// other thresholds (they have no peg).
+  /// The ribbon's jacket written for [journey]: [jacket] on the book, 0 on
+  /// the other thresholds (they have no ribbon).
   @visibleForTesting
   static double journeyJacketOf(JourneyState journey, double jacket) =>
       journey.hasJacket ? jacket.clamp(0.0, 1.0) : 0;
@@ -265,7 +265,7 @@ class _JourneyLayerState extends State<JourneyLayer>
   }
 
   static String _familyProp(JourneyFamily family) => switch (family) {
-    JourneyFamily.door => AvatarRiveContract.journeyPropDoor,
+    JourneyFamily.book => AvatarRiveContract.journeyPropBook,
     JourneyFamily.path => AvatarRiveContract.journeyPropPath,
     JourneyFamily.portal => AvatarRiveContract.journeyPropPortal,
     JourneyFamily.rocket => AvatarRiveContract.journeyPropRocket,

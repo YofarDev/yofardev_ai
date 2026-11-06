@@ -83,7 +83,7 @@ Design: `docs/superpowers/specs/2026-10-22-rive-v4-design.md`.
 | `lightFlicker` | number | 0–1, default 0.15: firelight flicker of the key light on the cheek and glasses, looped inside the file (0 steady, 1 full campfire flicker). |
 | `prop` | enum | none, tablet, newspaper. v7: tablet = pull the tablet out, then hold it (its screen lights the face); back to none puts it away. v8b: newspaper (appended, index 2) = the same out / hold / away with a folded broadsheet (no glow; a soft page shadow on the face). Only one prop shows: a prop changed to another is put away first. Plays on its own layer over the gesture layer. |
 | `lean` | number | 0–1, default 0: listening lean; the torso and head tip toward the viewer and the head lowers a little. Composes with `breath`, gestures and the head turn. |
-| `jacket` | boolean | v11, default false: the viewer's-right hand holds the storybook jacket (closed grip, the jacket hanging from the fist; it follows the reach, the walk and the IK). False: no jacket. It shows or goes in one frame: the app flips it at a `grab` contact, while the journey door's peg shows the other copy. |
+| `jacket` | boolean | v11, default false: the viewer's-right hand holds the storybook jacket (closed grip, the jacket hanging from the fist; it follows the reach, the walk and the IK). False: no jacket. It shows or goes in one frame: the app flips it at a `grab` contact, while the journey book's ribbon shows the other copy. |
 | `tabletWeather` | enum | v11: none, clear, clouds, rain, snow, storm, fog. The tablet's weather card: `none` (default) keeps the generic card; any other value shows that glyph and the `tabletTemp` readout. |
 | `tabletTemp` | number | v11, −40–50, default 0: the temperature on the tablet's weather card in °C (the app rounds it), a signed two-digit seven-segment readout; shown only when `tabletWeather` is not none. |
 | `topTint` | color | v13, default `00000000`: a colour variant of the top. Every painted shape of the top (front, back, sleeves; base and shade, never ink, seams, prints or skin) has a second fill over its own, blend mode **color** (hue and saturation from the tint, lightness from the garment), bound to this colour; its alpha is the amount. Alpha 0 draws nothing (as v12). The app writes alpha 0 while a costume is worn. |
@@ -276,7 +276,7 @@ The rects are measured from the built art: each covers the prop as it rests and 
 - Vector only. No embedded raster images.
 - Keep blur, feather and mesh deformation to a minimum.
 - `avatar.riv` must stay at or under 600 KB, and each scene at or under 400 KB.
-- `journey.riv` (v10) must stay at or under 160 KB.
+- `journey.riv` (v15) must stay at or under 160 KB.
 - Scenes are bundled with the app and loaded lazily (v12: seven scenes; v14: ten, no download).
 - The avatar plus one scene must run with no visible stutter on a CPU-throttled Android
   emulator.
@@ -339,9 +339,11 @@ the Stage's scene picker (v12).
 
 ## `assets/rive/journeys/journey.riv`
 
-v10: the threshold of a scene journey (door, path, portal or rocket), drawn while the avatar
-walks from one scene to the next. The app loads the file when a journey starts and disposes it when
-the journey ends.
+v15: the threshold of a scene journey (book, path, portal or rocket), drawn while the avatar
+walks from one scene to the next. The v10 `door` is gone: every other pair of scenes takes the
+pop-up **book** — its front cover swings around the spine hinge, pages riffle, and the other
+scene rises as a paper-cut vignette. The app loads the file when a journey starts and disposes
+it when the journey ends.
 
 - **Artboard:** `Journey`, 800×1000: the avatar's artboard size. The app draws it with the
   avatar's fit (contain, bottom-centre), above the avatar and below the scene's `SceneFront`.
@@ -349,25 +351,50 @@ the journey ends.
 - **State machine:** `Main`.
 - **View model:** `JourneyVM`.
 - **Threshold:** x 640 in artboard space. During a journey the app clips the avatar right of it,
-  so the avatar disappears into (and comes out of) the threshold. Each threshold's occluding part
-  covers x ≥ 640 from y 200 to the ground while it is open.
+  so the avatar disappears into (and comes out of) the threshold. The book's right page block
+  covers x ≥ 640 from y 200 to the ground whether open or closed (the band rule); the path's
+  ferns, the portal and the rocket cover it while open.
 - No listeners and no events. At every number 0 the artboard draws nothing.
+- **Converters:** every `JourneyVM` binding is one of the forms the runtime supports: a `c + k·x`
+  linear formula over a window, a `min`/`max` clamp window (the staging of `unfold`'s riffle,
+  panels and light shaft), a `cos` of a window (the riffled pages' and the cover's foreshortening)
+  or a `sin` of a window (the hero's rise out of the vignette). The unfold-driven art is fully
+  landed at `unfold` 0.89 (`gen_journeys.UNFOLD_LANDED`); the app's staging reaches ~0.895 by its
+  open beat's end, so the beats that snap `unfold` to 1 change nothing visible.
+- **Ids:** the book's elements mint from `gen_journeys.V15_ID_START` = 6000 (the v10 `door`'s ids
+  stay unused, so every other id keeps its value); the two vignette colours sit past the drawing
+  (from 20000).
 
 | JourneyVM property | Type | Values / range |
 |---|---|---|
-| `door` | number | 0–1, default 0: how much of the storybook door shows (it fades and grows in). |
+| `book` | number | 0–1, default 0: how much of the storybook shows (it fades and grows in). |
 | `path` | number | 0–1, default 0: how much of the path's near ferns and signpost shows. |
 | `portal` | number | 0–1, default 0: how much of the portal ring shows (it grows from a point). |
 | `rocket` | number | 0–1, default 0: how much of the little rocket shows. |
-| `open` | number | 0–1, default 0: the shown threshold opens: the door leaf swings open on its right hinge, the ferns part, the ring's aperture opens, the rocket's hatch opens. |
+| `open` | number | 0–1, default 0: the shown threshold opens. The book: the front cover swings around the spine hinge (its early window is the slow crack). The ferns part, the ring's aperture opens, the rocket's hatch opens. |
+| `unfold` | number | v15, 0–1, default 0: the book's riffle and the pop-up vignette — three riffled pages, the pop-up panels, the hero on the right page, its floor spill, light shaft and motes. The other thresholds ignore it. |
+| `destLivingRoom` | number | v15, 0–1, default 0: the vignette and the medallion of the living room. |
+| `destCampfire` | number | v15, 0–1, default 0: the vignette and the medallion of the campfire. |
+| `destBeach` | number | v15, 0–1, default 0: the vignette and the medallion of the beach. |
+| `destDeepSpace` | number | v15, 0–1, default 0: the vignette and the medallion of deep space. |
+| `destCafe` | number | v15, 0–1, default 0: the vignette and the medallion of the cafe. |
+| `destRooftop` | number | v15, 0–1, default 0: the vignette and the medallion of the rooftop. |
+| `destMountainHut` | number | v15, 0–1, default 0: the vignette and the medallion of the mountain hut. |
+| `destForestCabin` | number | v15, 0–1, default 0: the vignette and the medallion of the forest cabin. |
+| `destTrainCompartment` | number | v15, 0–1, default 0: the vignette and the medallion of the compartment. |
+| `destLibrary` | number | v15, 0–1, default 0: the vignette and the medallion of the library. |
 | `lift` | number | 0–1, default 0: the rocket's height off the ground, with its flame; 1 is out of frame at the top. The other thresholds ignore it. |
-| `lightKey` | color | the current scene's key light colour (rim and glow). Default `FFFFD49A`. |
-| `lightAmbient` | color | the current scene's ambient colour (the shadow side). Default `FF2C3346`. |
-| `jacket` | number | v11, 0–1, default 0: the storybook jacket hanging on the door's peg (door only; the peg shows with the door). The app sets it to 0 at the avatar's grab contact and back to 1 when the avatar hangs it on the next door. |
+| `lightKey` | color | the current scene's key light colour (the book's own rim and glow). Default `FFFFD49A`. |
+| `lightAmbient` | color | the current scene's ambient colour (the book's shadow side). Default `FF2C3346`. |
+| `vignetteKey` | color | v15: the vignette's key light, in the OTHER scene's rig — the destination's before the cut, the origin's from it (the vignette, hero and medallion glow). Default `FFFFD49A`. |
+| `vignetteAmbient` | color | v15: the vignette's ambient colour, same other-scene rule. Default `FF2C3346`. |
+| `jacket` | number | v11, 0–1, default 0: the storybook jacket hanging from the book's ribbon (book only; the ribbon shows with the book). The app sets it to 0 at the avatar's grab contact and back to 1 when the avatar hangs it on the next book. |
 
-The app shows one threshold at a time (the other three numbers stay 0).
+Exactly one of the four threshold numbers is nonzero at a time, and at most one `dest*` is nonzero
+(the scene the vignette shows: the destination on the exit side, the origin on the arrival side).
 
-**Hook point (v11):** the door's peg is at (628, 560) in artboard space (the same point as the
-avatar's `grab` contact, since both artboards share the frame). Its jacket is the same drawing as
-the avatar's held jacket, so the handoff at the contact shows one jacket.
+**Hook point (v11):** the book's ribbon hook is at (628, 560) in artboard space (the same point
+as the avatar's `grab` contact, since both artboards share the frame; v15 keeps the point, the
+ribbon replacing the peg). Its jacket is the same drawing as the avatar's held jacket, so the
+handoff at the contact shows one jacket.
 

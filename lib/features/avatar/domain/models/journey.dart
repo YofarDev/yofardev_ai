@@ -1,7 +1,22 @@
 import '../../../../core/models/avatar_scene.dart';
 
-/// The threshold a scene journey walks through (moonshot M7 ruling 5).
-enum JourneyFamily { door, path, portal, rocket }
+/// The threshold a scene journey walks through (moonshot M7 ruling 5, v15:
+/// the storybook replaced the v10 door).
+enum JourneyFamily {
+  /// The pop-up storybook (v15): the front cover swings around the spine
+  /// hinge onto a paper-cut vignette of the other scene, and its ribbon
+  /// holds the jacket.
+  book,
+
+  /// The campfire–beach–forestCabin trail.
+  path,
+
+  /// The deep-space ring.
+  portal,
+
+  /// The deep-space rocket.
+  rocket,
+}
 
 /// The beats of a scene journey, in order (M7 ruling 9, M8 ruling 6).
 enum JourneyPhase {
@@ -11,8 +26,8 @@ enum JourneyPhase {
   /// The threshold appears and opens; the avatar's gaze leads toward it.
   open,
 
-  /// Door only (M8): the avatar reaches for the jacket on the door's peg and
-  /// takes it at [JourneyTiming.grabContact].
+  /// Book only (M8): the avatar reaches for the jacket on the book's ribbon
+  /// and takes it at [JourneyTiming.grabContact].
   grab,
 
   /// The avatar walks out through it (until `presence_done(outOfScreen)`).
@@ -30,7 +45,7 @@ enum JourneyPhase {
   /// The avatar walks in out of it (until `presence_done(onScreen)`).
   enter,
 
-  /// Door only (M8): the avatar hangs the jacket on the new door's peg at
+  /// Book only (M8): the avatar hangs the jacket on the new book's ribbon at
   /// [JourneyTiming.grabContact].
   hang,
 
@@ -75,8 +90,9 @@ class JourneyState {
       reduced && (phase == JourneyPhase.close || phase == JourneyPhase.cut);
 
   /// Whether this journey runs the jacket beats ([JourneyPhase.grab] and
-  /// [JourneyPhase.hang]): the door has a peg, the other thresholds do not.
-  bool get hasJacket => !reduced && family == JourneyFamily.door;
+  /// [JourneyPhase.hang]): the book has a ribbon, the other thresholds do
+  /// not.
+  bool get hasJacket => !reduced && family == JourneyFamily.book;
 
   /// The scene the avatar is in during [phase]: [from] until the cut, [to]
   /// from the cut on.
@@ -110,21 +126,31 @@ class JourneyState {
       '#$serial${reduced ? ', reduced' : ''})';
 }
 
-/// How long the timed beats last (M7 ruling 9). The walks and the cut wait
-/// for the Rive file and the scene view, each bounded by [waitTimeout].
+/// How long the timed beats last (M7 ruling 9, v15 staging). The walks and
+/// the cut wait for the Rive file and the scene view, each bounded by
+/// [waitTimeout].
 abstract final class JourneyTiming {
   static const Duration pullBack = Duration(milliseconds: 600);
+
+  /// The threshold's appear inside the open beat; the book's cover swing
+  /// starts as it ends.
   static const Duration appear = Duration(milliseconds: 300);
-  static const Duration open = Duration(milliseconds: 450);
-  static const Duration close = Duration(milliseconds: 350);
+
+  /// The open beat (v15 book: the staged cover swing lands at 1010 ms and
+  /// the riffle runs to just past the beat's end; the grab snaps it).
+  static const Duration open = Duration(milliseconds: 1400);
+  static const Duration close = Duration(milliseconds: 640);
 
   /// The rocket's lift-off after its hatch closes, and its landing.
   static const Duration lift = Duration(milliseconds: 700);
-  static const Duration arriveHold = Duration(milliseconds: 150);
+
+  /// The hold before the arrival's threshold opens; the book's arrival swing
+  /// starts at its end.
+  static const Duration arriveHold = Duration(milliseconds: 120);
   static const Duration arriveOpen = Duration(milliseconds: 350);
   static const Duration vanish = Duration(milliseconds: 300);
 
-  /// The door's jacket beats (M8 ruling 6): the `grab` gesture's length, and
+  /// The book's jacket beats (M8 ruling 6): the `grab` gesture's length, and
   /// its contact, when the jacket changes hands.
   static const Duration grab = Duration(milliseconds: 900);
   static const Duration hang = Duration(milliseconds: 900);
@@ -141,9 +167,11 @@ abstract final class JourneyTiming {
   static Duration closeOf(JourneyFamily family) =>
       family == JourneyFamily.rocket ? close + lift : close;
 
-  /// The `arriveOpen` beat of [family] (the rocket lands first).
-  static Duration arriveOpenOf(JourneyFamily family) =>
-      family == JourneyFamily.rocket
-      ? lift + arriveOpen
-      : arriveHold + arriveOpen;
+  /// The `arriveOpen` beat of [family]: the rocket lands first; the book
+  /// stages its swing (hold 120 + 880); the rest open after the hold.
+  static Duration arriveOpenOf(JourneyFamily family) => switch (family) {
+    JourneyFamily.rocket => lift + arriveOpen,
+    JourneyFamily.book => const Duration(milliseconds: 1000),
+    _ => arriveHold + arriveOpen,
+  };
 }

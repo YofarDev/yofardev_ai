@@ -676,7 +676,7 @@ void main() {
         journey: const JourneyState(
           from: AvatarScene.livingRoom,
           to: AvatarScene.beach,
-          family: JourneyFamily.door,
+          family: JourneyFamily.book,
           phase: JourneyPhase.exit,
           serial: 1,
         ),

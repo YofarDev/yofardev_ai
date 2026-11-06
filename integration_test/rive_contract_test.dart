@@ -800,7 +800,7 @@ void main() {
     }
   });
 
-  group('journey.riv matches the contract (v10)', () {
+  group('journey.riv matches the contract (v15)', () {
     test('artboard, SM and JourneyVM numbers and colours', () async {
       final File? loaded = await File.asset(
         AvatarRiveContract.journeyAssetPath,
@@ -826,16 +826,23 @@ void main() {
         ),
       );
       final ViewModelInstance vmi = controller.dataBind(DataBind.auto());
-      for (final String name in <String>[
-        AvatarRiveContract.journeyPropDoor,
+      final List<String> propNames = <String>[
+        AvatarRiveContract.journeyPropBook,
         AvatarRiveContract.journeyPropPath,
         AvatarRiveContract.journeyPropPortal,
         AvatarRiveContract.journeyPropRocket,
         AvatarRiveContract.journeyPropOpen,
         AvatarRiveContract.journeyPropLift,
-        // v11: the jacket on the door's peg
+        // v15: the book's riffle and pop-up vignette
+        AvatarRiveContract.journeyPropUnfold,
+        // v15: exactly one destination vignette and medallion at a time
+        for (final AvatarScene scene in AvatarScene.values)
+          AvatarRiveContract.journeyDestProp(scene),
+        // v11: the jacket on the book's ribbon
         AvatarRiveContract.journeyPropJacket,
-      ]) {
+      ];
+      expect(propNames, hasLength(18));
+      for (final String name in propNames) {
         final ViewModelInstanceNumber? n = vmi.number(name);
         expect(n, isNotNull, reason: 'JourneyVM.$name');
         expect(n!.value, 0, reason: '$name defaults to 0');
@@ -846,6 +853,9 @@ void main() {
       for (final String name in <String>[
         AvatarRiveContract.journeyPropLightKey,
         AvatarRiveContract.journeyPropLightAmbient,
+        // v15: the vignette glows in the other scene's light
+        AvatarRiveContract.journeyPropVignetteKey,
+        AvatarRiveContract.journeyPropVignetteAmbient,
       ]) {
         expect(vmi.color(name), isNotNull, reason: 'JourneyVM.$name');
       }

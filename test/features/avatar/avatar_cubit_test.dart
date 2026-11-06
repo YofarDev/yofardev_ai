@@ -384,7 +384,7 @@ void main() {
           );
           JourneyState j() => avatarCubit.state.journey!;
           expect(j().phase, JourneyPhase.pullBack);
-          expect(j().family, JourneyFamily.door);
+          expect(j().family, JourneyFamily.book);
           expect(avatarCubit.state.preloadScene, AvatarScene.beach);
           expect(avatarCubit.state.presence, AvatarSpecials.onScreen);
 
@@ -392,12 +392,12 @@ void main() {
           expect(j().phase, JourneyPhase.open);
           expect(avatarCubit.state.headTarget, AvatarCubit.journeyLead);
 
-          // the jacket hangs on the door's peg from its appear
+          // the jacket hangs on the book's ribbon from its appear
           expect(avatarCubit.state.journeyJacket, 1);
           expect(avatarCubit.state.jacket, isFalse);
 
           async.elapse(JourneyTiming.open);
-          // M8: the door's grab beat, the grab gesture, the contact swap
+          // M8: the book's grab beat, the grab gesture, the contact swap
           expect(j().phase, JourneyPhase.grab);
           expect(avatarCubit.state.gestureEvent.gesture, AvatarGesture.grab);
           expect(avatarCubit.state.presence, AvatarSpecials.onScreen);
@@ -436,7 +436,7 @@ void main() {
           async.flushMicrotasks();
           expect(j().phase, JourneyPhase.arriveOpen);
 
-          async.elapse(JourneyTiming.arriveOpenOf(JourneyFamily.door));
+          async.elapse(JourneyTiming.arriveOpenOf(JourneyFamily.book));
           expect(j().phase, JourneyPhase.enter);
           expect(avatarCubit.state.presence, AvatarSpecials.onScreen);
           expect(
@@ -446,7 +446,7 @@ void main() {
 
           avatarCubit.onPresenceDone('onScreen');
           async.flushMicrotasks();
-          // M8: the hang beat puts the jacket on the new door's peg
+          // M8: the hang beat puts the jacket on the new book's ribbon
           expect(j().phase, JourneyPhase.hang);
           expect(avatarCubit.state.jacket, isTrue);
           final int grabSeq = avatarCubit.state.gestureEvent.seq;
@@ -607,7 +607,7 @@ void main() {
           async.elapse(JourneyTiming.close);
           avatarCubit.onSceneShown(AvatarScene.beach);
           async.flushMicrotasks();
-          async.elapse(JourneyTiming.arriveOpenOf(JourneyFamily.door));
+          async.elapse(JourneyTiming.arriveOpenOf(JourneyFamily.book));
           expect(avatarCubit.state.journey!.phase, JourneyPhase.enter);
           expect(avatarCubit.state.jacket, isTrue);
           avatarCubit.loadAvatar('chat2');
@@ -1347,7 +1347,7 @@ void main() {
       () {
         fakeAsync((FakeAsync async) {
           cubit.setValuesBasedOnScreenWidth(screenWidth: 400);
-          // livingRoom → beach is a door journey: its jacket beats are skipped
+          // livingRoom → beach is a book journey: its jacket beats are skipped
           changeScene(AvatarScene.beach, top: AvatarTop.longCoat);
           JourneyState j() => cubit.state.journey!;
           expect(j().reduced, isTrue);

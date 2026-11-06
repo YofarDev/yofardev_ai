@@ -5,6 +5,8 @@
 /// contract change happens in `rive/CONTRACT.md` first, then here.
 library;
 
+import '../../../../core/models/avatar_scene.dart';
+
 abstract final class AvatarRiveContract {
   // ── assets/rive/avatar.riv ────────────────────────────────────────────────
   static const String avatarAssetPath = 'assets/rive/avatar.riv';
@@ -580,34 +582,53 @@ abstract final class AvatarRiveContract {
   static String posterAssetPath(String sceneId) =>
       '$postersAssetDir/$sceneId.webp';
 
-  // ── assets/rive/journeys/journey.riv (contract v10) ──────────────────────
+  // ── assets/rive/journeys/journey.riv (contract v15) ──────────────────────
   static const String journeyAssetPath = 'assets/rive/journeys/journey.riv';
   static const String journeyArtboard = 'Journey';
   static const String journeyStateMachine = 'Main';
   static const String journeyViewModel = 'JourneyVM';
 
-  /// How much of each threshold shows (0..1); one at a time.
-  static const String journeyPropDoor = 'door';
+  /// How much of each threshold shows (0..1); one at a time. v15: the
+  /// storybook replaced the v10 `door`.
+  static const String journeyPropBook = 'book';
   static const String journeyPropPath = 'path';
   static const String journeyPropPortal = 'portal';
   static const String journeyPropRocket = 'rocket';
 
-  /// The shown threshold opens (0..1).
+  /// The shown threshold opens (0..1); the book's front cover swings around
+  /// the spine hinge.
   static const String journeyPropOpen = 'open';
+
+  /// v15: the book's riffle and its pop-up vignette (0..1, book only).
+  static const String journeyPropUnfold = 'unfold';
+
+  /// v15: the pop-up vignette and medallion of [scene] (0..1; exactly one
+  /// nonzero while the book shows). The exit side shows the destination, the
+  /// arrival side the origin.
+  static String journeyDestProp(AvatarScene scene) =>
+      'dest${scene.name[0].toUpperCase()}${scene.name.substring(1)}';
 
   /// The rocket's height off the ground (0..1, 1 = out of frame).
   static const String journeyPropLift = 'lift';
 
-  /// v11: the jacket on the door's peg (0..1, door only).
+  /// v11: the jacket on the book's ribbon (0..1, book only).
   static const String journeyPropJacket = 'jacket';
 
-  /// v11: the door's peg, the avatar's `grab` contact (artboard space).
+  /// v11: the ribbon's hook, the avatar's `grab` contact (artboard space).
   static const double journeyHookX = 628;
   static const double journeyHookY = 560;
 
-  /// The current scene's key and ambient colours.
+  /// The current scene's key and ambient colours (the book's own rim and
+  /// shade).
   static const String journeyPropLightKey = 'lightKey';
   static const String journeyPropLightAmbient = 'lightAmbient';
+
+  /// v15: the vignette's light, in the OTHER scene's rig — the destination's
+  /// before the cut, the origin's from it (the vignette, hero and medallion
+  /// glow; the book's own rim/shade keeps [journeyPropLightKey] and
+  /// [journeyPropLightAmbient]).
+  static const String journeyPropVignetteKey = 'vignetteKey';
+  static const String journeyPropVignetteAmbient = 'vignetteAmbient';
 
   /// The `Journey` artboard's size: the avatar's.
   static const double journeyArtboardWidth = 800;

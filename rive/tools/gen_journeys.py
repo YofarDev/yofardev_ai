@@ -14,10 +14,10 @@ app clips the avatar right of it while it walks through):
 Everything is history-free: `JourneyVM` numbers bind opacity, scale, rotation and position through
 `c + k x` formula converters (and clamped `min` / `max` ones for the book's cover swing and fades,
 the clamp windows of `unfold` that stage its riffle and pop-up, with a `cos` for the riffled pages'
-foreshortening, and the rocket's flame and smoke); one ambient loop turns the portal's swirl,
-flickers the flame, breathes the book's light, drifts its motes and flickers its emblems' flames.
-No listeners, no events. Colours outside `emit*` nodes are fitted into every scene's colour script,
-so the file lints clean wherever it is shown.
+and the cover's foreshortening and a `sin` for the vignette hero's rise, and the rocket's flame and
+smoke); one ambient loop turns the portal's swirl, flickers the flame, breathes the book's light,
+drifts its motes and flickers its emblems' flames. No listeners, no events. Colours outside `emit*`
+nodes are fitted into every scene's colour script, so the file lints clean wherever it is shown.
 
     uv run rive/tools/gen_journeys.py            # writes rive/journeys/
 """

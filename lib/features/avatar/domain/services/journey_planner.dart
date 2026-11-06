@@ -5,9 +5,10 @@ import '../models/journey.dart';
 /// 5, M11 ruling 6): anything to deep space takes the rocket, leaving deep
 /// space takes a portal, the three open-air scenes (campfire, beach and
 /// forestCabin) connect by a path, and every other pair takes the storybook
-/// door (of the living room, the cafe, the rooftop's stairwell, the hut, the
-/// cabin's porch, the compartment's sliding door or the library). Over the
-/// ten scenes that is 9 rocket, 9 portal, 6 path and 66 door journeys.
+/// (opened on the floor of the living room, the cafe, the rooftop's
+/// stairwell, the hut, the cabin's porch, the compartment or the library).
+/// Over the ten scenes that is 9 rocket, 9 portal, 6 path and 66 book
+/// journeys.
 abstract final class JourneyPlanner {
   /// The scenes a path joins.
   static const Set<AvatarScene> openAir = <AvatarScene>{
@@ -26,6 +27,6 @@ abstract final class JourneyPlanner {
     if (from != to && openAir.contains(from) && openAir.contains(to)) {
       return JourneyFamily.path;
     }
-    return JourneyFamily.door;
+    return JourneyFamily.book;
   }
 }

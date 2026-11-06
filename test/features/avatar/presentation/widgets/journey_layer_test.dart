@@ -21,7 +21,7 @@ class _AvatarState extends State<_Avatar> {
 JourneyState _j(JourneyPhase phase, int serial) => JourneyState(
   from: AvatarScene.livingRoom,
   to: AvatarScene.campfire,
-  family: JourneyFamily.door,
+  family: JourneyFamily.book,
   phase: phase,
   serial: serial,
 );

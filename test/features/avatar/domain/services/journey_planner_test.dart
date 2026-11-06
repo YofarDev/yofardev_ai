@@ -20,12 +20,12 @@ void main() {
       if (outdoors.contains(from) && outdoors.contains(to)) {
         return JourneyFamily.path;
       }
-      return JourneyFamily.door;
+      return JourneyFamily.book;
     }
 
     // The table, written out by hand: row = from, column = to, in
     // AvatarScene order.
-    const JourneyFamily d = JourneyFamily.door;
+    const JourneyFamily d = JourneyFamily.book;
     const JourneyFamily r = JourneyFamily.rocket;
     const JourneyFamily p = JourneyFamily.portal;
     const JourneyFamily w = JourneyFamily.path;
@@ -82,7 +82,7 @@ void main() {
       JourneyFamily.rocket: 9,
       JourneyFamily.portal: 9,
       JourneyFamily.path: 6,
-      JourneyFamily.door: 66,
+      JourneyFamily.book: 66,
     });
   });
 
@@ -90,7 +90,7 @@ void main() {
     const JourneyState s = JourneyState(
       from: AvatarScene.livingRoom,
       to: AvatarScene.beach,
-      family: JourneyFamily.door,
+      family: JourneyFamily.book,
       phase: JourneyPhase.close,
       serial: 3,
     );

@@ -7,7 +7,7 @@ import 'package:yofardev_ai/features/avatar/presentation/widgets/rive/journey_la
 
 JourneyState _j(
   JourneyPhase phase, [
-  JourneyFamily family = JourneyFamily.door,
+  JourneyFamily family = JourneyFamily.book,
 ]) => JourneyState(
   from: AvatarScene.livingRoom,
   to: AvatarScene.beach,
@@ -19,7 +19,7 @@ JourneyState _j(
 JourneyFrame _at(
   JourneyPhase phase,
   int ms, {
-  JourneyFamily family = JourneyFamily.door,
+  JourneyFamily family = JourneyFamily.book,
   bool rm = false,
 }) => JourneyChoreography.at(
   _j(phase, family),
@@ -27,7 +27,7 @@ JourneyFrame _at(
   reduceMotion: rm,
 );
 
-/// The layer's peg-jacket rule under test.
+/// The layer's ribbon-jacket rule under test.
 abstract final class JourneyLayerJacket {
   static double of(JourneyState journey, double jacket) =>
       JourneyLayer.journeyJacketOf(journey, jacket);
@@ -43,26 +43,90 @@ void main() {
     expect(_at(JourneyPhase.open, 0).show, 0);
     expect(_at(JourneyPhase.open, 0).clip, isTrue);
     expect(_at(JourneyPhase.open, 300).show, 1);
-    expect(_at(JourneyPhase.open, 150).open, 0);
-    expect(_at(JourneyPhase.open, 450).open, 1);
+    expect(
+      _at(JourneyPhase.open, 290).open,
+      0,
+    ); // the swing starts as the appear ends
+    expect(
+      _at(JourneyPhase.open, 450).open,
+      lessThan(0.06),
+    ); // the crack: barely open
     final JourneyFrame exit = _at(JourneyPhase.exit, 999);
     expect((exit.show, exit.open, exit.clip), (1.0, 1.0, true));
   });
 
-  test('the door holds open through the jacket beats (M8)', () {
+  test('the book stages crack-swing then riffle-unfold, overlapping', () {
+    expect(_at(JourneyPhase.open, 290).show, lessThan(1)); // still appearing
+    expect(
+      _at(JourneyPhase.open, 395).open,
+      lessThan(0.06),
+    ); // crack: barely cracked
+    expect(
+      _at(JourneyPhase.open, 700).open,
+      allOf(greaterThan(0.25), lessThan(0.8)),
+    );
+    expect(_at(JourneyPhase.open, 1010).open, 1); // cover landed
+    expect(_at(JourneyPhase.open, 849).unfold, 0); // riffle not yet
+    expect(
+      _at(JourneyPhase.open, 900).unfold,
+      greaterThan(0),
+    ); // overlap with the swing
+    expect(_at(JourneyPhase.open, 1600).unfold, 1); // settled past the beat
+  });
+
+  test(
+    'the close folds the vignette before the cover falls, with a rebound',
+    () {
+      expect(
+        _at(JourneyPhase.close, 100).unfold,
+        lessThan(0.5),
+      ); // folding fast
+      expect(_at(JourneyPhase.close, 100).open, 1); // cover still open
+      expect(_at(JourneyPhase.close, 580).open, 0); // landed
+      final double rebound = _at(
+        JourneyPhase.close,
+        610,
+      ).open; // 60ms rebound tail
+      expect(rebound, greaterThan(0));
+      expect(rebound, lessThan(0.05));
+      expect(_at(JourneyPhase.close, 640).open, 0);
+    },
+  );
+
+  test('the arrival vignette shows the origin, the exit the destination', () {
+    expect(_at(JourneyPhase.open, 999).destination, AvatarScene.beach);
+    expect(
+      _at(JourneyPhase.arriveOpen, 999).destination,
+      AvatarScene.livingRoom,
+    );
+    expect(
+      _at(
+        JourneyPhase.arriveOpen,
+        999,
+        family: JourneyFamily.rocket,
+      ).destination,
+      isNull,
+    );
+  });
+
+  test('the book holds open through the jacket beats (M8)', () {
     for (final JourneyPhase phase in <JourneyPhase>[
       JourneyPhase.grab,
       JourneyPhase.hang,
     ]) {
       for (final int ms in <int>[0, 380, 900]) {
         final JourneyFrame f = _at(phase, ms);
-        expect((f.show, f.open, f.clip), (1.0, 1.0, true), reason: '$phase');
+        expect(
+          (f.show, f.open, f.unfold, f.clip),
+          (1.0, 1.0, 1.0, true),
+          reason: '$phase',
+        );
       }
       expect(JourneyChoreography.settleOf(_j(phase)), Duration.zero);
     }
   });
 
-  test('only the door writes the peg jacket (v11)', () {
+  test('only the book writes the ribbon jacket (v11)', () {
     expect(JourneyLayerJacket.of(_j(JourneyPhase.open), 1), 1);
     expect(JourneyLayerJacket.of(_j(JourneyPhase.grab), 0), 0);
     expect(JourneyLayerJacket.of(_j(JourneyPhase.vanish), 2), 1);
@@ -77,9 +141,10 @@ void main() {
 
   test('it closes before the cut and stays shut across it', () {
     expect(_at(JourneyPhase.close, 0).open, 1);
-    expect(_at(JourneyPhase.close, 350).open, 0);
+    expect(_at(JourneyPhase.close, 350).open, lessThan(1)); // mid-fall
     final JourneyFrame cut = _at(JourneyPhase.cut, 0);
     expect((cut.show, cut.open, cut.lift, cut.clip), (1.0, 0.0, 0.0, true));
+    expect(_at(JourneyPhase.cut, 0).unfold, 0);
   });
 
   test(
@@ -90,7 +155,7 @@ void main() {
         0,
       );
       expect(
-        _at(JourneyPhase.close, 1050, family: JourneyFamily.rocket).lift,
+        _at(JourneyPhase.close, 1340, family: JourneyFamily.rocket).lift,
         1,
       );
       expect(_at(JourneyPhase.cut, 0, family: JourneyFamily.rocket).lift, 1);
@@ -108,23 +173,68 @@ void main() {
       );
       expect((landed.lift, landed.open), (0.0, 1.0));
       // the other thresholds never lift
-      expect(_at(JourneyPhase.close, 1050).lift, 0);
+      expect(_at(JourneyPhase.close, 1340).lift, 0);
     },
   );
 
   test('it opens in the new scene, closes behind the avatar and vanishes', () {
-    expect(_at(JourneyPhase.arriveOpen, 150).open, 0);
-    expect(_at(JourneyPhase.arriveOpen, 500).open, 1);
+    expect(
+      _at(JourneyPhase.arriveOpen, 120).open,
+      0,
+    ); // the swing starts at the hold
+    expect(_at(JourneyPhase.arriveOpen, 570).open, 1); // the swing has landed
     expect(_at(JourneyPhase.enter, 0).open, 1);
-    expect(_at(JourneyPhase.arriveClose, 350).open, 0);
+    expect(_at(JourneyPhase.arriveClose, 640).open, 0); // the fall lands
     expect(_at(JourneyPhase.vanish, 0).show, 1);
     expect(_at(JourneyPhase.vanish, 300).show, 0);
     expect(_at(JourneyPhase.vanish, 0).clip, isFalse);
   });
 
+  test('each beat settles: past it the frame no longer changes', () {
+    expect(
+      JourneyChoreography.settleOf(_j(JourneyPhase.open)),
+      const Duration(milliseconds: 1500),
+    );
+    expect(
+      JourneyChoreography.settleOf(_j(JourneyPhase.close)),
+      const Duration(milliseconds: 660),
+    );
+    expect(
+      JourneyChoreography.settleOf(_j(JourneyPhase.arriveClose)),
+      const Duration(milliseconds: 660),
+    );
+    expect(
+      JourneyChoreography.settleOf(_j(JourneyPhase.arriveOpen)),
+      JourneyTiming.arriveOpenOf(JourneyFamily.book),
+    );
+    expect(
+      JourneyChoreography.settleOf(
+        _j(JourneyPhase.arriveOpen, JourneyFamily.rocket),
+      ),
+      JourneyTiming.arriveOpenOf(JourneyFamily.rocket),
+    );
+    expect(
+      JourneyChoreography.settleOf(_j(JourneyPhase.vanish)),
+      JourneyTiming.vanish,
+    );
+  });
+
   test('reduce motion jumps every move to its end', () {
     expect(_at(JourneyPhase.open, 0, rm: true).show, 1);
-    expect(_at(JourneyPhase.close, 0, rm: true).open, 0);
+    expect(
+      _at(JourneyPhase.open, 0, rm: true).open,
+      1,
+    ); // the swing collapses to its end
+    expect(
+      _at(JourneyPhase.open, 0, rm: true).unfold,
+      0,
+    ); // ramps keep their start
+    expect(_at(JourneyPhase.open, 850, rm: true).unfold, 1);
+    expect(
+      _at(JourneyPhase.close, 0, rm: true).open,
+      0,
+    ); // the fall collapses to its end
+    expect(_at(JourneyPhase.arriveOpen, 0, rm: true).open, 1);
     expect(_at(JourneyPhase.vanish, 0, rm: true).show, 0);
   });
 

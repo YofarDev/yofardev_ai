@@ -196,7 +196,7 @@ void main() {
     JourneyState journey(JourneyPhase phase) => JourneyState(
       from: AvatarScene.livingRoom,
       to: AvatarScene.beach,
-      family: JourneyFamily.door,
+      family: JourneyFamily.book,
       phase: phase,
       serial: phase.index,
       reduced: true,
@@ -246,7 +246,7 @@ void main() {
           journey: const JourneyState(
             from: AvatarScene.livingRoom,
             to: AvatarScene.beach,
-            family: JourneyFamily.door,
+            family: JourneyFamily.book,
             phase: JourneyPhase.cut,
             serial: 1,
           ),
