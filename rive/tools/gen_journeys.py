@@ -106,6 +106,22 @@ for _i, _name in enumerate(("book", "unfold", *DEST_PROPS)):
                                            viewModelPropertyId=vm_props[_name].ref()))
 V15_DRAW_START = d15.next   # the book's drawing mints from here (build())
 
+# The vignette's own lights: the scene NOT on screen (the destination before the cut, the origin after it), so the
+# vignette glows in the other scene's light while the book's own rim and shade keep `lightKey` / `lightAmbient`. The
+# defaults are the living room's, like theirs, so the file draws correctly until the app writes them. Their ids sit
+# past the whole drawing, which keeps every drawing id as it was (build() asserts the drawing stops short of them).
+V15_LIGHT_START = 20000
+VIGNETTE_LIGHTS = {"vignetteKey": SCENES["livingRoom"].key, "vignetteAmbient": SCENES["livingRoom"].ambient}
+d15.next = V15_LIGHT_START
+for _name, _light in VIGNETTE_LIGHTS.items():
+    _after = vm_props["vignetteKey" if _name == "vignetteAmbient" else "lightAmbient"]
+    vm_props[_name] = d15("ViewModelPropertyColor", name=_name)
+    vm.children.insert(vm.children.index(_after) + 1, vm_props[_name])
+    inst.children.insert(1 + next(i for i, v in enumerate(inst.children)
+                                  if v.attrs["viewModelPropertyId"] == _after.ref()),
+                         d15("ViewModelInstanceColor", propertyValue=_light,
+                             viewModelPropertyId=vm_props[_name].ref()))
+
 
 def vpath(name: str) -> str:
     return f"{vm.ref()}-{vm_props[name].ref()}"
@@ -401,10 +417,13 @@ def ribbon() -> El:
 #
 # `unfold` stages all of it. The app ramps the number once per beat; the stagger lives here, in clamp windows of
 # it (`window`). Placement keeps the avatar's own beats readable, since the journey draws over the avatar:
-# - the panels stand left of the gutter but never left of VIG_LEFT (the avatar's face box is FACE_BOX);
+# - the supporting panels stand left of the gutter but never left of VIG_LEFT (the avatar's face box is FACE_BOX);
 # - their floor is the gutter at VIG_FLOOR, above HOOK_ZONE, where the avatar's `grab` / `hang` fist and its own
 #   jacket copy pass (the cover's stub keeps clear of it for the same reason);
-# - the riffle flips on the block's face and folds away onto the stub.
+# - the hero stands on the right page, where the only free area in portrait is, and keeps out of REACH_ZONE at every
+#   step; below HERO_FLOOR the block's face stays plain leather;
+# - the riffle flips on the block's face, above the reach zone, and folds away onto the stub.
+# All of it is lit by the scene NOT on screen (VIGNETTE_LIGHTS): the contrast with the room is the beat.
 
 UNFOLD_FLAPS = ((0.00, 0.18), (0.06, 0.27), (0.14, 0.38))             # the riffle: three pages, staggered
 UNFOLD_PANELS = {"Far": (0.10, 0.55), "Mid": (0.22, 0.72), "Near": (0.38, 1.0)}   # the pop-up, tallest first
@@ -416,16 +435,62 @@ HOOK_ZONE = (500.0, 640.0, 505.0, 770.0)   # the grab / hang reach, fist and hel
 PANEL_FLAT = math.pi / 2    # a panel lies flat behind the block: turned clockwise about its pivot onto the floor line
 FLAP_TURN = math.acos(COVER_REST)   # a riffled page turns about the spine until it lies on the cover's stub
 FLAP_FADE = 0.35            # a page fades in over this share of its window as it lifts (on the close, out as it lands)
-FLAPS = ((180.0, 258.0, 482.0), (186.0, 252.0, 485.0), (192.0, 246.0, 488.0))   # width, height, artboard centre y
+# width, height, artboard centre y: on the page where the hero rises, ending above the reach zone
+FLAPS = ((180.0, 226.0, 401.0), (186.0, 222.0, 403.0), (192.0, 218.0, 405.0))
 MOTES = ((616.0, 470.0, 8.0), (594.0, 412.0, 6.0), (574.0, 348.0, 10.0), (606.0, 292.0, 7.0), (556.0, 232.0, 9.0),
          (590.0, 172.0, 6.0), (548.0, 112.0, 8.0))   # artboard x, y (at the start of its rise) and size
 MOTE_PHASE, MOTE_RISE = 34, 60.0
 SHAFT_LEAN = 0.22           # the light shaft leans this far left of vertical (rad), from the gutter's mouth
+# The touchdown: a panel's main rise ends SETTLE_SHARE before the end of its window, SETTLE_TURN short of erect, and
+# the last of the turn takes the rest of the window, about five times slower, while the panel's scale comes down
+# SETTLE_DIP onto 1. Every converter stays monotonic (the rest pose is exact), so it lands, it does not wobble.
+SETTLE_SHARE, SETTLE_TURN, SETTLE_DIP = 0.2, 0.069, 0.02    # 0.069 rad = 3.95 degrees
+# The hero: the other scene, as a paper-cut card standing on the right page, turned out from the gutter. It stands up
+# off the page inside HERO_RISE of `unfold`, showing over the first HERO_FADE of that window.
+HERO_RISE, HERO_FOLDED, HERO_FADE = (0.45, 0.85), 0.06, 0.18
+HERO_AT = (721.0, 521.0)    # artboard: the middle of the card's foot, its pivot
+HERO_HW, HERO_TOP = 69.0, 306.0   # the card, from its foot: half its width and its height at the arch (the shear
+                                  # lifts the arch's left shoulder 5 px above this: its top stands at y 210)
+HERO_SHEAR = 0.4225         # px down per px right: the turned card's foot, clear of the reach zone left of x 700
+HERO_MAT = 7.0              # the paper frame round the card's sky
+HERO_FLAT_SHEAR = 0.18      # the nearer flat (the emblem and its back), turned less than the card: objects stay upright
+HERO_EMBLEM = (122.0, 226.0)   # the emblem's largest width and height on the flat
+HERO_EMBLEM_FOOT = 28.0     # its foot, above the card's at the middle (the ground strip hides it)
+HERO_FLOAT = {"deepSpace": 48.0}   # an emblem with no ground under it floats
+_C = "c"                    # a hard corner in the back flats' outlines
+# Each scene's back flat on the card: the top of its dark layer, left to right (y up from the card's foot). Its rim
+# takes the key, so it stands against the sky's glow.
+HERO_BACKS: dict[str, list[tuple]] = {
+    "livingRoom": [(-64, -108, _C), (64, -108, _C)],                                      # the floor
+    "campfire": [(-64, -86, _C), (-56, -114, _C), (-48, -92, _C), (-38, -130, _C), (-28, -96, _C), (-16, -122, _C),
+                 (-6, -92, _C), (6, -136, _C), (18, -96, _C), (30, -126, _C), (40, -94, _C), (52, -118, _C),
+                 (64, -90, _C)],                                                          # a pine treeline
+    "beach": [(-64, -98), (-24, -94), (20, -99), (64, -95)],                              # the sea
+    "deepSpace": [(-64, -72), (-40, -86), (-16, -68), (14, -82), (40, -64), (64, -80)],   # a moon's surface
+    "cafe": [(-64, -94, _C), (64, -94, _C)],                                              # the counter
+    "rooftop": [(-64, -104, _C), (-46, -104, _C), (-46, -122, _C), (-30, -122, _C), (-30, -96, _C), (-8, -96, _C),
+                (-8, -132, _C), (10, -132, _C), (10, -108, _C), (34, -108, _C), (34, -140, _C), (50, -140, _C),
+                (50, -100, _C), (64, -100, _C)],                                          # the far blocks
+    "mountainHut": [(-64, -64), (-48, -92), (-34, -80), (-12, -128), (6, -100), (26, -120), (46, -86), (64, -98)],
+    "forestCabin": [(-64, -96, _C), (-54, -128, _C), (-44, -102, _C), (-30, -146, _C), (-18, -106, _C),
+                    (-6, -134, _C), (6, -102, _C), (22, -152, _C), (36, -106, _C), (50, -136, _C), (64, -100, _C)],
+    "trainCompartment": [(-64, -86, _C), (64, -86, _C)],                                  # the seat's back
+    "library": [(-64, -122, _C), (-50, -122, _C), (-50, -134, _C), (-38, -134, _C), (-38, -114, _C), (-26, -114, _C),
+                (-26, -142, _C), (-14, -142, _C), (-14, -118, _C), (0, -118, _C), (0, -130, _C), (14, -130, _C),
+                (14, -112, _C), (30, -112, _C), (30, -138, _C), (44, -138, _C), (44, -120, _C), (64, -120, _C)],
+}
+HERO_BACK_FOOT = -20.0      # the back flats' bottom edge: hidden by the ground strip all along the card's foot
+REACH_ZONE = (500.0, 700.0, 515.0, 770.0)   # x0, x1, y0, y1: the grab / hang arm and the hook: no hero art, ever
+HERO_FLOOR = 560.0          # below this the block's face stays plain leather
 EMBLEM_AT = (-68.0, -26.0)  # the emblems' base centre, from the vignette's pivot (artboard (572, 474))
 GLYPH_R = MEDALLION_INNER_R - 4   # a medallion glyph's bounding box fits inside this circle
 PAPER, PAPER_SHADE, PAPER_TAN = "FFF3EBDD", "FFE0D2BC", "FFD9C7A8"
 INSET = "FF5A3E30"          # openings (a tent's door, coffee)
 FOIL, FOIL_SHADE, FOIL_INK = "FFDCB46C", "FFB08A48", "FF5A3A1E"
+CLEAR = "00FFF4E4"          # a glow's fading end: nearly neutral, so it fades the same in every scene's light
+COLOR_BLEND = 27            # Rive's color blend: hue and saturation from the paint, lightness from what is under it
+SPILL_PEAK = 0.533          # the floor spill's opacity at `unfold` 1 (0.85 of its v15 stop's alpha 0xA0)
+GUTTER_KEY_AT = 0.25        # where the gutter glow reaches the vignette's key
 BREATH = [(0, 0.9), (60, 1.0), (120, 0.88), (180, 1.0), (240, 0.9)]   # the v10 door's glow breath
 
 _windows: dict[tuple[object, ...], El] = {}
@@ -442,14 +507,6 @@ def window(a: float, b: float) -> El:
     key = ("window", round(a, 3), round(b, 3))
     if key not in _windows:
         _windows[key] = conv_tokens(*window_tokens(a, b))
-    return _windows[key]
-
-
-def windowed(a: float, b: float, k: float, c: float = 0.0) -> El:
-    """`c + k window(a, b)`: monotonic, from c to c + k over the window."""
-    key = ("linear", round(a, 3), round(b, 3), round(k, 3), round(c, 3))
-    if key not in _windows:
-        _windows[key] = conv_tokens(F.val(c), F.op("+"), F.val(k), F.op("*"), *window_tokens(a, b))
     return _windows[key]
 
 
@@ -512,13 +569,60 @@ def arc(cx: float, cy: float, rx: float, ry: float, a0: float, a1: float, n: int
     return out
 
 
+def vignette_fill(prop: str) -> El:
+    """A fill in the vignette's light (`vignetteKey` / `vignetteAmbient`)."""
+    return bound_fill(prop, VIGNETTE_LIGHTS[prop])
+
+
+def vignette_line(prop: str, w: float) -> El:
+    return bound_line(prop, w, VIGNETTE_LIGHTS[prop])
+
+
+def light_stop(position: float, prop: str = "vignetteKey") -> El:
+    """A gradient stop in the vignette's light."""
+    return d("GradientStop", bind(prop, 38), colorValue=fit(VIGNETTE_LIGHTS[prop]), position=float(position))
+
+
+def stop(c: str, position: float) -> El:
+    return d("GradientStop", colorValue=c, position=float(position))
+
+
+def light_glow(r: float, *stops: El, cx: float = 0.0, cy: float = 0.0) -> El:
+    """A radial fill through `stops`, clear at `r`. A bound colour is opaque, so a glow's strength is its shape's
+    opacity."""
+    return d("Fill", d("RadialGradient", *stops, stop(CLEAR, 1.0), startX=float(cx), startY=float(cy),
+                       endX=float(cx + r), endY=float(cy)), name="Fill")
+
+
+def relit(shape: El, at: int, position: float) -> None:
+    """Stop `at` of a glow drawn before the vignette's lights takes `vignetteKey` (its ids stay as they were)."""
+    stops = [e for e in _walk(shape) if e.tag == "GradientStop"]
+    stops[at].attrs.update(colorValue=fit(VIGNETTE_LIGHTS["vignetteKey"]), position=float(position))
+    stops[at].add(bind("vignetteKey", 38))
+    stops[-1].attrs["colorValue"] = CLEAR
+
+
+def tinted(*roots: El) -> None:
+    """The paper and the foil under `roots` take the vignette's light: a second fill over a shape's own, under its
+    ink (a shape's later paints draw over the earlier ones; M10's tint), color blend, so the shape keeps its
+    lightness and its tones and takes the key's hue."""
+    tones = {fit(c) for c in (PAPER, PAPER_SHADE, PAPER_TAN, FOIL, FOIL_SHADE)}
+    for root in roots:
+        for shape in _walk(root):
+            own = [c for c in shape.children if c.tag == "Fill"]
+            if shape.tag == "Shape" and own and own[0].children[0].attrs.get("colorValue") in tones:
+                shape.children.insert(shape.children.index(own[-1]) + 1, d(
+                    "Fill", d("SolidColor", bind("vignetteKey", 37), colorValue=fit(VIGNETTE_LIGHTS["vignetteKey"])),
+                    blendModeValue=COLOR_BLEND, fillRule=own[-1].attrs.get("fillRule"), name="Tint"))
+
+
 class Kit:
     """How an emblem is drawn: in the vignette (paper cut-outs, ink, emit lights with their glows) or on the
     medallion (gold foil stamped into the leather: foil, dark debossed lines and insets, no glows)."""
 
-    def __init__(self, scene: str, foil: bool) -> None:
+    def __init__(self, scene: str, foil: bool, prefix: str = "Vignette") -> None:
         self.foil = foil
-        self.prefix = ("Medallion" if foil else "Vignette") + scene[0].upper() + scene[1:]
+        self.prefix = ("Medallion" if foil else prefix) + scene[0].upper() + scene[1:]
 
     def n(self, part: str, emit: bool = False) -> str:
         return ("emit" if emit and not self.foil else "") + self.prefix + part
@@ -532,8 +636,8 @@ class Kit:
         return line(FOIL_INK if self.foil else INK, w)
 
     def drawn(self, w: float) -> El:
-        """A stroke drawn on its own (steam): paper in the vignette, which stands over the dark scene."""
-        return line(FOIL if self.foil else PAPER, w)
+        """A stroke drawn on its own (steam), in the vignette's light."""
+        return vignette_line("vignetteKey", w)
 
 
 def cut(k: Kit, part: str, pts: list, tone: str = PAPER, w: float = 3.0, **kw: object) -> El:
@@ -580,7 +684,7 @@ def _living_room(k: Kit) -> list[El]:
            cut(k, "Shade", [(12, -100, "c2"), (40, -100, "c2"), (34, -136, "c4"), (18, -136, "c4")]),
            cut(k, "Lamp", pole, w=2.0)]
     if not k.foil:
-        out.append(S(k.n("LampLight", emit=True), [(14, -100, "c"), (38, -100, "c"), (56, -28, "c"), (-4, -28, "c")],
+        out.append(S(k.n("LampGlow", emit=True), [(14, -100, "c"), (38, -100, "c"), (56, -28, "c"), (-4, -28, "c")],
                      vfill(-100, -28, [("B0FFE7B0", 0), ("00FFE7B0", 1)], emit=True)))
     return out
 
@@ -771,10 +875,13 @@ EMBLEMS = {"livingRoom": _living_room, "campfire": _campfire, "beach": _beach, "
 
 def glyph_box(shapes: list[El]) -> tuple[float, float, float, float]:
     """(x0, y0, x1, y1) of a glyph's shapes: their path points and parametric paths (turned ones by their
-    longer side)."""
+    longer side). The soft glows don't count: an emblem is fitted by its solid art."""
     xs: list[float] = []
     ys: list[float] = []
     for s in shapes:
+        name = str(s.attrs.get("name", ""))
+        if name.startswith("emit") and name.endswith("Glow"):
+            continue
         sx, sy = float(s.attrs.get("x", 0.0)), float(s.attrs.get("y", 0.0))
         for p in s.children:
             if p.tag == "PointsPath":
@@ -829,12 +936,27 @@ def riffle() -> El:
     return N("BookRiffle", *flaps, x=0.0, y=0.0)
 
 
+def settle_from(a: float, b: float) -> float:
+    """Where the touchdown of window (a, b) starts."""
+    return b - SETTLE_SHARE * (b - a)
+
+
+def settle_dip(a: float, b: float) -> El:
+    """A panel's scale: 1 + SETTLE_DIP until its touchdown, then down onto 1."""
+    return conv_tokens(F.val(1 + SETTLE_DIP), F.op("-"), F.val(SETTLE_DIP), F.op("*"),
+                       *window_tokens(settle_from(a, b), b))
+
+
 def panel(name: str, *kids: El) -> El:
     """`Panel<name>`, pivoting on the vignette's floor at the gutter: flat behind the block (PANEL_FLAT) until its
-    window of `unfold` opens, erect at its end."""
+    window of `unfold` opens, erect at its end. The rise ends SETTLE_TURN short of erect at the touchdown; the second
+    term takes the last of the turn over the rest of the window, about five times slower, as its scale dips."""
     a, b = UNFOLD_PANELS[name]
-    return N(f"Panel{name}", *kids, bind("unfold", 15, windowed(a, b, -PANEL_FLAT, PANEL_FLAT)), x=0.0, y=0.0,
-             rotation=PANEL_FLAT)
+    s, flat, dip = settle_from(a, b), round(PANEL_FLAT, 3), settle_dip(a, b)
+    turn = conv_tokens(F.val(flat), F.op("-"), F.val(flat - SETTLE_TURN), F.op("*"), *window_tokens(a, s),
+                       F.op("-"), F.val(SETTLE_TURN), F.op("*"), *window_tokens(s, b))
+    return N(f"Panel{name}", *kids, bind("unfold", 15, turn), bind("unfold", 16, dip), bind("unfold", 17, dip), x=0.0,
+             y=0.0, rotation=PANEL_FLAT, scaleX=1 + SETTLE_DIP, scaleY=1 + SETTLE_DIP)
 
 
 def motes() -> El:
@@ -848,7 +970,7 @@ def motes() -> El:
         rise = cyclic([(0, 0.0), (228, -MOTE_RISE), (239, -MOTE_RISE)], ph)
         y0 = my - VIG_FLOOR
         dot = E(f"emitBookMote{i}", mx - BLOCK_X0, y0 + rise[0][1], size, size,
-                rfill(size / 2, [("FFFFF8E6", 0), ("FFFFEFC4", 0.45), ("00FFE0A0", 1)], emit=True),
+                light_glow(size / 2, stop("FFFFF8E6", 0), light_stop(0.45)),
                 opacity=round(fade[0][1], 4))
         amb_tracks.append(track(d, dot, {"opacity": [(f, round(v, 4), EASE) for f, v in fade],
                                          "y": [(f, round(y0 + v, 3), "linear") for f, v in rise]}))
@@ -857,11 +979,12 @@ def motes() -> El:
 
 
 def vignette() -> El:
-    """`BookVignette`, behind the page block (a panel flat behind it is hidden): the pop-up. A paper floor slides
-    out of the gutter, then three paper-cut layers rise from it, tallest at the gutter and first, each turning up
-    about the floor's gutter end: `PanelFar` (a ridge in the scene's ambient light, its edge key-lit), `PanelMid`
-    (hills, their crest key-lit) and `PanelNear` (the near ground and the destination's emblem). Behind them the
-    book's light: a soft halo and a shaft rising from the gutter's mouth up-left, warm motes drifting up it."""
+    """`BookVignette`, behind the page block (a panel flat behind it is hidden): the pop-up's supporting layers, all
+    in the other scene's light. A paper floor slides out of the gutter, then three paper-cut layers rise from it,
+    tallest at the gutter and first, each turning up about the floor's gutter end: `PanelFar` (a ridge in the
+    vignette's ambient, its edge key-lit), `PanelMid` (hills, their crest key-lit) and `PanelNear` (the near ground
+    and the destination's emblem). Behind them the book's light: a soft halo and a shaft rising from the gutter's
+    mouth up-left, motes drifting up it."""
     # the ridge keeps right of the avatar's hair (x <= 557) above the hills' crest
     far = [(-116, 2, "c"), (-110, -40), (-96, -72), (-84, -112), (-76, -164), (-66, -194, "c6"), (-56, -184),
            (-46, -222), (-36, -252, "c6"), (-26, -240), (-14, -282), (-4, -304, "c6"), (0, -300, "c"), (0, 2, "c")]
@@ -875,36 +998,102 @@ def vignette() -> El:
     # the light: a soft ray from the mouth (a radial glow squashed into a beam, leaning SHAFT_LEAN left) and a
     # halo behind the layers; both fade to nothing before the avatar's face box
     ray = N("emitBookShaftRay",
-            E("emitBookShaftBeam", 0, 0, 600, 600,
-              rfill(300, [("C8FFF0C8", 0), ("70FFE2A8", 0.45), ("00FFD49A", 1)], emit=True, cy=170)),
+            E("emitBookShaftBeam", 0, 0, 600, 600, light_glow(300, light_stop(0), cy=170), opacity=0.78),
             x=-300 * math.sin(SHAFT_LEAN), y=-300 * math.cos(SHAFT_LEAN), rotation=-SHAFT_LEAN, scaleX=0.13)
     halo = N("emitBookHalo",
-             E("emitBookHaloGlow", 0, 0, 380, 380,
-               rfill(190, [("A8FFE9B8", 0), ("58FFD49A", 0.5), ("00FFD49A", 1)], emit=True)),
+             E("emitBookHaloGlow", 0, 0, 380, 380, light_glow(190, light_stop(0)), opacity=0.66),
              x=-46.0, y=-190.0, scaleX=0.37)
     light = N("emitBookShaft", N("emitBookShaftBreath", ray, halo, x=0.0, y=0.0),
               bind("unfold", 18, window(*UNFOLD_SHAFT)), x=0.0, y=0.0, opacity=0.0)
     layers = [panel("Near", S("PanelNearGround", near, fill(PAPER), line(INK, 3)),
                     *[emblem(s, p) for s, p in zip(SCENES, DEST_PROPS)]),
               panel("Mid", S("PanelMidRim", [(x, y + 3) for x, y in crest],
-                             bound_line("lightKey", 4, SCENES["livingRoom"].key), closed=False),
+                             vignette_line("vignetteKey", 4), closed=False),
                     S("PanelMidHills", [(-118, 2, "c"), *crest, (0, -138, "c"), (0, 2, "c")], fill(PAPER_TAN),
                       line(INK, 2.5))),
-              panel("Far", S("PanelFarRim", far_rim, bound_line("lightKey", 3, SCENES["livingRoom"].key),
-                             closed=False, opacity=0.7),
-                    S("PanelFarRidge", far, bound_fill("lightAmbient", SCENES["livingRoom"].ambient)))]
+              panel("Far", S("PanelFarRim", far_rim, vignette_line("vignetteKey", 3), closed=False, opacity=0.7),
+                    S("PanelFarRidge", far, vignette_fill("vignetteAmbient")))]
     layers[2].attrs["opacity"] = 0.55
     return N("BookVignette", motes(), floor, *layers, light, bind("unfold", 18, window(0.0, 0.05)), x=0.0,
              y=VIG_FLOOR - GROUND_Y, opacity=0.0)
 
 
+def arch(hw: float, top: float) -> list:
+    """A card's outline: from its foot (y 0), half its width `hw`, its arch at y -`top`."""
+    return [(-hw, 0, "c"), (-hw, 75 - top), (11 - hw, 39 - top), (37 - hw, 11 - top), (0, -top), (hw - 37, 11 - top),
+            (hw - 11, 39 - top), (hw, 75 - top), (hw, 0, "c")]
+
+
+def sheared(name: str, k: float, *kids: El) -> El:
+    """`kids` on a plane sheared y' = y + k x, the one foreshortening that keeps verticals vertical. Rive has no
+    skew: a turn, a scale and a turn multiply into one (the 2 x 2 singular value decomposition)."""
+    q, r, a0, a1 = math.hypot(1, k / 2), abs(k) / 2, math.atan2(k / 2, 0), math.atan2(k / 2, 1)
+    return N(name, N(f"{name}Turn", *kids, rotation=(a1 - a0) / 2), rotation=(a1 + a0) / 2, scaleX=q + r, scaleY=q - r)
+
+
+def hero_flat(scene: str, prop: str) -> El:
+    """`Hero<Scene>`, on `prop`: the scene's emblem large, its foot behind the ground strip, and its back flat."""
+    shapes = EMBLEMS[scene](Kit(scene, foil=False, prefix="Hero"))
+    x0, y0, x1, y1 = glyph_box(shapes)
+    s = round(min(HERO_EMBLEM[0] / (x1 - x0), HERO_EMBLEM[1] / (y1 - y0)), 4)
+    cap, top = scene[0].upper() + scene[1:], HERO_BACKS[scene]
+    return N(f"Hero{cap}",
+             N(f"Hero{cap}Emblem", *shapes, x=round(-s * (x0 + x1) / 2, 3),
+               y=round(-HERO_EMBLEM_FOOT - HERO_FLOAT.get(scene, 0.0) - s * y1, 3), scaleX=s, scaleY=s),
+             S(f"Hero{cap}BackRim", [(p[0], p[1] + 2, *p[2:]) for p in top], vignette_line("vignetteKey", 3),
+               closed=False),
+             S(f"Hero{cap}Back", [(top[0][0], HERO_BACK_FOOT, "c"), *top, (top[-1][0], HERO_BACK_FOOT, "c")],
+               vignette_fill("vignetteAmbient")),
+             bind(prop, 18), x=0.0, y=0.0, opacity=0.0)
+
+
+def hero() -> El:
+    """`VignetteHero`, on the block's face: the other scene as a paper-cut card, the page's own pop-up, turned out
+    from the gutter (`sheared`: its right side nearer, its foot falling away from the reach zone). A paper frame, a
+    sky from the vignette's ambient down to its key, the scene's flat (nearer, so turned less: its objects stay
+    upright) and the ground strip in front of it. It stands up off the page like the cover's swing, foreshortened
+    (`HeroRise`: its height, a sine of the fold, about its foot, which keeps the card inside its resting outline, off
+    the reach zone at every step), then touches down like the panels. Its light pools on the page behind it and
+    breathes."""
+    a, b = HERO_RISE
+    s, hw = settle_from(a, b), HERO_HW - HERO_MAT
+    sky = d("Fill", d("LinearGradient", light_stop(0.0, "vignetteAmbient"), light_stop(1.0), startX=0.0,
+                      startY=HERO_MAT - HERO_TOP, endX=0.0, endY=-96.0), name="Fill")
+    # the strip's top follows the flat's foot: thin at the card's left (its foot is highest there), deep at its right;
+    # its ends are corners, flush with the card's edges (a smooth point would overshoot them)
+    ground = [(-HERO_HW, 0, "c"), (-HERO_HW, -13, "c"), (-38, -24), (-4, -28), (32, -42), (HERO_HW, -47, "c"),
+              (HERO_HW, 0, "c")]
+    window_shape = S("HeroSky", arch(hw, HERO_TOP - HERO_MAT), sky)
+    # the sky clips the flat, glows included: the card is a window, its outline bounds all of the hero's art
+    rise = N("HeroRise",
+             S("HeroGround", ground, fill(PAPER), line(INK, 3)),
+             N("HeroClip", d("ClippingShape", sourceId=window_shape.ref(), name="Clip"),
+               sheared("HeroFlat", HERO_FLAT_SHEAR - HERO_SHEAR,
+                       *[hero_flat(scene, prop) for scene, prop in zip(SCENES, DEST_PROPS)]), x=0.0, y=0.0),
+             window_shape,
+             S("HeroMat", arch(HERO_HW, HERO_TOP), fill(PAPER), line(INK, 3)),
+             bind("unfold", 17, conv_tokens(F.val(HERO_FOLDED), F.op("+"), F.val(1 - HERO_FOLDED), F.op("*"), *F.fn(
+                 "sin", [F.val(PANEL_FLAT), F.op("*"), *window_tokens(a, s)]))),
+             x=0.0, y=0.0, scaleY=HERO_FOLDED)
+    pool = N("emitHeroGlow",
+             N("emitHeroGlowBreath",
+               E("emitHeroGlowPool", 0, 0, 360, 360, light_glow(180, light_stop(0.0)), opacity=0.6), x=0.0, y=0.0),
+             bind("unfold", 18, window(a, b)), x=0.0, y=-191.0, scaleX=0.78, opacity=0.0)
+    dip = settle_dip(a, b)
+    turn = conv_tokens(F.val(SETTLE_TURN), F.op("-"), F.val(SETTLE_TURN), F.op("*"), *window_tokens(s, b))
+    return N("VignetteHero", sheared("HeroPlane", HERO_SHEAR, rise), pool,
+             bind("unfold", 18, window(a, a + HERO_FADE * (b - a))), bind("unfold", 15, turn), bind("unfold", 16, dip),
+             bind("unfold", 17, dip), x=HERO_AT[0] - BLOCK_X0, y=HERO_AT[1] - GROUND_Y, rotation=SETTLE_TURN,
+             scaleX=1 + SETTLE_DIP, scaleY=1 + SETTLE_DIP, opacity=0.0)
+
+
 def book() -> El:
     """The standing pop-up storybook, its gutter on the threshold. Back to front: the vignette (behind the block,
-    so a panel lying flat is hidden), the page block, the interior glow, the riffle, the cover (and its edge
-    light), the floor spill, then the ribbon with the jacket, in front of everything (RML paints the first child
-    in front), so the hook stays visible over the resting stub."""
+    so a panel lying flat is hidden), the page block, the interior glow, the hero (on the block's face), the riffle,
+    the cover (and its edge light), the floor spill, then the ribbon with the jacket, in front of everything (RML
+    paints the first child in front), so the hook stays visible over the resting stub."""
     spill = E("emitBookSpill", 0, 20, 1040, 60, rfill(520, [("A0FFD49A", 0), ("00FFD49A", 1)], emit=True),
-              bind("unfold", 18, conv(0.85)), bind("unfold", 16, conv(0.6, 0.4)), opacity=0.0, scaleX=0.4)
+              bind("unfold", 18, conv(SPILL_PEAK)), bind("unfold", 16, conv(0.6, 0.4)), opacity=0.0, scaleX=0.4)
     root = N("Book", ribbon(), spill, cover_edge(), cover(), book_glow(), *page_block(),
              bind("book", 18), bind("book", 16, conv(0.08, 0.92)), bind("book", 17, conv(0.08, 0.92)),
              x=BLOCK_X0, y=GROUND_Y, opacity=0.0)
@@ -913,17 +1102,25 @@ def book() -> El:
     kids = root.children
     kids.insert(kids.index(named(root, "emitBookGlow")), riffle())
     kids.insert(kids.index(named(root, "BookBlock")) + 1, vignette())
+    kids.insert(kids.index(named(root, "emitBookGlow")), hero())
     medal = named(root, "BookMedallion")
     medal.children[:0] = [medallion_glyph(s, p) for s, p in zip(SCENES, DEST_PROPS)]
+    # the other scene's light: on the paper, the foil and the glows that come out of the book
+    tinted(named(root, "BookVignette"), named(root, "VignetteHero"), medal)
+    relit(spill, 0, 0.0)
+    relit(named(root, "emitBookGlowCore"), 1, GUTTER_KEY_AT)
     amb_tracks.append(track(d, named(root, "emitBookGlow"), {"opacity": BREATH}, ease=EASE))
     amb_tracks.append(track(d, named(root, "emitBookShaftBreath"), {"opacity": BREATH}, ease=EASE))
+    amb_tracks.append(track(d, named(root, "emitHeroGlowBreath"), {"opacity": BREATH}, ease=EASE))
     flicker = [1.0, 1.1, 0.94, 1.08, 0.97, 1.12, 0.95, 1.06]
-    for name, k in (("emitVignetteCampfireFlame", 1.0), ("emitVignetteLibraryFlame", 0.6)):
+    for name, k in (("emitVignetteCampfireFlame", 1.0), ("emitVignetteLibraryFlame", 0.6),
+                    ("emitHeroCampfireFlame", 1.0), ("emitHeroLibraryFlame", 0.6)):
         amb_tracks.append(track(d, named(root, name), {"scaleY": [
             (f, round(1 + k * (flicker[(f // 8) % len(flicker)] - 1), 4) if f < AMB_FRAMES else 1.0)
             for f in range(0, AMB_FRAMES + 1, 8)]}))
-    amb_tracks.append(track(d, named(root, "emitVignetteDeepSpaceStar"), {"opacity": [
-        (0, 1.0), (50, 0.5), (110, 1.0), (170, 0.65), (240, 1.0)]}, ease=EASE))
+    for name in ("emitVignetteDeepSpaceStar", "emitHeroDeepSpaceStar"):
+        amb_tracks.append(track(d, named(root, name), {"opacity": [
+            (0, 1.0), (50, 0.5), (110, 1.0), (170, 0.65), (240, 1.0)]}, ease=EASE))
     return root
 
 
@@ -1107,6 +1304,7 @@ def build() -> list[El]:
     d15.next = V15_DRAW_START
     with minting_in(d15):
         families = [book(), *others]
+    assert d15.next < V15_LIGHT_START, d15.next   # the drawing stops short of the vignette's lights
     amb = d("LinearAnimation", *amb_tracks, duration=AMB_FRAMES, fps=60, loopValue="loop", name="amb_journey")
     state = d("AnimationState", animationId=amb.ref(), x=160.0, y=100.0)
     layer = d("StateMachineLayer", d("AnyState", x=100.0, y=-100.0), d("ExitState", x=500.0, y=-100.0),
