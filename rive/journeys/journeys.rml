@@ -157,6 +157,669 @@
       <Node x="0" y="0" name="BookCover" id="0:6280">
         <Node x="0" y="0" name="CoverOuter" id="0:6209">
           <Node x="65" y="-180" name="BookMedallion" id="0:6158">
+            <Node x="1.653" y="27.484" name="MedallionGlyphLivingRoom" scaleX="0.4133" scaleY="0.4133" opacity="0" id="0:7541">
+              <Shape x="0" y="0" name="MedallionLivingRoomSeams" id="0:7493">
+                <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:7492">
+                  <StraightVertex x="-40" y="-44" id="0:7488"/>
+                  <StraightVertex x="-40" y="-24" id="0:7489"/>
+                  <StraightVertex x="-6" y="-24" id="0:7490"/>
+                  <StraightVertex x="-6" y="-44" id="0:7491"/>
+                </PointsPath>
+                <Stroke thickness="2.5" cap="round" join="round" name="Line" id="0:7487">
+                  <SolidColor colorValue="FF5B4029" id="0:7486"/>
+                </Stroke>
+              </Shape>
+              <Shape x="0" y="0" name="MedallionLivingRoomChair" id="0:7515">
+                <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:7514">
+                  <StraightVertex x="-42" y="3" id="0:7498"/>
+                  <StraightVertex x="-42" y="-10" id="0:7499"/>
+                  <StraightVertex x="-47" y="-14" radius="3" id="0:7500"/>
+                  <StraightVertex x="-48" y="-42" radius="6" id="0:7501"/>
+                  <StraightVertex x="-40" y="-46" radius="3" id="0:7502"/>
+                  <StraightVertex x="-39" y="-76" radius="12" id="0:7503"/>
+                  <StraightVertex x="-5" y="-76" radius="12" id="0:7504"/>
+                  <StraightVertex x="-6" y="-46" radius="3" id="0:7505"/>
+                  <StraightVertex x="2" y="-42" radius="6" id="0:7506"/>
+                  <StraightVertex x="1" y="-14" radius="3" id="0:7507"/>
+                  <StraightVertex x="-4" y="-10" id="0:7508"/>
+                  <StraightVertex x="-4" y="3" id="0:7509"/>
+                  <StraightVertex x="-11" y="3" id="0:7510"/>
+                  <StraightVertex x="-11" y="-8" id="0:7511"/>
+                  <StraightVertex x="-35" y="-8" id="0:7512"/>
+                  <StraightVertex x="-35" y="3" id="0:7513"/>
+                </PointsPath>
+                <Fill name="Fill" id="0:7495">
+                  <SolidColor colorValue="FFDCB46C" id="0:7494"/>
+                </Fill>
+                <Stroke thickness="3" cap="round" join="round" name="Line" id="0:7497">
+                  <SolidColor colorValue="FF5B4029" id="0:7496"/>
+                </Stroke>
+              </Shape>
+              <Shape x="0" y="0" name="MedallionLivingRoomShade" id="0:7525">
+                <PointsPath isClosed="true" isClockwise="false" name="Path" id="0:7524">
+                  <StraightVertex x="12" y="-100" radius="2" id="0:7520"/>
+                  <StraightVertex x="40" y="-100" radius="2" id="0:7521"/>
+                  <StraightVertex x="34" y="-136" radius="4" id="0:7522"/>
+                  <StraightVertex x="18" y="-136" radius="4" id="0:7523"/>
+                </PointsPath>
+                <Fill name="Fill" id="0:7517">
+                  <SolidColor colorValue="FFDCB46C" id="0:7516"/>
+                </Fill>
+                <Stroke thickness="3" cap="round" join="round" name="Line" id="0:7519">
+                  <SolidColor colorValue="FF5B4029" id="0:7518"/>
+                </Stroke>
+              </Shape>
+              <Shape x="0" y="0" name="MedallionLivingRoomLamp" id="0:7539">
+                <PointsPath isClosed="true" isClockwise="false" name="Path" id="0:7538">
+                  <StraightVertex x="17" y="3" id="0:7530"/>
+                  <StraightVertex x="35" y="3" id="0:7531"/>
+                  <StraightVertex x="35" y="-1" radius="2" id="0:7532"/>
+                  <StraightVertex x="28" y="-4" id="0:7533"/>
+                  <StraightVertex x="28" y="-102" id="0:7534"/>
+                  <StraightVertex x="24" y="-102" id="0:7535"/>
+                  <StraightVertex x="24" y="-4" id="0:7536"/>
+                  <StraightVertex x="17" y="-1" radius="2" id="0:7537"/>
+                </PointsPath>
+                <Fill name="Fill" id="0:7527">
+                  <SolidColor colorValue="FFDCB46C" id="0:7526"/>
+                </Fill>
+                <Stroke thickness="2" cap="round" join="round" name="Line" id="0:7529">
+                  <SolidColor colorValue="FF5B4029" id="0:7528"/>
+                </Stroke>
+              </Shape>
+              <DataBindContext sourcePathIds="0:27-0:6004" propertyKey="18" id="0:7540"/>
+            </Node>
+            <Node x="-1.802" y="18.7" name="MedallionGlyphCampfire" scaleX="0.4506" scaleY="0.4506" opacity="0" id="0:7584">
+              <Shape x="0" y="0" name="MedallionCampfireLog" id="0:7551">
+                <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:7550">
+                  <StraightVertex x="14" y="8" radius="3" id="0:7546"/>
+                  <StraightVertex x="52" y="-6" radius="3" id="0:7547"/>
+                  <StraightVertex x="54" y="1" radius="3" id="0:7548"/>
+                  <StraightVertex x="16" y="15" radius="3" id="0:7549"/>
+                </PointsPath>
+                <Fill name="Fill" id="0:7543">
+                  <SolidColor colorValue="FFB08D50" id="0:7542"/>
+                </Fill>
+                <Stroke thickness="2.5" cap="round" join="round" name="Line" id="0:7545">
+                  <SolidColor colorValue="FF5B4029" id="0:7544"/>
+                </Stroke>
+              </Shape>
+              <Shape x="34" y="0" name="MedallionCampfireFlame" id="0:7564">
+                <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:7563">
+                  <CubicDetachedVertex x="0" y="2" outRotation="-2.8753" outDistance="4.5052" inRotation="0.2663" inDistance="3.0959" id="0:7556"/>
+                  <CubicDetachedVertex x="-12" y="-10" outRotation="-1.8417" outDistance="7.306" inRotation="1.2998" inDistance="5.1483" id="0:7557"/>
+                  <CubicDetachedVertex x="-10" y="-34" outRotation="-1.3597" outDistance="11.1098" inRotation="1.7819" inDistance="7.9806" id="0:7558"/>
+                  <CubicDetachedVertex x="0" y="-66" outRotation="-0.6202" outDistance="2.2946" inRotation="2.5213" inDistance="3.4403" id="0:7559"/>
+                  <CubicDetachedVertex x="4" y="-44" outRotation="1.2925" outDistance="7.1441" inRotation="4.4341" inDistance="7.4161" id="0:7560"/>
+                  <CubicDetachedVertex x="12" y="-24" outRotation="1.4219" outDistance="6.508" inRotation="4.5635" inDistance="6.9745" id="0:7561"/>
+                  <CubicDetachedVertex x="10" y="-4" outRotation="2.0032" outDistance="3.5047" inRotation="5.1448" inDistance="6.0405" id="0:7562"/>
+                </PointsPath>
+                <Fill name="Fill" id="0:7553">
+                  <SolidColor colorValue="FFDCB46C" id="0:7552"/>
+                </Fill>
+                <Stroke thickness="2.5" cap="round" join="round" name="Line" id="0:7555">
+                  <SolidColor colorValue="FF5B4029" id="0:7554"/>
+                </Stroke>
+              </Shape>
+              <Shape x="0" y="0" name="MedallionCampfireDoor" id="0:7573">
+                <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:7572">
+                  <StraightVertex x="-24" y="3" id="0:7569"/>
+                  <StraightVertex x="-12" y="-54" radius="2" id="0:7570"/>
+                  <StraightVertex x="0" y="3" id="0:7571"/>
+                </PointsPath>
+                <Fill name="Fill" id="0:7566">
+                  <SolidColor colorValue="FF5B4029" id="0:7565"/>
+                </Fill>
+                <Stroke thickness="2.5" cap="round" join="round" name="Line" id="0:7568">
+                  <SolidColor colorValue="FF5B4029" id="0:7567"/>
+                </Stroke>
+              </Shape>
+              <Shape x="0" y="0" name="MedallionCampfireTent" id="0:7582">
+                <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:7581">
+                  <StraightVertex x="-46" y="3" id="0:7578"/>
+                  <StraightVertex x="-12" y="-98" radius="4" id="0:7579"/>
+                  <StraightVertex x="24" y="3" id="0:7580"/>
+                </PointsPath>
+                <Fill name="Fill" id="0:7575">
+                  <SolidColor colorValue="FFDCB46C" id="0:7574"/>
+                </Fill>
+                <Stroke thickness="3" cap="round" join="round" name="Line" id="0:7577">
+                  <SolidColor colorValue="FF5B4029" id="0:7576"/>
+                </Stroke>
+              </Shape>
+              <DataBindContext sourcePathIds="0:27-0:6006" propertyKey="18" id="0:7583"/>
+            </Node>
+            <Node x="-1.044" y="28.37" name="MedallionGlyphBeach" scaleX="0.3481" scaleY="0.3481" opacity="0" id="0:7646">
+              <Shape x="0" y="0" name="MedallionBeachFronds" id="0:7624">
+                <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:7591">
+                  <StraightVertex x="4" y="-122" id="0:7585"/>
+                  <CubicDetachedVertex x="-17.2678" y="-118.8471" outRotation="2.7855" outDistance="6.5596" inRotation="5.9271" inDistance="7.0004" id="0:7586"/>
+                  <CubicDetachedVertex x="-34.1283" y="-107.8194" outRotation="2.2603" outDistance="8.5686" inRotation="5.4019" inDistance="6.4864" id="0:7587"/>
+                  <StraightVertex x="-46" y="-84" radius="2" id="0:7588"/>
+                  <CubicDetachedVertex x="-44.9618" y="-122.074" outRotation="-1.194" outDistance="5.9609" inRotation="1.9476" inDistance="11.1668" id="0:7589"/>
+                  <CubicDetachedVertex x="-27.0961" y="-131.779" outRotation="0.0015" outDistance="10.0514" inRotation="3.1431" inDistance="6.2692" id="0:7590"/>
+                </PointsPath>
+                <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:7598">
+                  <StraightVertex x="4" y="-122" id="0:7592"/>
+                  <CubicDetachedVertex x="-5.2917" y="-132.0059" outRotation="-2.4647" outDistance="4.5377" inRotation="0.6769" inDistance="4.5039" id="0:7593"/>
+                  <CubicDetachedVertex x="-17.1439" y="-138.9906" outRotation="-2.8066" outDistance="5.6185" inRotation="0.335" inDistance="4.5142" id="0:7594"/>
+                  <StraightVertex x="-34" y="-142" radius="2" id="0:7595"/>
+                  <CubicDetachedVertex x="-11.442" y="-149.8241" outRotation="0.0049" outDistance="4.1478" inRotation="3.1465" inDistance="7.1461" id="0:7596"/>
+                  <CubicDetachedVertex x="-0.1189" y="-141.8341" outRotation="1.0641" outDistance="6.2984" inRotation="4.2057" inDistance="4.3089" id="0:7597"/>
+                </PointsPath>
+                <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:7605">
+                  <StraightVertex x="4" y="-122" id="0:7599"/>
+                  <CubicDetachedVertex x="-4.0515" y="-136.5434" outRotation="-1.8167" outDistance="4.5644" inRotation="1.3249" inDistance="5.3236" id="0:7600"/>
+                  <CubicDetachedVertex x="-3.2208" y="-150.7719" outRotation="-1.1257" outDistance="6.374" inRotation="2.0159" inDistance="4.5048" id="0:7601"/>
+                  <StraightVertex x="10" y="-166" radius="2" id="0:7602"/>
+                  <CubicDetachedVertex x="9.3232" y="-149.0614" outRotation="1.6567" outDistance="4.7309" inRotation="4.7983" inDistance="5.6436" id="0:7603"/>
+                  <CubicDetachedVertex x="7.3285" y="-134.9916" outRotation="1.765" outDistance="4.4636" inRotation="4.9066" inDistance="4.7297" id="0:7604"/>
+                </PointsPath>
+                <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:7612">
+                  <StraightVertex x="4" y="-122" id="0:7606"/>
+                  <CubicDetachedVertex x="9.5358" y="-141.7649" outRotation="-0.9962" outDistance="4.4039" inRotation="2.1454" inDistance="6.387" id="0:7607"/>
+                  <CubicDetachedVertex x="21.5934" y="-149.1746" outRotation="0.0512" outDistance="7.2597" inRotation="3.1928" inDistance="4.2434" id="0:7608"/>
+                  <StraightVertex x="44" y="-140" radius="2" id="0:7609"/>
+                  <CubicDetachedVertex x="26.7251" y="-137.7709" outRotation="2.8613" outDistance="4.6167" inRotation="6.0029" inDistance="5.723" id="0:7610"/>
+                  <CubicDetachedVertex x="14.1913" y="-131.4194" outRotation="2.5349" outDistance="4.5816" inRotation="5.6765" inDistance="4.6389" id="0:7611"/>
+                </PointsPath>
+                <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:7619">
+                  <StraightVertex x="4" y="-122" id="0:7613"/>
+                  <CubicDetachedVertex x="34.1435" y="-132.1913" outRotation="-0.0234" outDistance="5.9851" inRotation="3.1182" inDistance="9.7964" id="0:7614"/>
+                  <CubicDetachedVertex x="51.3314" y="-123.1085" outRotation="1.2019" outDistance="10.8332" inRotation="4.3435" inDistance="5.6743" id="0:7615"/>
+                  <StraightVertex x="52" y="-86" radius="2" id="0:7616"/>
+                  <CubicDetachedVertex x="41.068" y="-109.424" outRotation="-2.2482" outDistance="6.1683" inRotation="0.8934" inDistance="8.2806" id="0:7617"/>
+                  <CubicDetachedVertex x="24.8325" y="-119.7767" outRotation="-2.8145" outDistance="6.799" inRotation="0.3271" inDistance="6.2488" id="0:7618"/>
+                </PointsPath>
+                <Fill name="Fill" id="0:7621">
+                  <SolidColor colorValue="FFDCB46C" id="0:7620"/>
+                </Fill>
+                <Stroke thickness="2.5" cap="round" join="round" name="Line" id="0:7623">
+                  <SolidColor colorValue="FF5B4029" id="0:7622"/>
+                </Stroke>
+              </Shape>
+              <Shape x="0" y="0" name="MedallionBeachTrunk" id="0:7638">
+                <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:7637">
+                  <StraightVertex x="-20" y="3" id="0:7629"/>
+                  <CubicDetachedVertex x="-17" y="-40" outRotation="-1.4421" outDistance="14.2267" inRotation="1.6995" inDistance="14.3429" id="0:7630"/>
+                  <CubicDetachedVertex x="-9" y="-82" outRotation="-1.3495" outDistance="13.0901" inRotation="1.7921" inDistance="14.2432" id="0:7631"/>
+                  <StraightVertex x="1" y="-120" radius="3" id="0:7632"/>
+                  <StraightVertex x="8" y="-118" radius="3" id="0:7633"/>
+                  <CubicDetachedVertex x="0" y="-80" outRotation="1.7484" outDistance="13.4767" inRotation="4.89" inDistance="12.9388" id="0:7634"/>
+                  <CubicDetachedVertex x="-6" y="-40" outRotation="1.631" outDistance="14.2842" inRotation="4.7726" inDistance="13.4326" id="0:7635"/>
+                  <StraightVertex x="-5" y="3" id="0:7636"/>
+                </PointsPath>
+                <Fill name="Fill" id="0:7626">
+                  <SolidColor colorValue="FFB08D50" id="0:7625"/>
+                </Fill>
+                <Stroke thickness="3" cap="round" join="round" name="Line" id="0:7628">
+                  <SolidColor colorValue="FF5B4029" id="0:7627"/>
+                </Stroke>
+              </Shape>
+              <Shape x="30" y="-60" name="MedallionBeachSun" id="0:7644">
+                <Ellipse width="38" height="38" name="Path" id="0:7643"/>
+                <Fill name="Fill" id="0:7640">
+                  <SolidColor colorValue="FFDCB46C" id="0:7639"/>
+                </Fill>
+                <Stroke thickness="2.5" cap="round" join="round" name="Line" id="0:7642">
+                  <SolidColor colorValue="FF5B4029" id="0:7641"/>
+                </Stroke>
+              </Shape>
+              <DataBindContext sourcePathIds="0:27-0:6008" propertyKey="18" id="0:7645"/>
+            </Node>
+            <Node x="0.214" y="41.808" name="MedallionGlyphDeepSpace" scaleX="0.4288" scaleY="0.4288" opacity="0" id="0:7705">
+              <Shape x="0" y="0" name="MedallionDeepSpaceRingFront" id="0:7672">
+                <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:7671">
+                  <StraightVertex x="40.7186" y="-97.0623" id="0:7653"/>
+                  <CubicDetachedVertex x="39.1702" y="-91.4989" outRotation="2.1996" outDistance="3.4476" inRotation="5.3411" inDistance="1.8599" id="0:7654"/>
+                  <CubicDetachedVertex x="31.354" y="-84.1849" outRotation="2.5064" outDistance="5.0251" inRotation="5.648" inDistance="3.551" id="0:7655"/>
+                  <CubicDetachedVertex x="18.4599" y="-76.2338" outRotation="2.654" outDistance="5.8651" inRotation="5.7955" inDistance="5.0404" id="0:7656"/>
+                  <CubicDetachedVertex x="2.451" y="-68.856" outRotation="2.7616" outDistance="5.8678" inRotation="5.9032" inDistance="5.8678" id="0:7657"/>
+                  <CubicDetachedVertex x="-14.2355" y="-63.1748" outRotation="2.8692" outDistance="5.0404" inRotation="6.0108" inDistance="5.8651" id="0:7658"/>
+                  <CubicDetachedVertex x="-29.0592" y="-60.0551" outRotation="3.0168" outDistance="3.551" inRotation="6.1584" inDistance="5.0251" id="0:7659"/>
+                  <CubicDetachedVertex x="-39.7635" y="-59.9718" outRotation="-2.9596" outDistance="1.8599" inRotation="0.182" inDistance="3.4476" id="0:7660"/>
+                  <StraightVertex x="-44.7186" y="-62.9377" id="0:7661"/>
+                  <StraightVertex x="-33.5746" y="-67.3887" id="0:7662"/>
+                  <CubicDetachedVertex x="-30.3195" y="-66.2164" outRotation="0.0227" outDistance="2.4818" inRotation="3.1643" inDistance="1.1264" id="0:7663"/>
+                  <CubicDetachedVertex x="-22.7529" y="-67.1425" outRotation="-0.2053" outDistance="3.6934" inRotation="2.9363" inDistance="2.5349" id="0:7664"/>
+                  <CubicDetachedVertex x="-12.027" y="-70.026" outRotation="-0.307" outDistance="4.3361" inRotation="2.8346" inDistance="3.6992" id="0:7665"/>
+                  <CubicDetachedVertex x="0.2255" y="-74.428" outRotation="-0.38" outDistance="4.3371" inRotation="2.7616" inDistance="4.3371" id="0:7666"/>
+                  <CubicDetachedVertex x="12.1392" y="-79.6783" outRotation="-0.453" outDistance="3.6992" inRotation="2.6886" inDistance="4.3361" id="0:7667"/>
+                  <CubicDetachedVertex x="21.9003" y="-84.9775" outRotation="-0.5547" outDistance="2.5349" inRotation="2.5869" inDistance="3.6934" id="0:7668"/>
+                  <CubicDetachedVertex x="28.0228" y="-89.519" outRotation="-0.7827" outDistance="1.1264" inRotation="2.3588" inDistance="2.4818" id="0:7669"/>
+                  <StraightVertex x="29.5746" y="-92.6113" id="0:7670"/>
+                </PointsPath>
+                <Fill name="Fill" id="0:7650">
+                  <SolidColor colorValue="FFB08D50" id="0:7649"/>
+                </Fill>
+                <Stroke thickness="2.5" cap="round" join="round" name="Line" id="0:7652">
+                  <SolidColor colorValue="FF5B4029" id="0:7651"/>
+                </Stroke>
+              </Shape>
+              <Shape x="-2" y="-80" name="MedallionDeepSpacePlanet" id="0:7678">
+                <Ellipse width="58" height="58" name="Path" id="0:7677"/>
+                <Fill name="Fill" id="0:7674">
+                  <SolidColor colorValue="FFDCB46C" id="0:7673"/>
+                </Fill>
+                <Stroke thickness="3" cap="round" join="round" name="Line" id="0:7676">
+                  <SolidColor colorValue="FF5B4029" id="0:7675"/>
+                </Stroke>
+              </Shape>
+              <Shape x="0" y="0" name="MedallionDeepSpaceRingBack" id="0:7683">
+                <Ellipse width="92" height="24" x="-2" y="-80" rotation="-0.38" name="Path" id="0:7647"/>
+                <Ellipse width="68" height="12" x="-2" y="-80" rotation="-0.38" name="Path" id="0:7648"/>
+                <Fill name="Fill" fillRule="evenOdd" id="0:7680">
+                  <SolidColor colorValue="FFB08D50" id="0:7679"/>
+                </Fill>
+                <Stroke thickness="2.5" cap="round" join="round" name="Line" id="0:7682">
+                  <SolidColor colorValue="FF5B4029" id="0:7681"/>
+                </Stroke>
+              </Shape>
+              <Shape x="32" y="-146" name="MedallionDeepSpaceStar" id="0:7693">
+                <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:7692">
+                  <CubicDetachedVertex x="0" y="-15" inRotation="1.5708" inDistance="9.3" outRotation="1.5708" outDistance="9.3" id="0:7688"/>
+                  <CubicDetachedVertex x="15" y="0" inRotation="-3.1416" inDistance="9.3" outRotation="-3.1416" outDistance="9.3" id="0:7689"/>
+                  <CubicDetachedVertex x="0" y="15" inRotation="-1.5708" inDistance="9.3" outRotation="-1.5708" outDistance="9.3" id="0:7690"/>
+                  <CubicDetachedVertex x="-15" y="0" inRotation="0" inDistance="9.3" outRotation="0" outDistance="9.3" id="0:7691"/>
+                </PointsPath>
+                <Fill name="Fill" id="0:7685">
+                  <SolidColor colorValue="FFDCB46C" id="0:7684"/>
+                </Fill>
+                <Stroke thickness="1.5" cap="round" join="round" name="Line" id="0:7687">
+                  <SolidColor colorValue="FF5B4029" id="0:7686"/>
+                </Stroke>
+              </Shape>
+              <Shape x="-38" y="-142" name="MedallionDeepSpaceStarSmall" id="0:7703">
+                <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:7702">
+                  <CubicDetachedVertex x="0" y="-9" inRotation="1.5708" inDistance="5.58" outRotation="1.5708" outDistance="5.58" id="0:7698"/>
+                  <CubicDetachedVertex x="9" y="0" inRotation="-3.1416" inDistance="5.58" outRotation="-3.1416" outDistance="5.58" id="0:7699"/>
+                  <CubicDetachedVertex x="0" y="9" inRotation="-1.5708" inDistance="5.58" outRotation="-1.5708" outDistance="5.58" id="0:7700"/>
+                  <CubicDetachedVertex x="-9" y="0" inRotation="0" inDistance="5.58" outRotation="0" outDistance="5.58" id="0:7701"/>
+                </PointsPath>
+                <Fill name="Fill" id="0:7695">
+                  <SolidColor colorValue="FFDCB46C" id="0:7694"/>
+                </Fill>
+                <Stroke thickness="1.5" cap="round" join="round" name="Line" id="0:7697">
+                  <SolidColor colorValue="FF5B4029" id="0:7696"/>
+                </Stroke>
+              </Shape>
+              <DataBindContext sourcePathIds="0:27-0:6010" propertyKey="18" id="0:7704"/>
+            </Node>
+            <Node x="0.42" y="27.543" name="MedallionGlyphCafe" scaleX="0.4205" scaleY="0.4205" opacity="0" id="0:7749">
+              <Shape x="0" y="0" name="MedallionCafeSteam" id="0:7720">
+                <PointsPath isClosed="false" isClockwise="true" name="Path" id="0:7710">
+                  <CubicDetachedVertex x="-14" y="-74" outRotation="-1.1071" outDistance="5.9628" inRotation="2.0344" inDistance="0" id="0:7706"/>
+                  <CubicDetachedVertex x="-6" y="-90" outRotation="-1.6332" outDistance="5.4861" inRotation="1.5084" inDistance="5.2013" id="0:7707"/>
+                  <CubicDetachedVertex x="-16" y="-106" outRotation="-1.6296" outDistance="5.7986" inRotation="1.512" inDistance="5.5543" id="0:7708"/>
+                  <CubicDetachedVertex x="-8" y="-124" outRotation="-1.1526" outDistance="0" inRotation="1.989" inDistance="6.5659" id="0:7709"/>
+                </PointsPath>
+                <PointsPath isClosed="false" isClockwise="true" name="Path" id="0:7715">
+                  <CubicDetachedVertex x="4" y="-76" outRotation="-1.1526" outDistance="6.5659" inRotation="1.989" inDistance="0" id="0:7711"/>
+                  <CubicDetachedVertex x="12" y="-94" outRotation="-1.6263" outDistance="6.1425" inRotation="1.5153" inDistance="5.876" id="0:7712"/>
+                  <CubicDetachedVertex x="2" y="-112" outRotation="-1.6234" outDistance="6.485" inRotation="1.5182" inDistance="6.1992" id="0:7713"/>
+                  <CubicDetachedVertex x="10" y="-132" outRotation="-1.1903" outDistance="0" inRotation="1.9513" inDistance="7.1802" id="0:7714"/>
+                </PointsPath>
+                <Stroke thickness="4.5" cap="round" join="round" name="Line" id="0:7719">
+                  <SolidColor colorValue="FFDCB46C" id="0:7718"/>
+                </Stroke>
+              </Shape>
+              <Shape x="-5" y="-64" name="MedallionCafeCoffee" id="0:7726">
+                <Ellipse width="58" height="11" name="Path" id="0:7725"/>
+                <Fill name="Fill" id="0:7722">
+                  <SolidColor colorValue="FF5B4029" id="0:7721"/>
+                </Fill>
+                <Stroke thickness="2.5" cap="round" join="round" name="Line" id="0:7724">
+                  <SolidColor colorValue="FF5B4029" id="0:7723"/>
+                </Stroke>
+              </Shape>
+              <Shape x="0" y="0" name="MedallionCafeCup" id="0:7736">
+                <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:7735">
+                  <StraightVertex x="-31" y="-10" radius="5" id="0:7731"/>
+                  <StraightVertex x="-35" y="-64" radius="3" id="0:7732"/>
+                  <StraightVertex x="25" y="-64" radius="3" id="0:7733"/>
+                  <StraightVertex x="21" y="-10" radius="5" id="0:7734"/>
+                </PointsPath>
+                <Fill name="Fill" id="0:7728">
+                  <SolidColor colorValue="FFDCB46C" id="0:7727"/>
+                </Fill>
+                <Stroke thickness="3" cap="round" join="round" name="Line" id="0:7730">
+                  <SolidColor colorValue="FF5B4029" id="0:7729"/>
+                </Stroke>
+              </Shape>
+              <Shape x="0" y="0" name="MedallionCafeHandle" id="0:7741">
+                <Ellipse width="30" height="34" x="30" y="-38" name="Path" id="0:7716"/>
+                <Ellipse width="14" height="18" x="30" y="-38" name="Path" id="0:7717"/>
+                <Fill name="Fill" fillRule="evenOdd" id="0:7738">
+                  <SolidColor colorValue="FFDCB46C" id="0:7737"/>
+                </Fill>
+                <Stroke thickness="2.5" cap="round" join="round" name="Line" id="0:7740">
+                  <SolidColor colorValue="FF5B4029" id="0:7739"/>
+                </Stroke>
+              </Shape>
+              <Shape x="-4" y="-6" name="MedallionCafeSaucer" id="0:7747">
+                <Ellipse width="86" height="14" name="Path" id="0:7746"/>
+                <Fill name="Fill" id="0:7743">
+                  <SolidColor colorValue="FFB08D50" id="0:7742"/>
+                </Fill>
+                <Stroke thickness="2.5" cap="round" join="round" name="Line" id="0:7745">
+                  <SolidColor colorValue="FF5B4029" id="0:7744"/>
+                </Stroke>
+              </Shape>
+              <DataBindContext sourcePathIds="0:27-0:6012" propertyKey="18" id="0:7748"/>
+            </Node>
+            <Node x="0" y="29.84" name="MedallionGlyphRooftop" scaleX="0.3831" scaleY="0.3831" opacity="0" id="0:7817">
+              <Shape x="0" y="0" name="MedallionRooftopRailing" id="0:7767">
+                <Rectangle width="92" height="44" cornerRadiusTL="3" x="0" y="-24" name="Path" id="0:7750"/>
+                <Rectangle width="14" height="28" x="-30" y="-22" name="Path" id="0:7751"/>
+                <Rectangle width="14" height="28" x="-10" y="-22" name="Path" id="0:7752"/>
+                <Rectangle width="14" height="28" x="10" y="-22" name="Path" id="0:7753"/>
+                <Rectangle width="14" height="28" x="30" y="-22" name="Path" id="0:7754"/>
+                <Fill name="Fill" fillRule="evenOdd" id="0:7764">
+                  <SolidColor colorValue="FFDCB46C" id="0:7763"/>
+                </Fill>
+                <Stroke thickness="2.5" cap="round" join="round" name="Line" id="0:7766">
+                  <SolidColor colorValue="FF5B4029" id="0:7765"/>
+                </Stroke>
+              </Shape>
+              <Shape x="0" y="0" name="MedallionRooftopWindows" id="0:7770">
+                <Rectangle width="5" height="6" x="-38" y="-66" name="Path" id="0:7755"/>
+                <Rectangle width="5" height="6" x="-22" y="-82" name="Path" id="0:7756"/>
+                <Rectangle width="5" height="6" x="-22" y="-66" name="Path" id="0:7757"/>
+                <Rectangle width="5" height="6" x="-7" y="-58" name="Path" id="0:7758"/>
+                <Rectangle width="5" height="6" x="10" y="-96" name="Path" id="0:7759"/>
+                <Rectangle width="5" height="6" x="10" y="-80" name="Path" id="0:7760"/>
+                <Rectangle width="5" height="6" x="26" y="-56" name="Path" id="0:7761"/>
+                <Rectangle width="5" height="6" x="39" y="-72" name="Path" id="0:7762"/>
+                <Fill name="Fill" id="0:7769">
+                  <SolidColor colorValue="FF5B4029" id="0:7768"/>
+                </Fill>
+              </Shape>
+              <Shape x="0" y="0" name="MedallionRooftopRoofs" id="0:7791">
+                <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:7790">
+                  <StraightVertex x="-46" y="-40" id="0:7775"/>
+                  <StraightVertex x="-46" y="-78" id="0:7776"/>
+                  <StraightVertex x="-30" y="-78" id="0:7777"/>
+                  <StraightVertex x="-30" y="-92" id="0:7778"/>
+                  <StraightVertex x="-14" y="-92" id="0:7779"/>
+                  <StraightVertex x="-14" y="-70" id="0:7780"/>
+                  <StraightVertex x="0" y="-70" id="0:7781"/>
+                  <StraightVertex x="0" y="-104" radius="2" id="0:7782"/>
+                  <StraightVertex x="10" y="-114" id="0:7783"/>
+                  <StraightVertex x="20" y="-104" radius="2" id="0:7784"/>
+                  <StraightVertex x="20" y="-66" id="0:7785"/>
+                  <StraightVertex x="32" y="-66" id="0:7786"/>
+                  <StraightVertex x="32" y="-84" id="0:7787"/>
+                  <StraightVertex x="46" y="-84" id="0:7788"/>
+                  <StraightVertex x="46" y="-40" id="0:7789"/>
+                </PointsPath>
+                <Fill name="Fill" id="0:7772">
+                  <SolidColor colorValue="FFB08D50" id="0:7771"/>
+                </Fill>
+                <Stroke thickness="2.5" cap="round" join="round" name="Line" id="0:7774">
+                  <SolidColor colorValue="FF5B4029" id="0:7773"/>
+                </Stroke>
+              </Shape>
+              <Shape x="0" y="0" name="MedallionRooftopMoon" id="0:7815">
+                <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:7814">
+                  <StraightVertex x="8.577" y="-124.2162" radius="1" id="0:7796"/>
+                  <CubicDetachedVertex x="3.5986" y="-116.486" outRotation="2.3535" outDistance="2.9972" inRotation="5.4951" inDistance="2.9972" id="0:7797"/>
+                  <CubicDetachedVertex x="-4.1045" y="-111.4656" outRotation="2.7745" outDistance="2.9972" inRotation="5.9161" inDistance="2.9972" id="0:7798"/>
+                  <CubicDetachedVertex x="-13.1868" y="-110.032" outRotation="-3.0876" outDistance="2.9972" inRotation="0.054" inDistance="2.9972" id="0:7799"/>
+                  <CubicDetachedVertex x="-22.0617" y="-112.4357" outRotation="-2.6666" outDistance="2.9972" inRotation="0.475" inDistance="2.9972" id="0:7800"/>
+                  <CubicDetachedVertex x="-29.1791" y="-118.2567" outRotation="-2.2455" outDistance="2.9972" inRotation="0.8961" inDistance="2.9972" id="0:7801"/>
+                  <CubicDetachedVertex x="-33.2958" y="-126.4783" outRotation="-1.8245" outDistance="2.9972" inRotation="1.3171" inDistance="2.9972" id="0:7802"/>
+                  <CubicDetachedVertex x="-33.6927" y="-135.6644" outRotation="-1.4035" outDistance="2.9972" inRotation="1.7381" inDistance="2.9972" id="0:7803"/>
+                  <CubicDetachedVertex x="-30.3004" y="-144.2104" outRotation="-0.9824" outDistance="2.9972" inRotation="2.1592" inDistance="2.9972" id="0:7804"/>
+                  <CubicDetachedVertex x="-23.7116" y="-150.6236" outRotation="-0.5614" outDistance="2.9972" inRotation="2.5802" inDistance="2.9972" id="0:7805"/>
+                  <StraightVertex x="-15.077" y="-153.7838" radius="1" id="0:7806"/>
+                  <CubicDetachedVertex x="-19.1895" y="-148.0944" outRotation="2.0109" outDistance="2.2997" inRotation="5.1525" inDistance="2.2997" id="0:7807"/>
+                  <CubicDetachedVertex x="-20.9555" y="-141.3001" outRotation="1.6393" outDistance="2.2997" inRotation="4.7809" inDistance="2.2997" id="0:7808"/>
+                  <CubicDetachedVertex x="-20.1337" y="-134.3283" outRotation="1.2677" outDistance="2.2997" inRotation="4.4093" inDistance="2.2997" id="0:7809"/>
+                  <CubicDetachedVertex x="-16.8365" y="-128.1308" outRotation="0.8961" outDistance="2.2997" inRotation="4.0376" inDistance="2.2997" id="0:7810"/>
+                  <CubicDetachedVertex x="-11.5139" y="-123.5536" outRotation="0.5244" outDistance="2.2997" inRotation="3.666" inDistance="2.2997" id="0:7811"/>
+                  <CubicDetachedVertex x="-4.8925" y="-121.2215" outRotation="0.1528" outDistance="2.2997" inRotation="3.2944" inDistance="2.2997" id="0:7812"/>
+                  <CubicDetachedVertex x="2.1237" y="-121.4529" outRotation="-0.2188" outDistance="2.2997" inRotation="2.9228" inDistance="2.2997" id="0:7813"/>
+                </PointsPath>
+                <Fill name="Fill" id="0:7793">
+                  <SolidColor colorValue="FFDCB46C" id="0:7792"/>
+                </Fill>
+                <Stroke thickness="2.5" cap="round" join="round" name="Line" id="0:7795">
+                  <SolidColor colorValue="FF5B4029" id="0:7794"/>
+                </Stroke>
+              </Shape>
+              <DataBindContext sourcePathIds="0:27-0:6014" propertyKey="18" id="0:7816"/>
+            </Node>
+            <Node x="0" y="27.996" name="MedallionGlyphMountainHut" scaleX="0.3809" scaleY="0.3809" opacity="0" id="0:7857">
+              <Shape x="-2" y="-24" name="MedallionMountainHutWindow" id="0:7821">
+                <Rectangle width="16" height="16" cornerRadiusTL="2" name="Path" id="0:7820"/>
+                <Fill name="Fill" id="0:7819">
+                  <SolidColor colorValue="FF5B4029" id="0:7818"/>
+                </Fill>
+              </Shape>
+              <Shape x="0" y="0" name="MedallionMountainHutHut" id="0:7834">
+                <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:7833">
+                  <StraightVertex x="-30" y="3" id="0:7826"/>
+                  <StraightVertex x="-30" y="-40" id="0:7827"/>
+                  <StraightVertex x="-36" y="-40" id="0:7828"/>
+                  <StraightVertex x="-2" y="-74" radius="3" id="0:7829"/>
+                  <StraightVertex x="32" y="-40" id="0:7830"/>
+                  <StraightVertex x="26" y="-40" id="0:7831"/>
+                  <StraightVertex x="26" y="3" id="0:7832"/>
+                </PointsPath>
+                <Fill name="Fill" id="0:7823">
+                  <SolidColor colorValue="FFDCB46C" id="0:7822"/>
+                </Fill>
+                <Stroke thickness="3" cap="round" join="round" name="Line" id="0:7825">
+                  <SolidColor colorValue="FF5B4029" id="0:7824"/>
+                </Stroke>
+              </Shape>
+              <Shape x="0" y="0" name="MedallionMountainHutSnow" id="0:7846">
+                <PointsPath isClosed="true" isClockwise="false" name="Path" id="0:7845">
+                  <StraightVertex x="-6" y="-150" radius="3" id="0:7839"/>
+                  <StraightVertex x="-19" y="-108" radius="2" id="0:7840"/>
+                  <StraightVertex x="-11" y="-114" id="0:7841"/>
+                  <StraightVertex x="-4" y="-102" id="0:7842"/>
+                  <StraightVertex x="5" y="-114" id="0:7843"/>
+                  <StraightVertex x="12" y="-107" radius="2" id="0:7844"/>
+                </PointsPath>
+                <Fill name="Fill" id="0:7836">
+                  <SolidColor colorValue="FFDCB46C" id="0:7835"/>
+                </Fill>
+                <Stroke thickness="2.5" cap="round" join="round" name="Line" id="0:7838">
+                  <SolidColor colorValue="FF5B4029" id="0:7837"/>
+                </Stroke>
+              </Shape>
+              <Shape x="0" y="0" name="MedallionMountainHutPeak" id="0:7855">
+                <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:7854">
+                  <StraightVertex x="-46" y="-22" id="0:7851"/>
+                  <StraightVertex x="-6" y="-150" radius="3" id="0:7852"/>
+                  <StraightVertex x="46" y="-22" id="0:7853"/>
+                </PointsPath>
+                <Fill name="Fill" id="0:7848">
+                  <SolidColor colorValue="FFB08D50" id="0:7847"/>
+                </Fill>
+                <Stroke thickness="3" cap="round" join="round" name="Line" id="0:7850">
+                  <SolidColor colorValue="FF5B4029" id="0:7849"/>
+                </Stroke>
+              </Shape>
+              <DataBindContext sourcePathIds="0:27-0:6016" propertyKey="18" id="0:7856"/>
+            </Node>
+            <Node x="-0.353" y="28.416" name="MedallionGlyphForestCabin" scaleX="0.353" scaleY="0.353" opacity="0" id="0:7901">
+              <Shape x="0" y="0" name="MedallionForestCabinPineNear" id="0:7878">
+                <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:7877">
+                  <StraightVertex x="22" y="-108" radius="2" id="0:7862"/>
+                  <StraightVertex x="39.1" y="-75.3333" radius="2" id="0:7863"/>
+                  <StraightVertex x="29.182" y="-78.3333" id="0:7864"/>
+                  <StraightVertex x="44.05" y="-42.6667" radius="2" id="0:7865"/>
+                  <StraightVertex x="31.261" y="-45.6667" id="0:7866"/>
+                  <StraightVertex x="49" y="-10" radius="2" id="0:7867"/>
+                  <StraightVertex x="26" y="-10" id="0:7868"/>
+                  <StraightVertex x="26" y="3" id="0:7869"/>
+                  <StraightVertex x="18" y="3" id="0:7870"/>
+                  <StraightVertex x="18" y="-10" id="0:7871"/>
+                  <StraightVertex x="-5" y="-10" radius="2" id="0:7872"/>
+                  <StraightVertex x="12.739" y="-45.6667" id="0:7873"/>
+                  <StraightVertex x="-0.05" y="-42.6667" radius="2" id="0:7874"/>
+                  <StraightVertex x="14.818" y="-78.3333" id="0:7875"/>
+                  <StraightVertex x="4.9" y="-75.3333" radius="2" id="0:7876"/>
+                </PointsPath>
+                <Fill name="Fill" id="0:7859">
+                  <SolidColor colorValue="FFDCB46C" id="0:7858"/>
+                </Fill>
+                <Stroke thickness="3" cap="round" join="round" name="Line" id="0:7861">
+                  <SolidColor colorValue="FF5B4029" id="0:7860"/>
+                </Stroke>
+              </Shape>
+              <Shape x="0" y="0" name="MedallionForestCabinPineFar" id="0:7899">
+                <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:7898">
+                  <StraightVertex x="-14" y="-164" radius="2" id="0:7883"/>
+                  <StraightVertex x="6.9" y="-113.3333" radius="2" id="0:7884"/>
+                  <StraightVertex x="-5.222" y="-116.3333" id="0:7885"/>
+                  <StraightVertex x="12.95" y="-62.6667" radius="2" id="0:7886"/>
+                  <StraightVertex x="-2.681" y="-65.6667" id="0:7887"/>
+                  <StraightVertex x="19" y="-12" radius="2" id="0:7888"/>
+                  <StraightVertex x="-10" y="-12" id="0:7889"/>
+                  <StraightVertex x="-10" y="3" id="0:7890"/>
+                  <StraightVertex x="-18" y="3" id="0:7891"/>
+                  <StraightVertex x="-18" y="-12" id="0:7892"/>
+                  <StraightVertex x="-47" y="-12" radius="2" id="0:7893"/>
+                  <StraightVertex x="-25.319" y="-65.6667" id="0:7894"/>
+                  <StraightVertex x="-40.95" y="-62.6667" radius="2" id="0:7895"/>
+                  <StraightVertex x="-22.778" y="-116.3333" id="0:7896"/>
+                  <StraightVertex x="-34.9" y="-113.3333" radius="2" id="0:7897"/>
+                </PointsPath>
+                <Fill name="Fill" id="0:7880">
+                  <SolidColor colorValue="FFB08D50" id="0:7879"/>
+                </Fill>
+                <Stroke thickness="3" cap="round" join="round" name="Line" id="0:7882">
+                  <SolidColor colorValue="FF5B4029" id="0:7881"/>
+                </Stroke>
+              </Shape>
+              <DataBindContext sourcePathIds="0:27-0:6018" propertyKey="18" id="0:7900"/>
+            </Node>
+            <Node x="0" y="33.329" name="MedallionGlyphTrainCompartment" scaleX="0.3809" scaleY="0.3809" opacity="0" id="0:7948">
+              <Shape x="0" y="0" name="MedallionTrainCompartmentFrame" id="0:7915">
+                <Rectangle width="74" height="128" linkCornerRadius="false" cornerRadiusTL="37" cornerRadiusTR="37" cornerRadiusBL="4" cornerRadiusBR="4" x="0" y="-100" name="Path" id="0:7902"/>
+                <Rectangle width="52" height="108" linkCornerRadius="false" cornerRadiusTL="26" cornerRadiusTR="26" x="0" y="-100" name="Path" id="0:7903"/>
+                <Fill name="Fill" fillRule="evenOdd" id="0:7912">
+                  <SolidColor colorValue="FFDCB46C" id="0:7911"/>
+                </Fill>
+                <Stroke thickness="3" cap="round" join="round" name="Line" id="0:7914">
+                  <SolidColor colorValue="FF5B4029" id="0:7913"/>
+                </Stroke>
+              </Shape>
+              <Shape x="11" y="-128" name="MedallionTrainCompartmentMoon" id="0:7921">
+                <Ellipse width="12" height="12" name="Path" id="0:7920"/>
+                <Fill name="Fill" id="0:7917">
+                  <SolidColor colorValue="FFDCB46C" id="0:7916"/>
+                </Fill>
+                <Stroke thickness="2.5" cap="round" join="round" name="Line" id="0:7919">
+                  <SolidColor colorValue="FF5B4029" id="0:7918"/>
+                </Stroke>
+              </Shape>
+              <Shape x="0" y="0" name="MedallionTrainCompartmentHills" id="0:7933">
+                <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:7932">
+                  <StraightVertex x="-28" y="-44" id="0:7926"/>
+                  <CubicDetachedVertex x="-28" y="-66" outRotation="-1.1071" outDistance="5.5059" inRotation="2.0344" inDistance="6.4198" id="0:7927"/>
+                  <CubicDetachedVertex x="-12" y="-76" outRotation="-0.0624" outDistance="5.2013" inRotation="3.0792" inDistance="5.4861" id="0:7928"/>
+                  <CubicDetachedVertex x="4" y="-68" outRotation="-0.1489" outDistance="8.2019" inRotation="2.9927" inDistance="5.2806" id="0:7929"/>
+                  <StraightVertex x="28" y="-82" id="0:7930"/>
+                  <StraightVertex x="28" y="-44" id="0:7931"/>
+                </PointsPath>
+                <Fill name="Fill" id="0:7923">
+                  <SolidColor colorValue="FFB08D50" id="0:7922"/>
+                </Fill>
+                <Stroke thickness="2" cap="round" join="round" name="Line" id="0:7925">
+                  <SolidColor colorValue="FF5B4029" id="0:7924"/>
+                </Stroke>
+              </Shape>
+              <Shape x="0" y="0" name="MedallionTrainCompartmentView" id="0:7941">
+                <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:7940">
+                  <StraightVertex x="-27" y="-45" id="0:7936"/>
+                  <StraightVertex x="-27" y="-127" radius="26" id="0:7937"/>
+                  <StraightVertex x="27" y="-127" radius="26" id="0:7938"/>
+                  <StraightVertex x="27" y="-45" id="0:7939"/>
+                </PointsPath>
+                <Fill name="Fill" id="0:7935">
+                  <SolidColor colorValue="FF5B4029" id="0:7934"/>
+                </Fill>
+              </Shape>
+              <Shape x="0" y="0" name="MedallionTrainCompartmentTrack" id="0:7946">
+                <Rectangle width="92" height="5" x="0" y="-28" name="Path" id="0:7904"/>
+                <Rectangle width="92" height="5" x="0" y="-16" name="Path" id="0:7905"/>
+                <Rectangle width="6" height="22" x="-36" y="-22" name="Path" id="0:7906"/>
+                <Rectangle width="6" height="22" x="-18" y="-22" name="Path" id="0:7907"/>
+                <Rectangle width="6" height="22" x="0" y="-22" name="Path" id="0:7908"/>
+                <Rectangle width="6" height="22" x="18" y="-22" name="Path" id="0:7909"/>
+                <Rectangle width="6" height="22" x="36" y="-22" name="Path" id="0:7910"/>
+                <Fill name="Fill" id="0:7943">
+                  <SolidColor colorValue="FFB08D50" id="0:7942"/>
+                </Fill>
+                <Stroke thickness="2" cap="round" join="round" name="Line" id="0:7945">
+                  <SolidColor colorValue="FF5B4029" id="0:7944"/>
+                </Stroke>
+              </Shape>
+              <DataBindContext sourcePathIds="0:27-0:6020" propertyKey="18" id="0:7947"/>
+            </Node>
+            <Node x="1.764" y="29.106" name="MedallionGlyphLibrary" scaleX="0.441" scaleY="0.441" opacity="0" id="0:7990">
+              <Shape x="0" y="0" name="MedallionLibrarySpines" id="0:7963">
+                <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:7954">
+                  <CubicDetachedVertex x="28" y="-21" outRotation="1.5708" outDistance="6" inRotation="4.7124" inDistance="0" id="0:7952"/>
+                  <CubicDetachedVertex x="28" y="-3" outRotation="1.5708" outDistance="0" inRotation="4.7124" inDistance="6" id="0:7953"/>
+                </PointsPath>
+                <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:7957">
+                  <CubicDetachedVertex x="16" y="-39" outRotation="1.5708" outDistance="5.3333" inRotation="4.7124" inDistance="0" id="0:7955"/>
+                  <CubicDetachedVertex x="16" y="-23" outRotation="1.5708" outDistance="0" inRotation="4.7124" inDistance="5.3333" id="0:7956"/>
+                </PointsPath>
+                <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:7960">
+                  <CubicDetachedVertex x="-24" y="-55" outRotation="1.5708" outDistance="4.6667" inRotation="4.7124" inDistance="0" id="0:7958"/>
+                  <CubicDetachedVertex x="-24" y="-41" outRotation="1.5708" outDistance="0" inRotation="4.7124" inDistance="4.6667" id="0:7959"/>
+                </PointsPath>
+                <Stroke thickness="2.5" cap="round" join="round" name="Line" id="0:7962">
+                  <SolidColor colorValue="FF5B4029" id="0:7961"/>
+                </Stroke>
+              </Shape>
+              <Shape x="0" y="0" name="MedallionLibraryBooks" id="0:7968">
+                <Rectangle width="86" height="20" cornerRadiusTL="3" x="-4" y="-12" name="Path" id="0:7949"/>
+                <Rectangle width="70" height="18" cornerRadiusTL="3" x="-8" y="-31" name="Path" id="0:7950"/>
+                <Rectangle width="58" height="16" cornerRadiusTL="3" x="-2" y="-48" name="Path" id="0:7951"/>
+                <Fill name="Fill" id="0:7965">
+                  <SolidColor colorValue="FFDCB46C" id="0:7964"/>
+                </Fill>
+                <Stroke thickness="2.5" cap="round" join="round" name="Line" id="0:7967">
+                  <SolidColor colorValue="FF5B4029" id="0:7966"/>
+                </Stroke>
+              </Shape>
+              <Shape x="5" y="-100" name="MedallionLibraryFlame" id="0:7978">
+                <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:7977">
+                  <CubicDetachedVertex x="0" y="0" outRotation="3.1416" outDistance="2" inRotation="6.2832" inDistance="2" id="0:7973"/>
+                  <CubicDetachedVertex x="-6" y="-8" outRotation="-1.5708" outDistance="6.9515" inRotation="1.5708" inDistance="3.0485" id="0:7974"/>
+                  <CubicDetachedVertex x="0" y="-30" outRotation="0" outDistance="2" inRotation="3.1416" inDistance="2" id="0:7975"/>
+                  <CubicDetachedVertex x="6" y="-8" outRotation="1.5708" outDistance="3.0485" inRotation="4.7124" inDistance="6.9515" id="0:7976"/>
+                </PointsPath>
+                <Fill name="Fill" id="0:7970">
+                  <SolidColor colorValue="FFDCB46C" id="0:7969"/>
+                </Fill>
+                <Stroke thickness="2.5" cap="round" join="round" name="Line" id="0:7972">
+                  <SolidColor colorValue="FF5B4029" id="0:7971"/>
+                </Stroke>
+              </Shape>
+              <Shape x="0" y="0" name="MedallionLibraryCandle" id="0:7988">
+                <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:7987">
+                  <StraightVertex x="-2" y="-56" id="0:7983"/>
+                  <StraightVertex x="-2" y="-100" radius="2" id="0:7984"/>
+                  <StraightVertex x="12" y="-100" radius="2" id="0:7985"/>
+                  <StraightVertex x="12" y="-56" id="0:7986"/>
+                </PointsPath>
+                <Fill name="Fill" id="0:7980">
+                  <SolidColor colorValue="FFDCB46C" id="0:7979"/>
+                </Fill>
+                <Stroke thickness="2.5" cap="round" join="round" name="Line" id="0:7982">
+                  <SolidColor colorValue="FF5B4029" id="0:7981"/>
+                </Stroke>
+              </Shape>
+              <DataBindContext sourcePathIds="0:27-0:6022" propertyKey="18" id="0:7989"/>
+            </Node>
             <Shape x="0" y="0" name="MedallionBevel" opacity="0.55" id="0:6144">
               <PointsPath isClosed="false" isClockwise="true" name="Path" id="0:6143">
                 <CubicDetachedVertex x="-41.5348" y="-11.1292" outRotation="-1.1345" outDistance="4.9779" inRotation="2.0071" inDistance="0" id="0:6138"/>
@@ -277,6 +940,170 @@
         </Node>
         <DataBindContext sourcePathIds="0:27-0:18" propertyKey="16" converterId="0:6278" id="0:6279"/>
       </Node>
+      <Node x="0" y="0" name="BookRiffle" id="0:6585">
+        <Node x="0" y="-518" name="RiffleFlap0" opacity="0" id="0:6440">
+          <Shape x="0" y="0" name="RiffleFlap0Text" id="0:6389">
+            <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:6371">
+              <CubicDetachedVertex x="28" y="-77" outRotation="0" outDistance="40.6667" inRotation="3.1416" inDistance="0" id="0:6369"/>
+              <CubicDetachedVertex x="150" y="-77" outRotation="0" outDistance="0" inRotation="3.1416" inDistance="40.6667" id="0:6370"/>
+            </PointsPath>
+            <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:6374">
+              <CubicDetachedVertex x="28" y="-51" outRotation="0" outDistance="40.6667" inRotation="3.1416" inDistance="0" id="0:6372"/>
+              <CubicDetachedVertex x="150" y="-51" outRotation="0" outDistance="0" inRotation="3.1416" inDistance="40.6667" id="0:6373"/>
+            </PointsPath>
+            <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:6377">
+              <CubicDetachedVertex x="28" y="-25" outRotation="0" outDistance="37.3333" inRotation="3.1416" inDistance="0" id="0:6375"/>
+              <CubicDetachedVertex x="140" y="-25" outRotation="0" outDistance="0" inRotation="3.1416" inDistance="37.3333" id="0:6376"/>
+            </PointsPath>
+            <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:6380">
+              <CubicDetachedVertex x="28" y="1" outRotation="0" outDistance="40.6667" inRotation="3.1416" inDistance="0" id="0:6378"/>
+              <CubicDetachedVertex x="150" y="1" outRotation="0" outDistance="0" inRotation="3.1416" inDistance="40.6667" id="0:6379"/>
+            </PointsPath>
+            <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:6383">
+              <CubicDetachedVertex x="28" y="27" outRotation="0" outDistance="40.6667" inRotation="3.1416" inDistance="0" id="0:6381"/>
+              <CubicDetachedVertex x="150" y="27" outRotation="0" outDistance="0" inRotation="3.1416" inDistance="40.6667" id="0:6382"/>
+            </PointsPath>
+            <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:6386">
+              <CubicDetachedVertex x="28" y="53" outRotation="0" outDistance="37.3333" inRotation="3.1416" inDistance="0" id="0:6384"/>
+              <CubicDetachedVertex x="140" y="53" outRotation="0" outDistance="0" inRotation="3.1416" inDistance="37.3333" id="0:6385"/>
+            </PointsPath>
+            <Stroke thickness="3" cap="round" join="round" name="Line" id="0:6388">
+              <SolidColor colorValue="FFD9C7A8" id="0:6387"/>
+            </Stroke>
+          </Shape>
+          <Shape x="0" y="0" name="RiffleFlap0Page" id="0:6405">
+            <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:6404">
+              <StraightVertex x="0" y="-129" id="0:6397"/>
+              <StraightVertex x="168" y="-129" radius="10" id="0:6398"/>
+              <CubicDetachedVertex x="180" y="-107" outRotation="1.5011" outDistance="34.9275" inRotation="4.6427" inDistance="8.177" id="0:6399"/>
+              <CubicDetachedVertex x="177" y="0" outRotation="1.5708" outDistance="35.6667" inRotation="4.7124" inDistance="35.6667" id="0:6400"/>
+              <CubicDetachedVertex x="180" y="107" outRotation="1.6405" outDistance="8.177" inRotation="4.782" inDistance="34.9275" id="0:6401"/>
+              <StraightVertex x="168" y="129" radius="10" id="0:6402"/>
+              <StraightVertex x="0" y="129" id="0:6403"/>
+            </PointsPath>
+            <Fill name="Fill" id="0:6394">
+              <LinearGradient startX="0" startY="0" endX="180" endY="0" id="0:6393">
+                <GradientStop colorValue="FFD9C7A8" position="0" id="0:6390"/>
+                <GradientStop colorValue="FFF3EBDD" position="0.35" id="0:6391"/>
+                <GradientStop colorValue="FFEEE4D3" position="1" id="0:6392"/>
+              </LinearGradient>
+            </Fill>
+            <Stroke thickness="2" cap="round" join="round" name="Line" id="0:6396">
+              <SolidColor colorValue="FF2A1E24" id="0:6395"/>
+            </Stroke>
+          </Shape>
+          <DataBindContext sourcePathIds="0:27-0:6002" propertyKey="16" converterId="0:6423" id="0:6424"/>
+          <DataBindContext sourcePathIds="0:27-0:6002" propertyKey="18" converterId="0:6438" id="0:6439"/>
+        </Node>
+        <Node x="0" y="-515" name="RiffleFlap1" opacity="0" id="0:6512">
+          <Shape x="0" y="0" name="RiffleFlap1Text" id="0:6461">
+            <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:6443">
+              <CubicDetachedVertex x="28" y="-74" outRotation="0" outDistance="42.6667" inRotation="3.1416" inDistance="0" id="0:6441"/>
+              <CubicDetachedVertex x="156" y="-74" outRotation="0" outDistance="0" inRotation="3.1416" inDistance="42.6667" id="0:6442"/>
+            </PointsPath>
+            <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:6446">
+              <CubicDetachedVertex x="28" y="-48" outRotation="0" outDistance="42.6667" inRotation="3.1416" inDistance="0" id="0:6444"/>
+              <CubicDetachedVertex x="156" y="-48" outRotation="0" outDistance="0" inRotation="3.1416" inDistance="42.6667" id="0:6445"/>
+            </PointsPath>
+            <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:6449">
+              <CubicDetachedVertex x="28" y="-22" outRotation="0" outDistance="39.3333" inRotation="3.1416" inDistance="0" id="0:6447"/>
+              <CubicDetachedVertex x="146" y="-22" outRotation="0" outDistance="0" inRotation="3.1416" inDistance="39.3333" id="0:6448"/>
+            </PointsPath>
+            <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:6452">
+              <CubicDetachedVertex x="28" y="4" outRotation="0" outDistance="42.6667" inRotation="3.1416" inDistance="0" id="0:6450"/>
+              <CubicDetachedVertex x="156" y="4" outRotation="0" outDistance="0" inRotation="3.1416" inDistance="42.6667" id="0:6451"/>
+            </PointsPath>
+            <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:6455">
+              <CubicDetachedVertex x="28" y="30" outRotation="0" outDistance="42.6667" inRotation="3.1416" inDistance="0" id="0:6453"/>
+              <CubicDetachedVertex x="156" y="30" outRotation="0" outDistance="0" inRotation="3.1416" inDistance="42.6667" id="0:6454"/>
+            </PointsPath>
+            <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:6458">
+              <CubicDetachedVertex x="28" y="56" outRotation="0" outDistance="39.3333" inRotation="3.1416" inDistance="0" id="0:6456"/>
+              <CubicDetachedVertex x="146" y="56" outRotation="0" outDistance="0" inRotation="3.1416" inDistance="39.3333" id="0:6457"/>
+            </PointsPath>
+            <Stroke thickness="3" cap="round" join="round" name="Line" id="0:6460">
+              <SolidColor colorValue="FFD9C7A8" id="0:6459"/>
+            </Stroke>
+          </Shape>
+          <Shape x="0" y="0" name="RiffleFlap1Page" id="0:6477">
+            <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:6476">
+              <StraightVertex x="0" y="-126" id="0:6469"/>
+              <StraightVertex x="174" y="-126" radius="10" id="0:6470"/>
+              <CubicDetachedVertex x="186" y="-104" outRotation="1.4995" outDistance="33.9337" inRotation="4.6411" inDistance="8.1733" id="0:6471"/>
+              <CubicDetachedVertex x="183" y="0" outRotation="1.5708" outDistance="34.6667" inRotation="4.7124" inDistance="34.6667" id="0:6472"/>
+              <CubicDetachedVertex x="186" y="104" outRotation="1.6421" outDistance="8.1733" inRotation="4.7837" inDistance="33.9337" id="0:6473"/>
+              <StraightVertex x="174" y="126" radius="10" id="0:6474"/>
+              <StraightVertex x="0" y="126" id="0:6475"/>
+            </PointsPath>
+            <Fill name="Fill" id="0:6466">
+              <LinearGradient startX="0" startY="0" endX="186" endY="0" id="0:6465">
+                <GradientStop colorValue="FFD9C7A8" position="0" id="0:6462"/>
+                <GradientStop colorValue="FFF3EBDD" position="0.35" id="0:6463"/>
+                <GradientStop colorValue="FFEEE4D3" position="1" id="0:6464"/>
+              </LinearGradient>
+            </Fill>
+            <Stroke thickness="2" cap="round" join="round" name="Line" id="0:6468">
+              <SolidColor colorValue="FF2A1E24" id="0:6467"/>
+            </Stroke>
+          </Shape>
+          <DataBindContext sourcePathIds="0:27-0:6002" propertyKey="16" converterId="0:6495" id="0:6496"/>
+          <DataBindContext sourcePathIds="0:27-0:6002" propertyKey="18" converterId="0:6510" id="0:6511"/>
+        </Node>
+        <Node x="0" y="-512" name="RiffleFlap2" opacity="0" id="0:6584">
+          <Shape x="0" y="0" name="RiffleFlap2Text" id="0:6533">
+            <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:6515">
+              <CubicDetachedVertex x="28" y="-71" outRotation="0" outDistance="44.6667" inRotation="3.1416" inDistance="0" id="0:6513"/>
+              <CubicDetachedVertex x="162" y="-71" outRotation="0" outDistance="0" inRotation="3.1416" inDistance="44.6667" id="0:6514"/>
+            </PointsPath>
+            <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:6518">
+              <CubicDetachedVertex x="28" y="-45" outRotation="0" outDistance="44.6667" inRotation="3.1416" inDistance="0" id="0:6516"/>
+              <CubicDetachedVertex x="162" y="-45" outRotation="0" outDistance="0" inRotation="3.1416" inDistance="44.6667" id="0:6517"/>
+            </PointsPath>
+            <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:6521">
+              <CubicDetachedVertex x="28" y="-19" outRotation="0" outDistance="41.3333" inRotation="3.1416" inDistance="0" id="0:6519"/>
+              <CubicDetachedVertex x="152" y="-19" outRotation="0" outDistance="0" inRotation="3.1416" inDistance="41.3333" id="0:6520"/>
+            </PointsPath>
+            <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:6524">
+              <CubicDetachedVertex x="28" y="7" outRotation="0" outDistance="44.6667" inRotation="3.1416" inDistance="0" id="0:6522"/>
+              <CubicDetachedVertex x="162" y="7" outRotation="0" outDistance="0" inRotation="3.1416" inDistance="44.6667" id="0:6523"/>
+            </PointsPath>
+            <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:6527">
+              <CubicDetachedVertex x="28" y="33" outRotation="0" outDistance="44.6667" inRotation="3.1416" inDistance="0" id="0:6525"/>
+              <CubicDetachedVertex x="162" y="33" outRotation="0" outDistance="0" inRotation="3.1416" inDistance="44.6667" id="0:6526"/>
+            </PointsPath>
+            <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:6530">
+              <CubicDetachedVertex x="28" y="59" outRotation="0" outDistance="41.3333" inRotation="3.1416" inDistance="0" id="0:6528"/>
+              <CubicDetachedVertex x="152" y="59" outRotation="0" outDistance="0" inRotation="3.1416" inDistance="41.3333" id="0:6529"/>
+            </PointsPath>
+            <Stroke thickness="3" cap="round" join="round" name="Line" id="0:6532">
+              <SolidColor colorValue="FFD9C7A8" id="0:6531"/>
+            </Stroke>
+          </Shape>
+          <Shape x="0" y="0" name="RiffleFlap2Page" id="0:6549">
+            <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:6548">
+              <StraightVertex x="0" y="-123" id="0:6541"/>
+              <StraightVertex x="180" y="-123" radius="10" id="0:6542"/>
+              <CubicDetachedVertex x="192" y="-101" outRotation="1.4978" outDistance="32.9402" inRotation="4.6393" inDistance="8.1694" id="0:6543"/>
+              <CubicDetachedVertex x="189" y="0" outRotation="1.5708" outDistance="33.6667" inRotation="4.7124" inDistance="33.6667" id="0:6544"/>
+              <CubicDetachedVertex x="192" y="101" outRotation="1.6438" outDistance="8.1694" inRotation="4.7854" inDistance="32.9402" id="0:6545"/>
+              <StraightVertex x="180" y="123" radius="10" id="0:6546"/>
+              <StraightVertex x="0" y="123" id="0:6547"/>
+            </PointsPath>
+            <Fill name="Fill" id="0:6538">
+              <LinearGradient startX="0" startY="0" endX="192" endY="0" id="0:6537">
+                <GradientStop colorValue="FFD9C7A8" position="0" id="0:6534"/>
+                <GradientStop colorValue="FFF3EBDD" position="0.35" id="0:6535"/>
+                <GradientStop colorValue="FFEEE4D3" position="1" id="0:6536"/>
+              </LinearGradient>
+            </Fill>
+            <Stroke thickness="2" cap="round" join="round" name="Line" id="0:6540">
+              <SolidColor colorValue="FF2A1E24" id="0:6539"/>
+            </Stroke>
+          </Shape>
+          <DataBindContext sourcePathIds="0:27-0:6002" propertyKey="16" converterId="0:6567" id="0:6568"/>
+          <DataBindContext sourcePathIds="0:27-0:6002" propertyKey="18" converterId="0:6582" id="0:6583"/>
+        </Node>
+      </Node>
       <Node x="0" y="0" name="emitBookGlow" id="0:6312">
         <Node x="0" y="-340" name="emitBookGlowWindow" scaleX="0.1111" opacity="0" id="0:6311">
           <Shape x="0" y="0" name="emitBookGlowCore" id="0:6309">
@@ -366,6 +1193,939 @@
           <SolidColor colorValue="FF2A1E24" id="0:6318"/>
         </Stroke>
       </Shape>
+      <Node x="0" y="-500" name="BookVignette" opacity="0" id="0:7485">
+        <Node x="0" y="0" name="emitBookMotes" opacity="0" id="0:7469">
+          <Shape x="-24" y="-30" name="emitBookMote0" opacity="0" id="0:7322">
+            <Ellipse width="8" height="8" name="Path" id="0:7321"/>
+            <Fill name="Fill" id="0:7320">
+              <RadialGradient startX="0" startY="0" endX="4" endY="0" id="0:7319">
+                <GradientStop colorValue="FFFFF8E6" position="0" id="0:7316"/>
+                <GradientStop colorValue="FFFFEFC4" position="0.45" id="0:7317"/>
+                <GradientStop colorValue="00FFE0A0" position="1" id="0:7318"/>
+              </RadialGradient>
+            </Fill>
+          </Shape>
+          <Shape x="-46" y="-142.2105" name="emitBookMote1" opacity="0.0948" id="0:7342">
+            <Ellipse width="6" height="6" name="Path" id="0:7341"/>
+            <Fill name="Fill" id="0:7340">
+              <RadialGradient startX="0" startY="0" endX="3" endY="0" id="0:7339">
+                <GradientStop colorValue="FFFFF8E6" position="0" id="0:7336"/>
+                <GradientStop colorValue="FFFFEFC4" position="0.45" id="0:7337"/>
+                <GradientStop colorValue="00FFE0A0" position="1" id="0:7338"/>
+              </RadialGradient>
+            </Fill>
+          </Shape>
+          <Shape x="-66" y="-197.2632" name="emitBookMote2" opacity="0.2414" id="0:7364">
+            <Ellipse width="10" height="10" name="Path" id="0:7363"/>
+            <Fill name="Fill" id="0:7362">
+              <RadialGradient startX="0" startY="0" endX="5" endY="0" id="0:7361">
+                <GradientStop colorValue="FFFFF8E6" position="0" id="0:7358"/>
+                <GradientStop colorValue="FFFFEFC4" position="0.45" id="0:7359"/>
+                <GradientStop colorValue="00FFE0A0" position="1" id="0:7360"/>
+              </RadialGradient>
+            </Fill>
+          </Shape>
+          <Shape x="-34" y="-244.3158" name="emitBookMote3" opacity="0.51" id="0:7386">
+            <Ellipse width="7" height="7" name="Path" id="0:7385"/>
+            <Fill name="Fill" id="0:7384">
+              <RadialGradient startX="0" startY="0" endX="3.5" endY="0" id="0:7383">
+                <GradientStop colorValue="FFFFF8E6" position="0" id="0:7380"/>
+                <GradientStop colorValue="FFFFEFC4" position="0.45" id="0:7381"/>
+                <GradientStop colorValue="00FFE0A0" position="1" id="0:7382"/>
+              </RadialGradient>
+            </Fill>
+          </Shape>
+          <Shape x="-84" y="-295.3684" name="emitBookMote4" opacity="0.7863" id="0:7408">
+            <Ellipse width="9" height="9" name="Path" id="0:7407"/>
+            <Fill name="Fill" id="0:7406">
+              <RadialGradient startX="0" startY="0" endX="4.5" endY="0" id="0:7405">
+                <GradientStop colorValue="FFFFF8E6" position="0" id="0:7402"/>
+                <GradientStop colorValue="FFFFEFC4" position="0.45" id="0:7403"/>
+                <GradientStop colorValue="00FFE0A0" position="1" id="0:7404"/>
+              </RadialGradient>
+            </Fill>
+          </Shape>
+          <Shape x="-50" y="-346.4211" name="emitBookMote5" opacity="0.76" id="0:7430">
+            <Ellipse width="6" height="6" name="Path" id="0:7429"/>
+            <Fill name="Fill" id="0:7428">
+              <RadialGradient startX="0" startY="0" endX="3" endY="0" id="0:7427">
+                <GradientStop colorValue="FFFFF8E6" position="0" id="0:7424"/>
+                <GradientStop colorValue="FFFFEFC4" position="0.45" id="0:7425"/>
+                <GradientStop colorValue="00FFE0A0" position="1" id="0:7426"/>
+              </RadialGradient>
+            </Fill>
+          </Shape>
+          <Shape x="-92" y="-397.4737" name="emitBookMote6" opacity="0.495" id="0:7452">
+            <Ellipse width="8" height="8" name="Path" id="0:7451"/>
+            <Fill name="Fill" id="0:7450">
+              <RadialGradient startX="0" startY="0" endX="4" endY="0" id="0:7449">
+                <GradientStop colorValue="FFFFF8E6" position="0" id="0:7446"/>
+                <GradientStop colorValue="FFFFEFC4" position="0.45" id="0:7447"/>
+                <GradientStop colorValue="00FFE0A0" position="1" id="0:7448"/>
+              </RadialGradient>
+            </Fill>
+          </Shape>
+          <DataBindContext sourcePathIds="0:27-0:6002" propertyKey="18" converterId="0:6642" id="0:7468"/>
+        </Node>
+        <Node x="0" y="0" name="VignetteFloor" scaleX="0" id="0:6611">
+          <Shape x="0" y="0" name="VignetteFloorSlab" id="0:6595">
+            <PointsPath isClosed="true" isClockwise="false" name="Path" id="0:6594">
+              <StraightVertex x="0" y="-6" id="0:6590"/>
+              <StraightVertex x="-118" y="-6" radius="3" id="0:6591"/>
+              <StraightVertex x="-114" y="3" radius="3" id="0:6592"/>
+              <StraightVertex x="0" y="3" id="0:6593"/>
+            </PointsPath>
+            <Fill name="Fill" id="0:6587">
+              <SolidColor colorValue="FFE0D2BC" id="0:6586"/>
+            </Fill>
+            <Stroke thickness="2.5" cap="round" join="round" name="Line" id="0:6589">
+              <SolidColor colorValue="FF2A1E24" id="0:6588"/>
+            </Stroke>
+          </Shape>
+          <DataBindContext sourcePathIds="0:27-0:6002" propertyKey="16" converterId="0:6609" id="0:6610"/>
+        </Node>
+        <Node x="0" y="0" name="PanelNear" rotation="1.5708" id="0:7212">
+          <Shape x="0" y="0" name="PanelNearGround" id="0:6658">
+            <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:6657">
+              <StraightVertex x="-118" y="2" id="0:6649"/>
+              <CubicDetachedVertex x="-116" y="-12" outRotation="-0.8761" outDistance="6.1736" inRotation="2.2655" inDistance="4.2401" id="0:6650"/>
+              <CubicDetachedVertex x="-98" y="-22" outRotation="-0.1355" outDistance="8.3031" inRotation="3.0061" inDistance="6.4993" id="0:6651"/>
+              <CubicDetachedVertex x="-72" y="-18" outRotation="-0.1149" outDistance="8.974" inRotation="3.0267" inDistance="8.4744" id="0:6652"/>
+              <CubicDetachedVertex x="-46" y="-28" outRotation="-0.1587" outDistance="7.8262" inRotation="2.9829" inDistance="9.0525" id="0:6653"/>
+              <CubicDetachedVertex x="-22" y="-26" outRotation="-0.1297" outDistance="7.6219" inRotation="3.0119" inDistance="7.8413" id="0:6654"/>
+              <StraightVertex x="0" y="-34" id="0:6655"/>
+              <StraightVertex x="0" y="2" id="0:6656"/>
+            </PointsPath>
+            <Fill name="Fill" id="0:6646">
+              <SolidColor colorValue="FFF3EBDD" id="0:6645"/>
+            </Fill>
+            <Stroke thickness="3" cap="round" join="round" name="Line" id="0:6648">
+              <SolidColor colorValue="FF2A1E24" id="0:6647"/>
+            </Stroke>
+          </Shape>
+          <Node x="-68" y="-26" name="EmblemLivingRoom" opacity="0" id="0:6724">
+            <Shape x="0" y="0" name="VignetteLivingRoomSeams" id="0:6666">
+              <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:6665">
+                <StraightVertex x="-40" y="-44" id="0:6661"/>
+                <StraightVertex x="-40" y="-24" id="0:6662"/>
+                <StraightVertex x="-6" y="-24" id="0:6663"/>
+                <StraightVertex x="-6" y="-44" id="0:6664"/>
+              </PointsPath>
+              <Stroke thickness="2.5" cap="round" join="round" name="Line" id="0:6660">
+                <SolidColor colorValue="FF2A1E24" id="0:6659"/>
+              </Stroke>
+            </Shape>
+            <Shape x="0" y="0" name="VignetteLivingRoomChair" id="0:6688">
+              <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:6687">
+                <StraightVertex x="-42" y="3" id="0:6671"/>
+                <StraightVertex x="-42" y="-10" id="0:6672"/>
+                <StraightVertex x="-47" y="-14" radius="3" id="0:6673"/>
+                <StraightVertex x="-48" y="-42" radius="6" id="0:6674"/>
+                <StraightVertex x="-40" y="-46" radius="3" id="0:6675"/>
+                <StraightVertex x="-39" y="-76" radius="12" id="0:6676"/>
+                <StraightVertex x="-5" y="-76" radius="12" id="0:6677"/>
+                <StraightVertex x="-6" y="-46" radius="3" id="0:6678"/>
+                <StraightVertex x="2" y="-42" radius="6" id="0:6679"/>
+                <StraightVertex x="1" y="-14" radius="3" id="0:6680"/>
+                <StraightVertex x="-4" y="-10" id="0:6681"/>
+                <StraightVertex x="-4" y="3" id="0:6682"/>
+                <StraightVertex x="-11" y="3" id="0:6683"/>
+                <StraightVertex x="-11" y="-8" id="0:6684"/>
+                <StraightVertex x="-35" y="-8" id="0:6685"/>
+                <StraightVertex x="-35" y="3" id="0:6686"/>
+              </PointsPath>
+              <Fill name="Fill" id="0:6668">
+                <SolidColor colorValue="FFF3EBDD" id="0:6667"/>
+              </Fill>
+              <Stroke thickness="3" cap="round" join="round" name="Line" id="0:6670">
+                <SolidColor colorValue="FF2A1E24" id="0:6669"/>
+              </Stroke>
+            </Shape>
+            <Shape x="0" y="0" name="VignetteLivingRoomShade" id="0:6698">
+              <PointsPath isClosed="true" isClockwise="false" name="Path" id="0:6697">
+                <StraightVertex x="12" y="-100" radius="2" id="0:6693"/>
+                <StraightVertex x="40" y="-100" radius="2" id="0:6694"/>
+                <StraightVertex x="34" y="-136" radius="4" id="0:6695"/>
+                <StraightVertex x="18" y="-136" radius="4" id="0:6696"/>
+              </PointsPath>
+              <Fill name="Fill" id="0:6690">
+                <SolidColor colorValue="FFF3EBDD" id="0:6689"/>
+              </Fill>
+              <Stroke thickness="3" cap="round" join="round" name="Line" id="0:6692">
+                <SolidColor colorValue="FF2A1E24" id="0:6691"/>
+              </Stroke>
+            </Shape>
+            <Shape x="0" y="0" name="VignetteLivingRoomLamp" id="0:6712">
+              <PointsPath isClosed="true" isClockwise="false" name="Path" id="0:6711">
+                <StraightVertex x="17" y="3" id="0:6703"/>
+                <StraightVertex x="35" y="3" id="0:6704"/>
+                <StraightVertex x="35" y="-1" radius="2" id="0:6705"/>
+                <StraightVertex x="28" y="-4" id="0:6706"/>
+                <StraightVertex x="28" y="-102" id="0:6707"/>
+                <StraightVertex x="24" y="-102" id="0:6708"/>
+                <StraightVertex x="24" y="-4" id="0:6709"/>
+                <StraightVertex x="17" y="-1" radius="2" id="0:6710"/>
+              </PointsPath>
+              <Fill name="Fill" id="0:6700">
+                <SolidColor colorValue="FFF3EBDD" id="0:6699"/>
+              </Fill>
+              <Stroke thickness="2" cap="round" join="round" name="Line" id="0:6702">
+                <SolidColor colorValue="FF2A1E24" id="0:6701"/>
+              </Stroke>
+            </Shape>
+            <Shape x="0" y="0" name="emitVignetteLivingRoomLampLight" id="0:6722">
+              <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:6721">
+                <StraightVertex x="14" y="-100" id="0:6717"/>
+                <StraightVertex x="38" y="-100" id="0:6718"/>
+                <StraightVertex x="56" y="-28" id="0:6719"/>
+                <StraightVertex x="-4" y="-28" id="0:6720"/>
+              </PointsPath>
+              <Fill name="Fill" id="0:6716">
+                <LinearGradient startX="0" startY="-100" endX="0" endY="-28" id="0:6715">
+                  <GradientStop colorValue="B0FFE7B0" position="0" id="0:6713"/>
+                  <GradientStop colorValue="00FFE7B0" position="1" id="0:6714"/>
+                </LinearGradient>
+              </Fill>
+            </Shape>
+            <DataBindContext sourcePathIds="0:27-0:6004" propertyKey="18" id="0:6723"/>
+          </Node>
+          <Node x="-68" y="-26" name="EmblemCampfire" opacity="0" id="0:6774">
+            <Shape x="0" y="0" name="VignetteCampfireLog" id="0:6734">
+              <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:6733">
+                <StraightVertex x="14" y="8" radius="3" id="0:6729"/>
+                <StraightVertex x="52" y="-6" radius="3" id="0:6730"/>
+                <StraightVertex x="54" y="1" radius="3" id="0:6731"/>
+                <StraightVertex x="16" y="15" radius="3" id="0:6732"/>
+              </PointsPath>
+              <Fill name="Fill" id="0:6726">
+                <SolidColor colorValue="FFE0D2BC" id="0:6725"/>
+              </Fill>
+              <Stroke thickness="2.5" cap="round" join="round" name="Line" id="0:6728">
+                <SolidColor colorValue="FF2A1E24" id="0:6727"/>
+              </Stroke>
+            </Shape>
+            <Shape x="34" y="0" name="emitVignetteCampfireFlame" id="0:6748">
+              <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:6747">
+                <CubicDetachedVertex x="0" y="2" outRotation="-2.8753" outDistance="4.5052" inRotation="0.2663" inDistance="3.0959" id="0:6740"/>
+                <CubicDetachedVertex x="-12" y="-10" outRotation="-1.8417" outDistance="7.306" inRotation="1.2998" inDistance="5.1483" id="0:6741"/>
+                <CubicDetachedVertex x="-10" y="-34" outRotation="-1.3597" outDistance="11.1098" inRotation="1.7819" inDistance="7.9806" id="0:6742"/>
+                <CubicDetachedVertex x="0" y="-66" outRotation="-0.6202" outDistance="2.2946" inRotation="2.5213" inDistance="3.4403" id="0:6743"/>
+                <CubicDetachedVertex x="4" y="-44" outRotation="1.2925" outDistance="7.1441" inRotation="4.4341" inDistance="7.4161" id="0:6744"/>
+                <CubicDetachedVertex x="12" y="-24" outRotation="1.4219" outDistance="6.508" inRotation="4.5635" inDistance="6.9745" id="0:6745"/>
+                <CubicDetachedVertex x="10" y="-4" outRotation="2.0032" outDistance="3.5047" inRotation="5.1448" inDistance="6.0405" id="0:6746"/>
+              </PointsPath>
+              <Fill name="Fill" id="0:6739">
+                <LinearGradient startX="0" startY="0" endX="0" endY="-66" id="0:6738">
+                  <GradientStop colorValue="FFFFF1C8" position="0" id="0:6735"/>
+                  <GradientStop colorValue="FFFFC46A" position="0.45" id="0:6736"/>
+                  <GradientStop colorValue="FFFF8552" position="1" id="0:6737"/>
+                </LinearGradient>
+              </Fill>
+            </Shape>
+            <Shape x="0" y="0" name="VignetteCampfireDoor" id="0:6757">
+              <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:6756">
+                <StraightVertex x="-24" y="3" id="0:6753"/>
+                <StraightVertex x="-12" y="-54" radius="2" id="0:6754"/>
+                <StraightVertex x="0" y="3" id="0:6755"/>
+              </PointsPath>
+              <Fill name="Fill" id="0:6750">
+                <SolidColor colorValue="FF5A3E30" id="0:6749"/>
+              </Fill>
+              <Stroke thickness="2.5" cap="round" join="round" name="Line" id="0:6752">
+                <SolidColor colorValue="FF2A1E24" id="0:6751"/>
+              </Stroke>
+            </Shape>
+            <Shape x="0" y="0" name="VignetteCampfireTent" id="0:6766">
+              <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:6765">
+                <StraightVertex x="-46" y="3" id="0:6762"/>
+                <StraightVertex x="-12" y="-98" radius="4" id="0:6763"/>
+                <StraightVertex x="24" y="3" id="0:6764"/>
+              </PointsPath>
+              <Fill name="Fill" id="0:6759">
+                <SolidColor colorValue="FFF3EBDD" id="0:6758"/>
+              </Fill>
+              <Stroke thickness="3" cap="round" join="round" name="Line" id="0:6761">
+                <SolidColor colorValue="FF2A1E24" id="0:6760"/>
+              </Stroke>
+            </Shape>
+            <Shape x="34" y="-26" name="emitVignetteCampfireFireGlow" id="0:6772">
+              <Ellipse width="100" height="100" name="Path" id="0:6771"/>
+              <Fill name="Fill" id="0:6770">
+                <RadialGradient startX="0" startY="0" endX="50" endY="0" id="0:6769">
+                  <GradientStop colorValue="90FFB060" position="0" id="0:6767"/>
+                  <GradientStop colorValue="00FF8A40" position="1" id="0:6768"/>
+                </RadialGradient>
+              </Fill>
+            </Shape>
+            <DataBindContext sourcePathIds="0:27-0:6006" propertyKey="18" id="0:6773"/>
+          </Node>
+          <Node x="-68" y="-26" name="EmblemBeach" opacity="0" id="0:6842">
+            <Shape x="0" y="0" name="VignetteBeachFronds" id="0:6814">
+              <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:6781">
+                <StraightVertex x="4" y="-122" id="0:6775"/>
+                <CubicDetachedVertex x="-17.2678" y="-118.8471" outRotation="2.7855" outDistance="6.5596" inRotation="5.9271" inDistance="7.0004" id="0:6776"/>
+                <CubicDetachedVertex x="-34.1283" y="-107.8194" outRotation="2.2603" outDistance="8.5686" inRotation="5.4019" inDistance="6.4864" id="0:6777"/>
+                <StraightVertex x="-46" y="-84" radius="2" id="0:6778"/>
+                <CubicDetachedVertex x="-44.9618" y="-122.074" outRotation="-1.194" outDistance="5.9609" inRotation="1.9476" inDistance="11.1668" id="0:6779"/>
+                <CubicDetachedVertex x="-27.0961" y="-131.779" outRotation="0.0015" outDistance="10.0514" inRotation="3.1431" inDistance="6.2692" id="0:6780"/>
+              </PointsPath>
+              <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:6788">
+                <StraightVertex x="4" y="-122" id="0:6782"/>
+                <CubicDetachedVertex x="-5.2917" y="-132.0059" outRotation="-2.4647" outDistance="4.5377" inRotation="0.6769" inDistance="4.5039" id="0:6783"/>
+                <CubicDetachedVertex x="-17.1439" y="-138.9906" outRotation="-2.8066" outDistance="5.6185" inRotation="0.335" inDistance="4.5142" id="0:6784"/>
+                <StraightVertex x="-34" y="-142" radius="2" id="0:6785"/>
+                <CubicDetachedVertex x="-11.442" y="-149.8241" outRotation="0.0049" outDistance="4.1478" inRotation="3.1465" inDistance="7.1461" id="0:6786"/>
+                <CubicDetachedVertex x="-0.1189" y="-141.8341" outRotation="1.0641" outDistance="6.2984" inRotation="4.2057" inDistance="4.3089" id="0:6787"/>
+              </PointsPath>
+              <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:6795">
+                <StraightVertex x="4" y="-122" id="0:6789"/>
+                <CubicDetachedVertex x="-4.0515" y="-136.5434" outRotation="-1.8167" outDistance="4.5644" inRotation="1.3249" inDistance="5.3236" id="0:6790"/>
+                <CubicDetachedVertex x="-3.2208" y="-150.7719" outRotation="-1.1257" outDistance="6.374" inRotation="2.0159" inDistance="4.5048" id="0:6791"/>
+                <StraightVertex x="10" y="-166" radius="2" id="0:6792"/>
+                <CubicDetachedVertex x="9.3232" y="-149.0614" outRotation="1.6567" outDistance="4.7309" inRotation="4.7983" inDistance="5.6436" id="0:6793"/>
+                <CubicDetachedVertex x="7.3285" y="-134.9916" outRotation="1.765" outDistance="4.4636" inRotation="4.9066" inDistance="4.7297" id="0:6794"/>
+              </PointsPath>
+              <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:6802">
+                <StraightVertex x="4" y="-122" id="0:6796"/>
+                <CubicDetachedVertex x="9.5358" y="-141.7649" outRotation="-0.9962" outDistance="4.4039" inRotation="2.1454" inDistance="6.387" id="0:6797"/>
+                <CubicDetachedVertex x="21.5934" y="-149.1746" outRotation="0.0512" outDistance="7.2597" inRotation="3.1928" inDistance="4.2434" id="0:6798"/>
+                <StraightVertex x="44" y="-140" radius="2" id="0:6799"/>
+                <CubicDetachedVertex x="26.7251" y="-137.7709" outRotation="2.8613" outDistance="4.6167" inRotation="6.0029" inDistance="5.723" id="0:6800"/>
+                <CubicDetachedVertex x="14.1913" y="-131.4194" outRotation="2.5349" outDistance="4.5816" inRotation="5.6765" inDistance="4.6389" id="0:6801"/>
+              </PointsPath>
+              <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:6809">
+                <StraightVertex x="4" y="-122" id="0:6803"/>
+                <CubicDetachedVertex x="34.1435" y="-132.1913" outRotation="-0.0234" outDistance="5.9851" inRotation="3.1182" inDistance="9.7964" id="0:6804"/>
+                <CubicDetachedVertex x="51.3314" y="-123.1085" outRotation="1.2019" outDistance="10.8332" inRotation="4.3435" inDistance="5.6743" id="0:6805"/>
+                <StraightVertex x="52" y="-86" radius="2" id="0:6806"/>
+                <CubicDetachedVertex x="41.068" y="-109.424" outRotation="-2.2482" outDistance="6.1683" inRotation="0.8934" inDistance="8.2806" id="0:6807"/>
+                <CubicDetachedVertex x="24.8325" y="-119.7767" outRotation="-2.8145" outDistance="6.799" inRotation="0.3271" inDistance="6.2488" id="0:6808"/>
+              </PointsPath>
+              <Fill name="Fill" id="0:6811">
+                <SolidColor colorValue="FFF3EBDD" id="0:6810"/>
+              </Fill>
+              <Stroke thickness="2.5" cap="round" join="round" name="Line" id="0:6813">
+                <SolidColor colorValue="FF2A1E24" id="0:6812"/>
+              </Stroke>
+            </Shape>
+            <Shape x="0" y="0" name="VignetteBeachTrunk" id="0:6828">
+              <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:6827">
+                <StraightVertex x="-20" y="3" id="0:6819"/>
+                <CubicDetachedVertex x="-17" y="-40" outRotation="-1.4421" outDistance="14.2267" inRotation="1.6995" inDistance="14.3429" id="0:6820"/>
+                <CubicDetachedVertex x="-9" y="-82" outRotation="-1.3495" outDistance="13.0901" inRotation="1.7921" inDistance="14.2432" id="0:6821"/>
+                <StraightVertex x="1" y="-120" radius="3" id="0:6822"/>
+                <StraightVertex x="8" y="-118" radius="3" id="0:6823"/>
+                <CubicDetachedVertex x="0" y="-80" outRotation="1.7484" outDistance="13.4767" inRotation="4.89" inDistance="12.9388" id="0:6824"/>
+                <CubicDetachedVertex x="-6" y="-40" outRotation="1.631" outDistance="14.2842" inRotation="4.7726" inDistance="13.4326" id="0:6825"/>
+                <StraightVertex x="-5" y="3" id="0:6826"/>
+              </PointsPath>
+              <Fill name="Fill" id="0:6816">
+                <SolidColor colorValue="FFE0D2BC" id="0:6815"/>
+              </Fill>
+              <Stroke thickness="3" cap="round" join="round" name="Line" id="0:6818">
+                <SolidColor colorValue="FF2A1E24" id="0:6817"/>
+              </Stroke>
+            </Shape>
+            <Shape x="30" y="-60" name="emitVignetteBeachSun" id="0:6834">
+              <Ellipse width="38" height="38" name="Path" id="0:6833"/>
+              <Fill name="Fill" id="0:6832">
+                <RadialGradient startX="0" startY="0" endX="19" endY="0" id="0:6831">
+                  <GradientStop colorValue="FFFFF2C2" position="0" id="0:6829"/>
+                  <GradientStop colorValue="FFFFD27A" position="1" id="0:6830"/>
+                </RadialGradient>
+              </Fill>
+            </Shape>
+            <Shape x="30" y="-60" name="emitVignetteBeachSunGlow" id="0:6840">
+              <Ellipse width="86" height="86" name="Path" id="0:6839"/>
+              <Fill name="Fill" id="0:6838">
+                <RadialGradient startX="0" startY="0" endX="43" endY="0" id="0:6837">
+                  <GradientStop colorValue="90FFD88A" position="0.3" id="0:6835"/>
+                  <GradientStop colorValue="00FFD88A" position="1" id="0:6836"/>
+                </RadialGradient>
+              </Fill>
+            </Shape>
+            <DataBindContext sourcePathIds="0:27-0:6008" propertyKey="18" id="0:6841"/>
+          </Node>
+          <Node x="-68" y="-26" name="EmblemDeepSpace" opacity="0" id="0:6897">
+            <Shape x="0" y="0" name="VignetteDeepSpaceRingFront" id="0:6868">
+              <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:6867">
+                <StraightVertex x="40.7186" y="-97.0623" id="0:6849"/>
+                <CubicDetachedVertex x="39.1702" y="-91.4989" outRotation="2.1996" outDistance="3.4476" inRotation="5.3411" inDistance="1.8599" id="0:6850"/>
+                <CubicDetachedVertex x="31.354" y="-84.1849" outRotation="2.5064" outDistance="5.0251" inRotation="5.648" inDistance="3.551" id="0:6851"/>
+                <CubicDetachedVertex x="18.4599" y="-76.2338" outRotation="2.654" outDistance="5.8651" inRotation="5.7955" inDistance="5.0404" id="0:6852"/>
+                <CubicDetachedVertex x="2.451" y="-68.856" outRotation="2.7616" outDistance="5.8678" inRotation="5.9032" inDistance="5.8678" id="0:6853"/>
+                <CubicDetachedVertex x="-14.2355" y="-63.1748" outRotation="2.8692" outDistance="5.0404" inRotation="6.0108" inDistance="5.8651" id="0:6854"/>
+                <CubicDetachedVertex x="-29.0592" y="-60.0551" outRotation="3.0168" outDistance="3.551" inRotation="6.1584" inDistance="5.0251" id="0:6855"/>
+                <CubicDetachedVertex x="-39.7635" y="-59.9718" outRotation="-2.9596" outDistance="1.8599" inRotation="0.182" inDistance="3.4476" id="0:6856"/>
+                <StraightVertex x="-44.7186" y="-62.9377" id="0:6857"/>
+                <StraightVertex x="-33.5746" y="-67.3887" id="0:6858"/>
+                <CubicDetachedVertex x="-30.3195" y="-66.2164" outRotation="0.0227" outDistance="2.4818" inRotation="3.1643" inDistance="1.1264" id="0:6859"/>
+                <CubicDetachedVertex x="-22.7529" y="-67.1425" outRotation="-0.2053" outDistance="3.6934" inRotation="2.9363" inDistance="2.5349" id="0:6860"/>
+                <CubicDetachedVertex x="-12.027" y="-70.026" outRotation="-0.307" outDistance="4.3361" inRotation="2.8346" inDistance="3.6992" id="0:6861"/>
+                <CubicDetachedVertex x="0.2255" y="-74.428" outRotation="-0.38" outDistance="4.3371" inRotation="2.7616" inDistance="4.3371" id="0:6862"/>
+                <CubicDetachedVertex x="12.1392" y="-79.6783" outRotation="-0.453" outDistance="3.6992" inRotation="2.6886" inDistance="4.3361" id="0:6863"/>
+                <CubicDetachedVertex x="21.9003" y="-84.9775" outRotation="-0.5547" outDistance="2.5349" inRotation="2.5869" inDistance="3.6934" id="0:6864"/>
+                <CubicDetachedVertex x="28.0228" y="-89.519" outRotation="-0.7827" outDistance="1.1264" inRotation="2.3588" inDistance="2.4818" id="0:6865"/>
+                <StraightVertex x="29.5746" y="-92.6113" id="0:6866"/>
+              </PointsPath>
+              <Fill name="Fill" id="0:6846">
+                <SolidColor colorValue="FFE0D2BC" id="0:6845"/>
+              </Fill>
+              <Stroke thickness="2.5" cap="round" join="round" name="Line" id="0:6848">
+                <SolidColor colorValue="FF2A1E24" id="0:6847"/>
+              </Stroke>
+            </Shape>
+            <Shape x="-2" y="-80" name="VignetteDeepSpacePlanet" id="0:6874">
+              <Ellipse width="58" height="58" name="Path" id="0:6873"/>
+              <Fill name="Fill" id="0:6870">
+                <SolidColor colorValue="FFF3EBDD" id="0:6869"/>
+              </Fill>
+              <Stroke thickness="3" cap="round" join="round" name="Line" id="0:6872">
+                <SolidColor colorValue="FF2A1E24" id="0:6871"/>
+              </Stroke>
+            </Shape>
+            <Shape x="0" y="0" name="VignetteDeepSpaceRingBack" id="0:6879">
+              <Ellipse width="92" height="24" x="-2" y="-80" rotation="-0.38" name="Path" id="0:6843"/>
+              <Ellipse width="68" height="12" x="-2" y="-80" rotation="-0.38" name="Path" id="0:6844"/>
+              <Fill name="Fill" fillRule="evenOdd" id="0:6876">
+                <SolidColor colorValue="FFE0D2BC" id="0:6875"/>
+              </Fill>
+              <Stroke thickness="2.5" cap="round" join="round" name="Line" id="0:6878">
+                <SolidColor colorValue="FF2A1E24" id="0:6877"/>
+              </Stroke>
+            </Shape>
+            <Shape x="32" y="-146" name="emitVignetteDeepSpaceStar" id="0:6887">
+              <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:6886">
+                <CubicDetachedVertex x="0" y="-15" inRotation="1.5708" inDistance="9.3" outRotation="1.5708" outDistance="9.3" id="0:6882"/>
+                <CubicDetachedVertex x="15" y="0" inRotation="-3.1416" inDistance="9.3" outRotation="-3.1416" outDistance="9.3" id="0:6883"/>
+                <CubicDetachedVertex x="0" y="15" inRotation="-1.5708" inDistance="9.3" outRotation="-1.5708" outDistance="9.3" id="0:6884"/>
+                <CubicDetachedVertex x="-15" y="0" inRotation="0" inDistance="9.3" outRotation="0" outDistance="9.3" id="0:6885"/>
+              </PointsPath>
+              <Fill name="Fill" id="0:6881">
+                <SolidColor colorValue="FFFFF6E0" id="0:6880"/>
+              </Fill>
+            </Shape>
+            <Shape x="-38" y="-142" name="emitVignetteDeepSpaceStarSmall" id="0:6895">
+              <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:6894">
+                <CubicDetachedVertex x="0" y="-9" inRotation="1.5708" inDistance="5.58" outRotation="1.5708" outDistance="5.58" id="0:6890"/>
+                <CubicDetachedVertex x="9" y="0" inRotation="-3.1416" inDistance="5.58" outRotation="-3.1416" outDistance="5.58" id="0:6891"/>
+                <CubicDetachedVertex x="0" y="9" inRotation="-1.5708" inDistance="5.58" outRotation="-1.5708" outDistance="5.58" id="0:6892"/>
+                <CubicDetachedVertex x="-9" y="0" inRotation="0" inDistance="5.58" outRotation="0" outDistance="5.58" id="0:6893"/>
+              </PointsPath>
+              <Fill name="Fill" id="0:6889">
+                <SolidColor colorValue="FFFFF6E0" id="0:6888"/>
+              </Fill>
+            </Shape>
+            <DataBindContext sourcePathIds="0:27-0:6010" propertyKey="18" id="0:6896"/>
+          </Node>
+          <Node x="-68" y="-26" name="EmblemCafe" opacity="0" id="0:6941">
+            <Shape x="0" y="0" name="VignetteCafeSteam" id="0:6912">
+              <PointsPath isClosed="false" isClockwise="true" name="Path" id="0:6902">
+                <CubicDetachedVertex x="-14" y="-74" outRotation="-1.1071" outDistance="5.9628" inRotation="2.0344" inDistance="0" id="0:6898"/>
+                <CubicDetachedVertex x="-6" y="-90" outRotation="-1.6332" outDistance="5.4861" inRotation="1.5084" inDistance="5.2013" id="0:6899"/>
+                <CubicDetachedVertex x="-16" y="-106" outRotation="-1.6296" outDistance="5.7986" inRotation="1.512" inDistance="5.5543" id="0:6900"/>
+                <CubicDetachedVertex x="-8" y="-124" outRotation="-1.1526" outDistance="0" inRotation="1.989" inDistance="6.5659" id="0:6901"/>
+              </PointsPath>
+              <PointsPath isClosed="false" isClockwise="true" name="Path" id="0:6907">
+                <CubicDetachedVertex x="4" y="-76" outRotation="-1.1526" outDistance="6.5659" inRotation="1.989" inDistance="0" id="0:6903"/>
+                <CubicDetachedVertex x="12" y="-94" outRotation="-1.6263" outDistance="6.1425" inRotation="1.5153" inDistance="5.876" id="0:6904"/>
+                <CubicDetachedVertex x="2" y="-112" outRotation="-1.6234" outDistance="6.485" inRotation="1.5182" inDistance="6.1992" id="0:6905"/>
+                <CubicDetachedVertex x="10" y="-132" outRotation="-1.1903" outDistance="0" inRotation="1.9513" inDistance="7.1802" id="0:6906"/>
+              </PointsPath>
+              <Stroke thickness="4.5" cap="round" join="round" name="Line" id="0:6911">
+                <SolidColor colorValue="FFF3EBDD" id="0:6910"/>
+              </Stroke>
+            </Shape>
+            <Shape x="-5" y="-64" name="VignetteCafeCoffee" id="0:6918">
+              <Ellipse width="58" height="11" name="Path" id="0:6917"/>
+              <Fill name="Fill" id="0:6914">
+                <SolidColor colorValue="FF5A3E30" id="0:6913"/>
+              </Fill>
+              <Stroke thickness="2.5" cap="round" join="round" name="Line" id="0:6916">
+                <SolidColor colorValue="FF2A1E24" id="0:6915"/>
+              </Stroke>
+            </Shape>
+            <Shape x="0" y="0" name="VignetteCafeCup" id="0:6928">
+              <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:6927">
+                <StraightVertex x="-31" y="-10" radius="5" id="0:6923"/>
+                <StraightVertex x="-35" y="-64" radius="3" id="0:6924"/>
+                <StraightVertex x="25" y="-64" radius="3" id="0:6925"/>
+                <StraightVertex x="21" y="-10" radius="5" id="0:6926"/>
+              </PointsPath>
+              <Fill name="Fill" id="0:6920">
+                <SolidColor colorValue="FFF3EBDD" id="0:6919"/>
+              </Fill>
+              <Stroke thickness="3" cap="round" join="round" name="Line" id="0:6922">
+                <SolidColor colorValue="FF2A1E24" id="0:6921"/>
+              </Stroke>
+            </Shape>
+            <Shape x="0" y="0" name="VignetteCafeHandle" id="0:6933">
+              <Ellipse width="30" height="34" x="30" y="-38" name="Path" id="0:6908"/>
+              <Ellipse width="14" height="18" x="30" y="-38" name="Path" id="0:6909"/>
+              <Fill name="Fill" fillRule="evenOdd" id="0:6930">
+                <SolidColor colorValue="FFF3EBDD" id="0:6929"/>
+              </Fill>
+              <Stroke thickness="2.5" cap="round" join="round" name="Line" id="0:6932">
+                <SolidColor colorValue="FF2A1E24" id="0:6931"/>
+              </Stroke>
+            </Shape>
+            <Shape x="-4" y="-6" name="VignetteCafeSaucer" id="0:6939">
+              <Ellipse width="86" height="14" name="Path" id="0:6938"/>
+              <Fill name="Fill" id="0:6935">
+                <SolidColor colorValue="FFE0D2BC" id="0:6934"/>
+              </Fill>
+              <Stroke thickness="2.5" cap="round" join="round" name="Line" id="0:6937">
+                <SolidColor colorValue="FF2A1E24" id="0:6936"/>
+              </Stroke>
+            </Shape>
+            <DataBindContext sourcePathIds="0:27-0:6012" propertyKey="18" id="0:6940"/>
+          </Node>
+          <Node x="-68" y="-26" name="EmblemRooftop" opacity="0" id="0:7015">
+            <Shape x="0" y="0" name="VignetteRooftopRailing" id="0:6959">
+              <Rectangle width="92" height="44" cornerRadiusTL="3" x="0" y="-24" name="Path" id="0:6942"/>
+              <Rectangle width="14" height="28" x="-30" y="-22" name="Path" id="0:6943"/>
+              <Rectangle width="14" height="28" x="-10" y="-22" name="Path" id="0:6944"/>
+              <Rectangle width="14" height="28" x="10" y="-22" name="Path" id="0:6945"/>
+              <Rectangle width="14" height="28" x="30" y="-22" name="Path" id="0:6946"/>
+              <Fill name="Fill" fillRule="evenOdd" id="0:6956">
+                <SolidColor colorValue="FFF3EBDD" id="0:6955"/>
+              </Fill>
+              <Stroke thickness="2.5" cap="round" join="round" name="Line" id="0:6958">
+                <SolidColor colorValue="FF2A1E24" id="0:6957"/>
+              </Stroke>
+            </Shape>
+            <Shape x="0" y="0" name="emitVignetteRooftopWindows" id="0:6962">
+              <Rectangle width="5" height="6" x="-38" y="-66" name="Path" id="0:6947"/>
+              <Rectangle width="5" height="6" x="-22" y="-82" name="Path" id="0:6948"/>
+              <Rectangle width="5" height="6" x="-22" y="-66" name="Path" id="0:6949"/>
+              <Rectangle width="5" height="6" x="-7" y="-58" name="Path" id="0:6950"/>
+              <Rectangle width="5" height="6" x="10" y="-96" name="Path" id="0:6951"/>
+              <Rectangle width="5" height="6" x="10" y="-80" name="Path" id="0:6952"/>
+              <Rectangle width="5" height="6" x="26" y="-56" name="Path" id="0:6953"/>
+              <Rectangle width="5" height="6" x="39" y="-72" name="Path" id="0:6954"/>
+              <Fill name="Fill" id="0:6961">
+                <SolidColor colorValue="FFFFD48A" id="0:6960"/>
+              </Fill>
+            </Shape>
+            <Shape x="0" y="0" name="VignetteRooftopRoofs" id="0:6983">
+              <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:6982">
+                <StraightVertex x="-46" y="-40" id="0:6967"/>
+                <StraightVertex x="-46" y="-78" id="0:6968"/>
+                <StraightVertex x="-30" y="-78" id="0:6969"/>
+                <StraightVertex x="-30" y="-92" id="0:6970"/>
+                <StraightVertex x="-14" y="-92" id="0:6971"/>
+                <StraightVertex x="-14" y="-70" id="0:6972"/>
+                <StraightVertex x="0" y="-70" id="0:6973"/>
+                <StraightVertex x="0" y="-104" radius="2" id="0:6974"/>
+                <StraightVertex x="10" y="-114" id="0:6975"/>
+                <StraightVertex x="20" y="-104" radius="2" id="0:6976"/>
+                <StraightVertex x="20" y="-66" id="0:6977"/>
+                <StraightVertex x="32" y="-66" id="0:6978"/>
+                <StraightVertex x="32" y="-84" id="0:6979"/>
+                <StraightVertex x="46" y="-84" id="0:6980"/>
+                <StraightVertex x="46" y="-40" id="0:6981"/>
+              </PointsPath>
+              <Fill name="Fill" id="0:6964">
+                <SolidColor colorValue="FFD9C7A8" id="0:6963"/>
+              </Fill>
+              <Stroke thickness="2.5" cap="round" join="round" name="Line" id="0:6966">
+                <SolidColor colorValue="FF2A1E24" id="0:6965"/>
+              </Stroke>
+            </Shape>
+            <Shape x="0" y="0" name="VignetteRooftopMoon" id="0:7007">
+              <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:7006">
+                <StraightVertex x="8.577" y="-124.2162" radius="1" id="0:6988"/>
+                <CubicDetachedVertex x="3.5986" y="-116.486" outRotation="2.3535" outDistance="2.9972" inRotation="5.4951" inDistance="2.9972" id="0:6989"/>
+                <CubicDetachedVertex x="-4.1045" y="-111.4656" outRotation="2.7745" outDistance="2.9972" inRotation="5.9161" inDistance="2.9972" id="0:6990"/>
+                <CubicDetachedVertex x="-13.1868" y="-110.032" outRotation="-3.0876" outDistance="2.9972" inRotation="0.054" inDistance="2.9972" id="0:6991"/>
+                <CubicDetachedVertex x="-22.0617" y="-112.4357" outRotation="-2.6666" outDistance="2.9972" inRotation="0.475" inDistance="2.9972" id="0:6992"/>
+                <CubicDetachedVertex x="-29.1791" y="-118.2567" outRotation="-2.2455" outDistance="2.9972" inRotation="0.8961" inDistance="2.9972" id="0:6993"/>
+                <CubicDetachedVertex x="-33.2958" y="-126.4783" outRotation="-1.8245" outDistance="2.9972" inRotation="1.3171" inDistance="2.9972" id="0:6994"/>
+                <CubicDetachedVertex x="-33.6927" y="-135.6644" outRotation="-1.4035" outDistance="2.9972" inRotation="1.7381" inDistance="2.9972" id="0:6995"/>
+                <CubicDetachedVertex x="-30.3004" y="-144.2104" outRotation="-0.9824" outDistance="2.9972" inRotation="2.1592" inDistance="2.9972" id="0:6996"/>
+                <CubicDetachedVertex x="-23.7116" y="-150.6236" outRotation="-0.5614" outDistance="2.9972" inRotation="2.5802" inDistance="2.9972" id="0:6997"/>
+                <StraightVertex x="-15.077" y="-153.7838" radius="1" id="0:6998"/>
+                <CubicDetachedVertex x="-19.1895" y="-148.0944" outRotation="2.0109" outDistance="2.2997" inRotation="5.1525" inDistance="2.2997" id="0:6999"/>
+                <CubicDetachedVertex x="-20.9555" y="-141.3001" outRotation="1.6393" outDistance="2.2997" inRotation="4.7809" inDistance="2.2997" id="0:7000"/>
+                <CubicDetachedVertex x="-20.1337" y="-134.3283" outRotation="1.2677" outDistance="2.2997" inRotation="4.4093" inDistance="2.2997" id="0:7001"/>
+                <CubicDetachedVertex x="-16.8365" y="-128.1308" outRotation="0.8961" outDistance="2.2997" inRotation="4.0376" inDistance="2.2997" id="0:7002"/>
+                <CubicDetachedVertex x="-11.5139" y="-123.5536" outRotation="0.5244" outDistance="2.2997" inRotation="3.666" inDistance="2.2997" id="0:7003"/>
+                <CubicDetachedVertex x="-4.8925" y="-121.2215" outRotation="0.1528" outDistance="2.2997" inRotation="3.2944" inDistance="2.2997" id="0:7004"/>
+                <CubicDetachedVertex x="2.1237" y="-121.4529" outRotation="-0.2188" outDistance="2.2997" inRotation="2.9228" inDistance="2.2997" id="0:7005"/>
+              </PointsPath>
+              <Fill name="Fill" id="0:6985">
+                <SolidColor colorValue="FFF3EBDD" id="0:6984"/>
+              </Fill>
+              <Stroke thickness="2.5" cap="round" join="round" name="Line" id="0:6987">
+                <SolidColor colorValue="FF2A1E24" id="0:6986"/>
+              </Stroke>
+            </Shape>
+            <Shape x="-12" y="-132" name="emitVignetteRooftopMoonGlow" id="0:7013">
+              <Ellipse width="68" height="68" name="Path" id="0:7012"/>
+              <Fill name="Fill" id="0:7011">
+                <RadialGradient startX="0" startY="0" endX="34" endY="0" id="0:7010">
+                  <GradientStop colorValue="70FFF3DD" position="0.3" id="0:7008"/>
+                  <GradientStop colorValue="00FFF3DD" position="1" id="0:7009"/>
+                </RadialGradient>
+              </Fill>
+            </Shape>
+            <DataBindContext sourcePathIds="0:27-0:6014" propertyKey="18" id="0:7014"/>
+          </Node>
+          <Node x="-68" y="-26" name="EmblemMountainHut" opacity="0" id="0:7055">
+            <Shape x="-2" y="-24" name="emitVignetteMountainHutWindow" id="0:7019">
+              <Rectangle width="16" height="16" cornerRadiusTL="2" name="Path" id="0:7018"/>
+              <Fill name="Fill" id="0:7017">
+                <SolidColor colorValue="FFFFD08A" id="0:7016"/>
+              </Fill>
+            </Shape>
+            <Shape x="0" y="0" name="VignetteMountainHutHut" id="0:7032">
+              <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:7031">
+                <StraightVertex x="-30" y="3" id="0:7024"/>
+                <StraightVertex x="-30" y="-40" id="0:7025"/>
+                <StraightVertex x="-36" y="-40" id="0:7026"/>
+                <StraightVertex x="-2" y="-74" radius="3" id="0:7027"/>
+                <StraightVertex x="32" y="-40" id="0:7028"/>
+                <StraightVertex x="26" y="-40" id="0:7029"/>
+                <StraightVertex x="26" y="3" id="0:7030"/>
+              </PointsPath>
+              <Fill name="Fill" id="0:7021">
+                <SolidColor colorValue="FFF3EBDD" id="0:7020"/>
+              </Fill>
+              <Stroke thickness="3" cap="round" join="round" name="Line" id="0:7023">
+                <SolidColor colorValue="FF2A1E24" id="0:7022"/>
+              </Stroke>
+            </Shape>
+            <Shape x="0" y="0" name="VignetteMountainHutSnow" id="0:7044">
+              <PointsPath isClosed="true" isClockwise="false" name="Path" id="0:7043">
+                <StraightVertex x="-6" y="-150" radius="3" id="0:7037"/>
+                <StraightVertex x="-19" y="-108" radius="2" id="0:7038"/>
+                <StraightVertex x="-11" y="-114" id="0:7039"/>
+                <StraightVertex x="-4" y="-102" id="0:7040"/>
+                <StraightVertex x="5" y="-114" id="0:7041"/>
+                <StraightVertex x="12" y="-107" radius="2" id="0:7042"/>
+              </PointsPath>
+              <Fill name="Fill" id="0:7034">
+                <SolidColor colorValue="FFF3EBDD" id="0:7033"/>
+              </Fill>
+              <Stroke thickness="2.5" cap="round" join="round" name="Line" id="0:7036">
+                <SolidColor colorValue="FF2A1E24" id="0:7035"/>
+              </Stroke>
+            </Shape>
+            <Shape x="0" y="0" name="VignetteMountainHutPeak" id="0:7053">
+              <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:7052">
+                <StraightVertex x="-46" y="-22" id="0:7049"/>
+                <StraightVertex x="-6" y="-150" radius="3" id="0:7050"/>
+                <StraightVertex x="46" y="-22" id="0:7051"/>
+              </PointsPath>
+              <Fill name="Fill" id="0:7046">
+                <SolidColor colorValue="FFD9C7A8" id="0:7045"/>
+              </Fill>
+              <Stroke thickness="3" cap="round" join="round" name="Line" id="0:7048">
+                <SolidColor colorValue="FF2A1E24" id="0:7047"/>
+              </Stroke>
+            </Shape>
+            <DataBindContext sourcePathIds="0:27-0:6016" propertyKey="18" id="0:7054"/>
+          </Node>
+          <Node x="-68" y="-26" name="EmblemForestCabin" opacity="0" id="0:7099">
+            <Shape x="0" y="0" name="VignetteForestCabinPineNear" id="0:7076">
+              <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:7075">
+                <StraightVertex x="22" y="-108" radius="2" id="0:7060"/>
+                <StraightVertex x="39.1" y="-75.3333" radius="2" id="0:7061"/>
+                <StraightVertex x="29.182" y="-78.3333" id="0:7062"/>
+                <StraightVertex x="44.05" y="-42.6667" radius="2" id="0:7063"/>
+                <StraightVertex x="31.261" y="-45.6667" id="0:7064"/>
+                <StraightVertex x="49" y="-10" radius="2" id="0:7065"/>
+                <StraightVertex x="26" y="-10" id="0:7066"/>
+                <StraightVertex x="26" y="3" id="0:7067"/>
+                <StraightVertex x="18" y="3" id="0:7068"/>
+                <StraightVertex x="18" y="-10" id="0:7069"/>
+                <StraightVertex x="-5" y="-10" radius="2" id="0:7070"/>
+                <StraightVertex x="12.739" y="-45.6667" id="0:7071"/>
+                <StraightVertex x="-0.05" y="-42.6667" radius="2" id="0:7072"/>
+                <StraightVertex x="14.818" y="-78.3333" id="0:7073"/>
+                <StraightVertex x="4.9" y="-75.3333" radius="2" id="0:7074"/>
+              </PointsPath>
+              <Fill name="Fill" id="0:7057">
+                <SolidColor colorValue="FFF3EBDD" id="0:7056"/>
+              </Fill>
+              <Stroke thickness="3" cap="round" join="round" name="Line" id="0:7059">
+                <SolidColor colorValue="FF2A1E24" id="0:7058"/>
+              </Stroke>
+            </Shape>
+            <Shape x="0" y="0" name="VignetteForestCabinPineFar" id="0:7097">
+              <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:7096">
+                <StraightVertex x="-14" y="-164" radius="2" id="0:7081"/>
+                <StraightVertex x="6.9" y="-113.3333" radius="2" id="0:7082"/>
+                <StraightVertex x="-5.222" y="-116.3333" id="0:7083"/>
+                <StraightVertex x="12.95" y="-62.6667" radius="2" id="0:7084"/>
+                <StraightVertex x="-2.681" y="-65.6667" id="0:7085"/>
+                <StraightVertex x="19" y="-12" radius="2" id="0:7086"/>
+                <StraightVertex x="-10" y="-12" id="0:7087"/>
+                <StraightVertex x="-10" y="3" id="0:7088"/>
+                <StraightVertex x="-18" y="3" id="0:7089"/>
+                <StraightVertex x="-18" y="-12" id="0:7090"/>
+                <StraightVertex x="-47" y="-12" radius="2" id="0:7091"/>
+                <StraightVertex x="-25.319" y="-65.6667" id="0:7092"/>
+                <StraightVertex x="-40.95" y="-62.6667" radius="2" id="0:7093"/>
+                <StraightVertex x="-22.778" y="-116.3333" id="0:7094"/>
+                <StraightVertex x="-34.9" y="-113.3333" radius="2" id="0:7095"/>
+              </PointsPath>
+              <Fill name="Fill" id="0:7078">
+                <SolidColor colorValue="FFD9C7A8" id="0:7077"/>
+              </Fill>
+              <Stroke thickness="3" cap="round" join="round" name="Line" id="0:7080">
+                <SolidColor colorValue="FF2A1E24" id="0:7079"/>
+              </Stroke>
+            </Shape>
+            <DataBindContext sourcePathIds="0:27-0:6018" propertyKey="18" id="0:7098"/>
+          </Node>
+          <Node x="-68" y="-26" name="EmblemTrainCompartment" opacity="0" id="0:7144">
+            <Shape x="0" y="0" name="VignetteTrainCompartmentFrame" id="0:7113">
+              <Rectangle width="74" height="128" linkCornerRadius="false" cornerRadiusTL="37" cornerRadiusTR="37" cornerRadiusBL="4" cornerRadiusBR="4" x="0" y="-100" name="Path" id="0:7100"/>
+              <Rectangle width="52" height="108" linkCornerRadius="false" cornerRadiusTL="26" cornerRadiusTR="26" x="0" y="-100" name="Path" id="0:7101"/>
+              <Fill name="Fill" fillRule="evenOdd" id="0:7110">
+                <SolidColor colorValue="FFF3EBDD" id="0:7109"/>
+              </Fill>
+              <Stroke thickness="3" cap="round" join="round" name="Line" id="0:7112">
+                <SolidColor colorValue="FF2A1E24" id="0:7111"/>
+              </Stroke>
+            </Shape>
+            <Shape x="11" y="-128" name="emitVignetteTrainCompartmentMoon" id="0:7117">
+              <Ellipse width="12" height="12" name="Path" id="0:7116"/>
+              <Fill name="Fill" id="0:7115">
+                <SolidColor colorValue="FFFFF3DD" id="0:7114"/>
+              </Fill>
+            </Shape>
+            <Shape x="0" y="0" name="VignetteTrainCompartmentHills" id="0:7129">
+              <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:7128">
+                <StraightVertex x="-28" y="-44" id="0:7122"/>
+                <CubicDetachedVertex x="-28" y="-66" outRotation="-1.1071" outDistance="5.5059" inRotation="2.0344" inDistance="6.4198" id="0:7123"/>
+                <CubicDetachedVertex x="-12" y="-76" outRotation="-0.0624" outDistance="5.2013" inRotation="3.0792" inDistance="5.4861" id="0:7124"/>
+                <CubicDetachedVertex x="4" y="-68" outRotation="-0.1489" outDistance="8.2019" inRotation="2.9927" inDistance="5.2806" id="0:7125"/>
+                <StraightVertex x="28" y="-82" id="0:7126"/>
+                <StraightVertex x="28" y="-44" id="0:7127"/>
+              </PointsPath>
+              <Fill name="Fill" id="0:7119">
+                <SolidColor colorValue="FFD9C7A8" id="0:7118"/>
+              </Fill>
+              <Stroke thickness="2" cap="round" join="round" name="Line" id="0:7121">
+                <SolidColor colorValue="FF2A1E24" id="0:7120"/>
+              </Stroke>
+            </Shape>
+            <Shape x="0" y="0" name="VignetteTrainCompartmentView" id="0:7137">
+              <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:7136">
+                <StraightVertex x="-27" y="-45" id="0:7132"/>
+                <StraightVertex x="-27" y="-127" radius="26" id="0:7133"/>
+                <StraightVertex x="27" y="-127" radius="26" id="0:7134"/>
+                <StraightVertex x="27" y="-45" id="0:7135"/>
+              </PointsPath>
+              <Fill name="Fill" id="0:7131">
+                <SolidColor colorValue="FF46506E" id="0:7130"/>
+              </Fill>
+            </Shape>
+            <Shape x="0" y="0" name="VignetteTrainCompartmentTrack" id="0:7142">
+              <Rectangle width="92" height="5" x="0" y="-28" name="Path" id="0:7102"/>
+              <Rectangle width="92" height="5" x="0" y="-16" name="Path" id="0:7103"/>
+              <Rectangle width="6" height="22" x="-36" y="-22" name="Path" id="0:7104"/>
+              <Rectangle width="6" height="22" x="-18" y="-22" name="Path" id="0:7105"/>
+              <Rectangle width="6" height="22" x="0" y="-22" name="Path" id="0:7106"/>
+              <Rectangle width="6" height="22" x="18" y="-22" name="Path" id="0:7107"/>
+              <Rectangle width="6" height="22" x="36" y="-22" name="Path" id="0:7108"/>
+              <Fill name="Fill" id="0:7139">
+                <SolidColor colorValue="FFE0D2BC" id="0:7138"/>
+              </Fill>
+              <Stroke thickness="2" cap="round" join="round" name="Line" id="0:7141">
+                <SolidColor colorValue="FF2A1E24" id="0:7140"/>
+              </Stroke>
+            </Shape>
+            <DataBindContext sourcePathIds="0:27-0:6020" propertyKey="18" id="0:7143"/>
+          </Node>
+          <Node x="-68" y="-26" name="EmblemLibrary" opacity="0" id="0:7192">
+            <Shape x="0" y="0" name="VignetteLibrarySpines" id="0:7159">
+              <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:7150">
+                <CubicDetachedVertex x="28" y="-21" outRotation="1.5708" outDistance="6" inRotation="4.7124" inDistance="0" id="0:7148"/>
+                <CubicDetachedVertex x="28" y="-3" outRotation="1.5708" outDistance="0" inRotation="4.7124" inDistance="6" id="0:7149"/>
+              </PointsPath>
+              <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:7153">
+                <CubicDetachedVertex x="16" y="-39" outRotation="1.5708" outDistance="5.3333" inRotation="4.7124" inDistance="0" id="0:7151"/>
+                <CubicDetachedVertex x="16" y="-23" outRotation="1.5708" outDistance="0" inRotation="4.7124" inDistance="5.3333" id="0:7152"/>
+              </PointsPath>
+              <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:7156">
+                <CubicDetachedVertex x="-24" y="-55" outRotation="1.5708" outDistance="4.6667" inRotation="4.7124" inDistance="0" id="0:7154"/>
+                <CubicDetachedVertex x="-24" y="-41" outRotation="1.5708" outDistance="0" inRotation="4.7124" inDistance="4.6667" id="0:7155"/>
+              </PointsPath>
+              <Stroke thickness="2.5" cap="round" join="round" name="Line" id="0:7158">
+                <SolidColor colorValue="FF2A1E24" id="0:7157"/>
+              </Stroke>
+            </Shape>
+            <Shape x="0" y="0" name="VignetteLibraryBooks" id="0:7164">
+              <Rectangle width="86" height="20" cornerRadiusTL="3" x="-4" y="-12" name="Path" id="0:7145"/>
+              <Rectangle width="70" height="18" cornerRadiusTL="3" x="-8" y="-31" name="Path" id="0:7146"/>
+              <Rectangle width="58" height="16" cornerRadiusTL="3" x="-2" y="-48" name="Path" id="0:7147"/>
+              <Fill name="Fill" id="0:7161">
+                <SolidColor colorValue="FFF3EBDD" id="0:7160"/>
+              </Fill>
+              <Stroke thickness="2.5" cap="round" join="round" name="Line" id="0:7163">
+                <SolidColor colorValue="FF2A1E24" id="0:7162"/>
+              </Stroke>
+            </Shape>
+            <Shape x="5" y="-100" name="emitVignetteLibraryFlame" id="0:7174">
+              <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:7173">
+                <CubicDetachedVertex x="0" y="0" outRotation="3.1416" outDistance="2" inRotation="6.2832" inDistance="2" id="0:7169"/>
+                <CubicDetachedVertex x="-6" y="-8" outRotation="-1.5708" outDistance="6.9515" inRotation="1.5708" inDistance="3.0485" id="0:7170"/>
+                <CubicDetachedVertex x="0" y="-30" outRotation="0" outDistance="2" inRotation="3.1416" inDistance="2" id="0:7171"/>
+                <CubicDetachedVertex x="6" y="-8" outRotation="1.5708" outDistance="3.0485" inRotation="4.7124" inDistance="6.9515" id="0:7172"/>
+              </PointsPath>
+              <Fill name="Fill" id="0:7168">
+                <LinearGradient startX="0" startY="0" endX="0" endY="-30" id="0:7167">
+                  <GradientStop colorValue="FFFFF1C8" position="0" id="0:7165"/>
+                  <GradientStop colorValue="FFFFB060" position="1" id="0:7166"/>
+                </LinearGradient>
+              </Fill>
+            </Shape>
+            <Shape x="0" y="0" name="VignetteLibraryCandle" id="0:7184">
+              <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:7183">
+                <StraightVertex x="-2" y="-56" id="0:7179"/>
+                <StraightVertex x="-2" y="-100" radius="2" id="0:7180"/>
+                <StraightVertex x="12" y="-100" radius="2" id="0:7181"/>
+                <StraightVertex x="12" y="-56" id="0:7182"/>
+              </PointsPath>
+              <Fill name="Fill" id="0:7176">
+                <SolidColor colorValue="FFF3EBDD" id="0:7175"/>
+              </Fill>
+              <Stroke thickness="2.5" cap="round" join="round" name="Line" id="0:7178">
+                <SolidColor colorValue="FF2A1E24" id="0:7177"/>
+              </Stroke>
+            </Shape>
+            <Shape x="5" y="-112" name="emitVignetteLibraryCandleGlow" id="0:7190">
+              <Ellipse width="76" height="76" name="Path" id="0:7189"/>
+              <Fill name="Fill" id="0:7188">
+                <RadialGradient startX="0" startY="0" endX="38" endY="0" id="0:7187">
+                  <GradientStop colorValue="90FFD08A" position="0" id="0:7185"/>
+                  <GradientStop colorValue="00FFB060" position="1" id="0:7186"/>
+                </RadialGradient>
+              </Fill>
+            </Shape>
+            <DataBindContext sourcePathIds="0:27-0:6022" propertyKey="18" id="0:7191"/>
+          </Node>
+          <DataBindContext sourcePathIds="0:27-0:6002" propertyKey="15" converterId="0:7210" id="0:7211"/>
+        </Node>
+        <Node x="0" y="0" name="PanelMid" rotation="1.5708" id="0:7260">
+          <Shape x="0" y="0" name="PanelMidRim" id="0:7224">
+            <PointsPath isClosed="false" isClockwise="true" name="Path" id="0:7223">
+              <CubicDetachedVertex x="-112" y="-41" outRotation="-1.1999" outDistance="12.8755" inRotation="1.9417" inDistance="0" id="0:7216"/>
+              <CubicDetachedVertex x="-98" y="-77" outRotation="-1.0358" outDistance="8.3114" inRotation="2.1058" inDistance="12.6117" id="0:7217"/>
+              <CubicDetachedVertex x="-80" y="-95" outRotation="-0.3985" outDistance="6.0639" inRotation="2.7431" inDistance="7.6798" id="0:7218"/>
+              <CubicDetachedVertex x="-60" y="-93" outRotation="-0.4845" outDistance="8.3849" inRotation="2.6571" inDistance="5.929" id="0:7219"/>
+              <CubicDetachedVertex x="-42" y="-115" outRotation="-0.7266" outDistance="6.7447" inRotation="2.415" inDistance="9.3108" id="0:7220"/>
+              <CubicDetachedVertex x="-24" y="-125" outRotation="-0.5743" outDistance="6.6512" inRotation="2.5673" inDistance="6.8478" id="0:7221"/>
+              <CubicDetachedVertex x="-8" y="-137" outRotation="-0.6435" outDistance="0" inRotation="2.4981" inDistance="6.6667" id="0:7222"/>
+            </PointsPath>
+            <Stroke thickness="4" cap="round" join="round" name="Line" id="0:7215">
+              <SolidColor colorValue="FFEAC28C" id="0:7214">
+                <DataBindContext sourcePathIds="0:27-0:22" propertyKey="37" id="0:7213"/>
+              </SolidColor>
+            </Stroke>
+          </Shape>
+          <Shape x="0" y="0" name="PanelMidHills" id="0:7240">
+            <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:7239">
+              <StraightVertex x="-118" y="2" id="0:7229"/>
+              <CubicDetachedVertex x="-112" y="-44" outRotation="-1.3316" outDistance="12.7827" inRotation="1.81" inDistance="15.3519" id="0:7230"/>
+              <CubicDetachedVertex x="-98" y="-80" outRotation="-1.0358" outDistance="8.3114" inRotation="2.1058" inDistance="12.6117" id="0:7231"/>
+              <CubicDetachedVertex x="-80" y="-98" outRotation="-0.3985" outDistance="6.0639" inRotation="2.7431" inDistance="7.6798" id="0:7232"/>
+              <CubicDetachedVertex x="-60" y="-96" outRotation="-0.4845" outDistance="8.3849" inRotation="2.6571" inDistance="5.929" id="0:7233"/>
+              <CubicDetachedVertex x="-42" y="-118" outRotation="-0.7266" outDistance="6.7447" inRotation="2.415" inDistance="9.3108" id="0:7234"/>
+              <CubicDetachedVertex x="-24" y="-128" outRotation="-0.5743" outDistance="6.6512" inRotation="2.5673" inDistance="6.8478" id="0:7235"/>
+              <CubicDetachedVertex x="-8" y="-140" outRotation="-0.3948" outDistance="2.5302" inRotation="2.7468" inDistance="6.1365" id="0:7236"/>
+              <StraightVertex x="0" y="-138" id="0:7237"/>
+              <StraightVertex x="0" y="2" id="0:7238"/>
+            </PointsPath>
+            <Fill name="Fill" id="0:7226">
+              <SolidColor colorValue="FFD9C7A8" id="0:7225"/>
+            </Fill>
+            <Stroke thickness="2.5" cap="round" join="round" name="Line" id="0:7228">
+              <SolidColor colorValue="FF2A1E24" id="0:7227"/>
+            </Stroke>
+          </Shape>
+          <DataBindContext sourcePathIds="0:27-0:6002" propertyKey="15" converterId="0:7258" id="0:7259"/>
+        </Node>
+        <Node x="0" y="0" name="PanelFar" rotation="1.5708" opacity="0.55" id="0:7315">
+          <Shape x="0" y="0" name="PanelFarRim" opacity="0.7" id="0:7276">
+            <PointsPath isClosed="false" isClockwise="true" name="Path" id="0:7275">
+              <CubicDetachedVertex x="-110" y="-40" outRotation="-1.1584" outDistance="11.6428" inRotation="1.9832" inDistance="0" id="0:7264"/>
+              <CubicDetachedVertex x="-96" y="-72" outRotation="-1.2243" outDistance="13.8952" inRotation="1.9173" inDistance="11.6217" id="0:7265"/>
+              <CubicDetachedVertex x="-84" y="-112" outRotation="-1.3567" outDistance="17.4956" inRotation="1.7849" inDistance="13.8873" id="0:7266"/>
+              <CubicDetachedVertex x="-76" y="-164" outRotation="-1.3547" outDistance="10.5056" inRotation="1.7869" inDistance="17.4785" id="0:7267"/>
+              <CubicDetachedVertex x="-66" y="-194" outRotation="-0.7854" outDistance="2.9134" inRotation="2.3562" inDistance="6.5147" id="0:7268"/>
+              <CubicDetachedVertex x="-56" y="-184" outRotation="-0.9505" outDistance="8.4342" inRotation="2.191" inDistance="3.0355" id="0:7269"/>
+              <CubicDetachedVertex x="-46" y="-222" outRotation="-1.2847" outDistance="10.5355" inRotation="1.8568" inDistance="13.0912" id="0:7270"/>
+              <CubicDetachedVertex x="-36" y="-252" outRotation="-0.7328" outDistance="2.9655" inRotation="2.4088" inDistance="6.0035" id="0:7271"/>
+              <CubicDetachedVertex x="-26" y="-240" outRotation="-0.938" outDistance="9.1342" inRotation="2.2035" inDistance="3.2665" id="0:7272"/>
+              <CubicDetachedVertex x="-14" y="-282" outRotation="-1.2397" outDistance="8.0351" inRotation="1.9019" inDistance="14.5235" id="0:7273"/>
+              <CubicDetachedVertex x="-4" y="-304" outRotation="-1.1442" outDistance="0" inRotation="1.9974" inDistance="8.0554" id="0:7274"/>
+            </PointsPath>
+            <Stroke thickness="3" cap="round" join="round" name="Line" id="0:7263">
+              <SolidColor colorValue="FFEAC28C" id="0:7262">
+                <DataBindContext sourcePathIds="0:27-0:22" propertyKey="37" id="0:7261"/>
+              </SolidColor>
+            </Stroke>
+          </Shape>
+          <Shape x="0" y="0" name="PanelFarRidge" id="0:7295">
+            <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:7294">
+              <StraightVertex x="-116" y="2" id="0:7280"/>
+              <CubicDetachedVertex x="-110" y="-40" outRotation="-1.3068" outDistance="11.5375" inRotation="1.8348" inDistance="14.0142" id="0:7281"/>
+              <CubicDetachedVertex x="-96" y="-72" outRotation="-1.2243" outDistance="13.8952" inRotation="1.9173" inDistance="11.6217" id="0:7282"/>
+              <CubicDetachedVertex x="-84" y="-112" outRotation="-1.3567" outDistance="17.4956" inRotation="1.7849" inDistance="13.8873" id="0:7283"/>
+              <CubicDetachedVertex x="-76" y="-164" outRotation="-1.3547" outDistance="10.5056" inRotation="1.7869" inDistance="17.4785" id="0:7284"/>
+              <StraightVertex x="-66" y="-194" radius="6" id="0:7285"/>
+              <CubicDetachedVertex x="-56" y="-184" outRotation="-0.9505" outDistance="8.4342" inRotation="2.191" inDistance="3.0355" id="0:7286"/>
+              <CubicDetachedVertex x="-46" y="-222" outRotation="-1.2847" outDistance="10.5355" inRotation="1.8568" inDistance="13.0912" id="0:7287"/>
+              <StraightVertex x="-36" y="-252" radius="6" id="0:7288"/>
+              <CubicDetachedVertex x="-26" y="-240" outRotation="-0.938" outDistance="9.1342" inRotation="2.2035" inDistance="3.2665" id="0:7289"/>
+              <CubicDetachedVertex x="-14" y="-282" outRotation="-1.2397" outDistance="8.0351" inRotation="1.9019" inDistance="14.5235" id="0:7290"/>
+              <StraightVertex x="-4" y="-304" radius="6" id="0:7291"/>
+              <StraightVertex x="0" y="-300" id="0:7292"/>
+              <StraightVertex x="0" y="2" id="0:7293"/>
+            </PointsPath>
+            <Fill name="Fill" id="0:7279">
+              <SolidColor colorValue="FF2C3346" id="0:7278">
+                <DataBindContext sourcePathIds="0:27-0:24" propertyKey="37" id="0:7277"/>
+              </SolidColor>
+            </Fill>
+          </Shape>
+          <DataBindContext sourcePathIds="0:27-0:6002" propertyKey="15" converterId="0:7313" id="0:7314"/>
+        </Node>
+        <Node x="0" y="0" name="emitBookShaft" opacity="0" id="0:6644">
+          <Node x="0" y="0" name="emitBookShaftBreath" id="0:6628">
+            <Node x="-65.4689" y="-292.7692" name="emitBookShaftRay" rotation="-0.22" scaleX="0.13" id="0:6619">
+              <Shape x="0" y="0" name="emitBookShaftBeam" id="0:6618">
+                <Ellipse width="600" height="600" name="Path" id="0:6617"/>
+                <Fill name="Fill" id="0:6616">
+                  <RadialGradient startX="0" startY="170" endX="300" endY="170" id="0:6615">
+                    <GradientStop colorValue="C8FFF0C8" position="0" id="0:6612"/>
+                    <GradientStop colorValue="70FFE2A8" position="0.45" id="0:6613"/>
+                    <GradientStop colorValue="00FFD49A" position="1" id="0:6614"/>
+                  </RadialGradient>
+                </Fill>
+              </Shape>
+            </Node>
+            <Node x="-46" y="-190" name="emitBookHalo" scaleX="0.37" id="0:6627">
+              <Shape x="0" y="0" name="emitBookHaloGlow" id="0:6626">
+                <Ellipse width="380" height="380" name="Path" id="0:6625"/>
+                <Fill name="Fill" id="0:6624">
+                  <RadialGradient startX="0" startY="0" endX="190" endY="0" id="0:6623">
+                    <GradientStop colorValue="A8FFE9B8" position="0" id="0:6620"/>
+                    <GradientStop colorValue="58FFD49A" position="0.5" id="0:6621"/>
+                    <GradientStop colorValue="00FFD49A" position="1" id="0:6622"/>
+                  </RadialGradient>
+                </Fill>
+              </Shape>
+            </Node>
+          </Node>
+          <DataBindContext sourcePathIds="0:27-0:6002" propertyKey="18" converterId="0:6642" id="0:6643"/>
+        </Node>
+        <DataBindContext sourcePathIds="0:27-0:6002" propertyKey="18" converterId="0:7483" id="0:7484"/>
+      </Node>
       <DataBindContext sourcePathIds="0:27-0:6000" propertyKey="18" id="0:6365"/>
       <DataBindContext sourcePathIds="0:27-0:6000" propertyKey="16" converterId="0:151" id="0:6366"/>
       <DataBindContext sourcePathIds="0:27-0:6000" propertyKey="17" converterId="0:151" id="0:6367"/>
@@ -1634,6 +3394,227 @@
           <KeyFrameDouble frame="240" value="1" interpolationType="linear" id="0:1079"/>
         </KeyedProperty>
       </KeyedObject>
+      <KeyedObject objectId="0:7322" id="0:7335">
+        <KeyedProperty property="opacity" id="0:7329">
+          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:28" id="0:7323"/>
+          <KeyFrameDouble frame="40" value="0.55" interpolationType="cubic" interpolatorId="0:28" id="0:7324"/>
+          <KeyFrameDouble frame="90" value="0.9" interpolationType="cubic" interpolatorId="0:28" id="0:7325"/>
+          <KeyFrameDouble frame="170" value="0.25" interpolationType="cubic" interpolatorId="0:28" id="0:7326"/>
+          <KeyFrameDouble frame="228" value="0" interpolationType="cubic" interpolatorId="0:28" id="0:7327"/>
+          <KeyFrameDouble frame="240" value="0" interpolationType="cubic" interpolatorId="0:28" id="0:7328"/>
+        </KeyedProperty>
+        <KeyedProperty property="y" id="0:7334">
+          <KeyFrameDouble frame="0" value="-30" interpolationType="linear" id="0:7330"/>
+          <KeyFrameDouble frame="228" value="-90" interpolationType="linear" id="0:7331"/>
+          <KeyFrameDouble frame="239" value="-90" interpolationType="linear" id="0:7332"/>
+          <KeyFrameDouble frame="240" value="-30" interpolationType="linear" id="0:7333"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:7342" id="0:7357">
+        <KeyedProperty property="opacity" id="0:7350">
+          <KeyFrameDouble frame="0" value="0.0948" interpolationType="cubic" interpolatorId="0:28" id="0:7343"/>
+          <KeyFrameDouble frame="22" value="0" interpolationType="cubic" interpolatorId="0:28" id="0:7344"/>
+          <KeyFrameDouble frame="34" value="0" interpolationType="cubic" interpolatorId="0:28" id="0:7345"/>
+          <KeyFrameDouble frame="74" value="0.55" interpolationType="cubic" interpolatorId="0:28" id="0:7346"/>
+          <KeyFrameDouble frame="124" value="0.9" interpolationType="cubic" interpolatorId="0:28" id="0:7347"/>
+          <KeyFrameDouble frame="204" value="0.25" interpolationType="cubic" interpolatorId="0:28" id="0:7348"/>
+          <KeyFrameDouble frame="240" value="0.0948" interpolationType="cubic" interpolatorId="0:28" id="0:7349"/>
+        </KeyedProperty>
+        <KeyedProperty property="y" id="0:7356">
+          <KeyFrameDouble frame="0" value="-142.211" interpolationType="linear" id="0:7351"/>
+          <KeyFrameDouble frame="22" value="-148" interpolationType="linear" id="0:7352"/>
+          <KeyFrameDouble frame="33" value="-148" interpolationType="linear" id="0:7353"/>
+          <KeyFrameDouble frame="34" value="-88" interpolationType="linear" id="0:7354"/>
+          <KeyFrameDouble frame="240" value="-142.211" interpolationType="linear" id="0:7355"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:7364" id="0:7379">
+        <KeyedProperty property="opacity" id="0:7372">
+          <KeyFrameDouble frame="0" value="0.2414" interpolationType="cubic" interpolatorId="0:28" id="0:7365"/>
+          <KeyFrameDouble frame="56" value="0" interpolationType="cubic" interpolatorId="0:28" id="0:7366"/>
+          <KeyFrameDouble frame="68" value="0" interpolationType="cubic" interpolatorId="0:28" id="0:7367"/>
+          <KeyFrameDouble frame="108" value="0.55" interpolationType="cubic" interpolatorId="0:28" id="0:7368"/>
+          <KeyFrameDouble frame="158" value="0.9" interpolationType="cubic" interpolatorId="0:28" id="0:7369"/>
+          <KeyFrameDouble frame="238" value="0.25" interpolationType="cubic" interpolatorId="0:28" id="0:7370"/>
+          <KeyFrameDouble frame="240" value="0.2414" interpolationType="cubic" interpolatorId="0:28" id="0:7371"/>
+        </KeyedProperty>
+        <KeyedProperty property="y" id="0:7378">
+          <KeyFrameDouble frame="0" value="-197.263" interpolationType="linear" id="0:7373"/>
+          <KeyFrameDouble frame="56" value="-212" interpolationType="linear" id="0:7374"/>
+          <KeyFrameDouble frame="67" value="-212" interpolationType="linear" id="0:7375"/>
+          <KeyFrameDouble frame="68" value="-152" interpolationType="linear" id="0:7376"/>
+          <KeyFrameDouble frame="240" value="-197.263" interpolationType="linear" id="0:7377"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:7386" id="0:7401">
+        <KeyedProperty property="opacity" id="0:7394">
+          <KeyFrameDouble frame="0" value="0.51" interpolationType="cubic" interpolatorId="0:28" id="0:7387"/>
+          <KeyFrameDouble frame="32" value="0.25" interpolationType="cubic" interpolatorId="0:28" id="0:7388"/>
+          <KeyFrameDouble frame="90" value="0" interpolationType="cubic" interpolatorId="0:28" id="0:7389"/>
+          <KeyFrameDouble frame="102" value="0" interpolationType="cubic" interpolatorId="0:28" id="0:7390"/>
+          <KeyFrameDouble frame="142" value="0.55" interpolationType="cubic" interpolatorId="0:28" id="0:7391"/>
+          <KeyFrameDouble frame="192" value="0.9" interpolationType="cubic" interpolatorId="0:28" id="0:7392"/>
+          <KeyFrameDouble frame="240" value="0.51" interpolationType="cubic" interpolatorId="0:28" id="0:7393"/>
+        </KeyedProperty>
+        <KeyedProperty property="y" id="0:7400">
+          <KeyFrameDouble frame="0" value="-244.316" interpolationType="linear" id="0:7395"/>
+          <KeyFrameDouble frame="90" value="-268" interpolationType="linear" id="0:7396"/>
+          <KeyFrameDouble frame="101" value="-268" interpolationType="linear" id="0:7397"/>
+          <KeyFrameDouble frame="102" value="-208" interpolationType="linear" id="0:7398"/>
+          <KeyFrameDouble frame="240" value="-244.316" interpolationType="linear" id="0:7399"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:7408" id="0:7423">
+        <KeyedProperty property="opacity" id="0:7416">
+          <KeyFrameDouble frame="0" value="0.7863" interpolationType="cubic" interpolatorId="0:28" id="0:7409"/>
+          <KeyFrameDouble frame="66" value="0.25" interpolationType="cubic" interpolatorId="0:28" id="0:7410"/>
+          <KeyFrameDouble frame="124" value="0" interpolationType="cubic" interpolatorId="0:28" id="0:7411"/>
+          <KeyFrameDouble frame="136" value="0" interpolationType="cubic" interpolatorId="0:28" id="0:7412"/>
+          <KeyFrameDouble frame="176" value="0.55" interpolationType="cubic" interpolatorId="0:28" id="0:7413"/>
+          <KeyFrameDouble frame="226" value="0.9" interpolationType="cubic" interpolatorId="0:28" id="0:7414"/>
+          <KeyFrameDouble frame="240" value="0.7863" interpolationType="cubic" interpolatorId="0:28" id="0:7415"/>
+        </KeyedProperty>
+        <KeyedProperty property="y" id="0:7422">
+          <KeyFrameDouble frame="0" value="-295.368" interpolationType="linear" id="0:7417"/>
+          <KeyFrameDouble frame="124" value="-328" interpolationType="linear" id="0:7418"/>
+          <KeyFrameDouble frame="135" value="-328" interpolationType="linear" id="0:7419"/>
+          <KeyFrameDouble frame="136" value="-268" interpolationType="linear" id="0:7420"/>
+          <KeyFrameDouble frame="240" value="-295.368" interpolationType="linear" id="0:7421"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:7430" id="0:7445">
+        <KeyedProperty property="opacity" id="0:7438">
+          <KeyFrameDouble frame="0" value="0.76" interpolationType="cubic" interpolatorId="0:28" id="0:7431"/>
+          <KeyFrameDouble frame="20" value="0.9" interpolationType="cubic" interpolatorId="0:28" id="0:7432"/>
+          <KeyFrameDouble frame="100" value="0.25" interpolationType="cubic" interpolatorId="0:28" id="0:7433"/>
+          <KeyFrameDouble frame="158" value="0" interpolationType="cubic" interpolatorId="0:28" id="0:7434"/>
+          <KeyFrameDouble frame="170" value="0" interpolationType="cubic" interpolatorId="0:28" id="0:7435"/>
+          <KeyFrameDouble frame="210" value="0.55" interpolationType="cubic" interpolatorId="0:28" id="0:7436"/>
+          <KeyFrameDouble frame="240" value="0.76" interpolationType="cubic" interpolatorId="0:28" id="0:7437"/>
+        </KeyedProperty>
+        <KeyedProperty property="y" id="0:7444">
+          <KeyFrameDouble frame="0" value="-346.421" interpolationType="linear" id="0:7439"/>
+          <KeyFrameDouble frame="158" value="-388" interpolationType="linear" id="0:7440"/>
+          <KeyFrameDouble frame="169" value="-388" interpolationType="linear" id="0:7441"/>
+          <KeyFrameDouble frame="170" value="-328" interpolationType="linear" id="0:7442"/>
+          <KeyFrameDouble frame="240" value="-346.421" interpolationType="linear" id="0:7443"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:7452" id="0:7467">
+        <KeyedProperty property="opacity" id="0:7460">
+          <KeyFrameDouble frame="0" value="0.495" interpolationType="cubic" interpolatorId="0:28" id="0:7453"/>
+          <KeyFrameDouble frame="4" value="0.55" interpolationType="cubic" interpolatorId="0:28" id="0:7454"/>
+          <KeyFrameDouble frame="54" value="0.9" interpolationType="cubic" interpolatorId="0:28" id="0:7455"/>
+          <KeyFrameDouble frame="134" value="0.25" interpolationType="cubic" interpolatorId="0:28" id="0:7456"/>
+          <KeyFrameDouble frame="192" value="0" interpolationType="cubic" interpolatorId="0:28" id="0:7457"/>
+          <KeyFrameDouble frame="204" value="0" interpolationType="cubic" interpolatorId="0:28" id="0:7458"/>
+          <KeyFrameDouble frame="240" value="0.495" interpolationType="cubic" interpolatorId="0:28" id="0:7459"/>
+        </KeyedProperty>
+        <KeyedProperty property="y" id="0:7466">
+          <KeyFrameDouble frame="0" value="-397.474" interpolationType="linear" id="0:7461"/>
+          <KeyFrameDouble frame="192" value="-448" interpolationType="linear" id="0:7462"/>
+          <KeyFrameDouble frame="203" value="-448" interpolationType="linear" id="0:7463"/>
+          <KeyFrameDouble frame="204" value="-388" interpolationType="linear" id="0:7464"/>
+          <KeyFrameDouble frame="240" value="-397.474" interpolationType="linear" id="0:7465"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:6312" id="0:7997">
+        <KeyedProperty property="opacity" id="0:7996">
+          <KeyFrameDouble frame="0" value="0.9" interpolationType="cubic" interpolatorId="0:28" id="0:7991"/>
+          <KeyFrameDouble frame="60" value="1" interpolationType="cubic" interpolatorId="0:28" id="0:7992"/>
+          <KeyFrameDouble frame="120" value="0.88" interpolationType="cubic" interpolatorId="0:28" id="0:7993"/>
+          <KeyFrameDouble frame="180" value="1" interpolationType="cubic" interpolatorId="0:28" id="0:7994"/>
+          <KeyFrameDouble frame="240" value="0.9" interpolationType="cubic" interpolatorId="0:28" id="0:7995"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:6628" id="0:8004">
+        <KeyedProperty property="opacity" id="0:8003">
+          <KeyFrameDouble frame="0" value="0.9" interpolationType="cubic" interpolatorId="0:28" id="0:7998"/>
+          <KeyFrameDouble frame="60" value="1" interpolationType="cubic" interpolatorId="0:28" id="0:7999"/>
+          <KeyFrameDouble frame="120" value="0.88" interpolationType="cubic" interpolatorId="0:28" id="0:8000"/>
+          <KeyFrameDouble frame="180" value="1" interpolationType="cubic" interpolatorId="0:28" id="0:8001"/>
+          <KeyFrameDouble frame="240" value="0.9" interpolationType="cubic" interpolatorId="0:28" id="0:8002"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:6748" id="0:8037">
+        <KeyedProperty property="scaleY" id="0:8036">
+          <KeyFrameDouble frame="0" value="1" interpolationType="linear" id="0:8005"/>
+          <KeyFrameDouble frame="8" value="1.1" interpolationType="linear" id="0:8006"/>
+          <KeyFrameDouble frame="16" value="0.94" interpolationType="linear" id="0:8007"/>
+          <KeyFrameDouble frame="24" value="1.08" interpolationType="linear" id="0:8008"/>
+          <KeyFrameDouble frame="32" value="0.97" interpolationType="linear" id="0:8009"/>
+          <KeyFrameDouble frame="40" value="1.12" interpolationType="linear" id="0:8010"/>
+          <KeyFrameDouble frame="48" value="0.95" interpolationType="linear" id="0:8011"/>
+          <KeyFrameDouble frame="56" value="1.06" interpolationType="linear" id="0:8012"/>
+          <KeyFrameDouble frame="64" value="1" interpolationType="linear" id="0:8013"/>
+          <KeyFrameDouble frame="72" value="1.1" interpolationType="linear" id="0:8014"/>
+          <KeyFrameDouble frame="80" value="0.94" interpolationType="linear" id="0:8015"/>
+          <KeyFrameDouble frame="88" value="1.08" interpolationType="linear" id="0:8016"/>
+          <KeyFrameDouble frame="96" value="0.97" interpolationType="linear" id="0:8017"/>
+          <KeyFrameDouble frame="104" value="1.12" interpolationType="linear" id="0:8018"/>
+          <KeyFrameDouble frame="112" value="0.95" interpolationType="linear" id="0:8019"/>
+          <KeyFrameDouble frame="120" value="1.06" interpolationType="linear" id="0:8020"/>
+          <KeyFrameDouble frame="128" value="1" interpolationType="linear" id="0:8021"/>
+          <KeyFrameDouble frame="136" value="1.1" interpolationType="linear" id="0:8022"/>
+          <KeyFrameDouble frame="144" value="0.94" interpolationType="linear" id="0:8023"/>
+          <KeyFrameDouble frame="152" value="1.08" interpolationType="linear" id="0:8024"/>
+          <KeyFrameDouble frame="160" value="0.97" interpolationType="linear" id="0:8025"/>
+          <KeyFrameDouble frame="168" value="1.12" interpolationType="linear" id="0:8026"/>
+          <KeyFrameDouble frame="176" value="0.95" interpolationType="linear" id="0:8027"/>
+          <KeyFrameDouble frame="184" value="1.06" interpolationType="linear" id="0:8028"/>
+          <KeyFrameDouble frame="192" value="1" interpolationType="linear" id="0:8029"/>
+          <KeyFrameDouble frame="200" value="1.1" interpolationType="linear" id="0:8030"/>
+          <KeyFrameDouble frame="208" value="0.94" interpolationType="linear" id="0:8031"/>
+          <KeyFrameDouble frame="216" value="1.08" interpolationType="linear" id="0:8032"/>
+          <KeyFrameDouble frame="224" value="0.97" interpolationType="linear" id="0:8033"/>
+          <KeyFrameDouble frame="232" value="1.12" interpolationType="linear" id="0:8034"/>
+          <KeyFrameDouble frame="240" value="1" interpolationType="linear" id="0:8035"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:7174" id="0:8070">
+        <KeyedProperty property="scaleY" id="0:8069">
+          <KeyFrameDouble frame="0" value="1" interpolationType="linear" id="0:8038"/>
+          <KeyFrameDouble frame="8" value="1.06" interpolationType="linear" id="0:8039"/>
+          <KeyFrameDouble frame="16" value="0.964" interpolationType="linear" id="0:8040"/>
+          <KeyFrameDouble frame="24" value="1.048" interpolationType="linear" id="0:8041"/>
+          <KeyFrameDouble frame="32" value="0.982" interpolationType="linear" id="0:8042"/>
+          <KeyFrameDouble frame="40" value="1.072" interpolationType="linear" id="0:8043"/>
+          <KeyFrameDouble frame="48" value="0.97" interpolationType="linear" id="0:8044"/>
+          <KeyFrameDouble frame="56" value="1.036" interpolationType="linear" id="0:8045"/>
+          <KeyFrameDouble frame="64" value="1" interpolationType="linear" id="0:8046"/>
+          <KeyFrameDouble frame="72" value="1.06" interpolationType="linear" id="0:8047"/>
+          <KeyFrameDouble frame="80" value="0.964" interpolationType="linear" id="0:8048"/>
+          <KeyFrameDouble frame="88" value="1.048" interpolationType="linear" id="0:8049"/>
+          <KeyFrameDouble frame="96" value="0.982" interpolationType="linear" id="0:8050"/>
+          <KeyFrameDouble frame="104" value="1.072" interpolationType="linear" id="0:8051"/>
+          <KeyFrameDouble frame="112" value="0.97" interpolationType="linear" id="0:8052"/>
+          <KeyFrameDouble frame="120" value="1.036" interpolationType="linear" id="0:8053"/>
+          <KeyFrameDouble frame="128" value="1" interpolationType="linear" id="0:8054"/>
+          <KeyFrameDouble frame="136" value="1.06" interpolationType="linear" id="0:8055"/>
+          <KeyFrameDouble frame="144" value="0.964" interpolationType="linear" id="0:8056"/>
+          <KeyFrameDouble frame="152" value="1.048" interpolationType="linear" id="0:8057"/>
+          <KeyFrameDouble frame="160" value="0.982" interpolationType="linear" id="0:8058"/>
+          <KeyFrameDouble frame="168" value="1.072" interpolationType="linear" id="0:8059"/>
+          <KeyFrameDouble frame="176" value="0.97" interpolationType="linear" id="0:8060"/>
+          <KeyFrameDouble frame="184" value="1.036" interpolationType="linear" id="0:8061"/>
+          <KeyFrameDouble frame="192" value="1" interpolationType="linear" id="0:8062"/>
+          <KeyFrameDouble frame="200" value="1.06" interpolationType="linear" id="0:8063"/>
+          <KeyFrameDouble frame="208" value="0.964" interpolationType="linear" id="0:8064"/>
+          <KeyFrameDouble frame="216" value="1.048" interpolationType="linear" id="0:8065"/>
+          <KeyFrameDouble frame="224" value="0.982" interpolationType="linear" id="0:8066"/>
+          <KeyFrameDouble frame="232" value="1.072" interpolationType="linear" id="0:8067"/>
+          <KeyFrameDouble frame="240" value="1" interpolationType="linear" id="0:8068"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:6887" id="0:8077">
+        <KeyedProperty property="opacity" id="0:8076">
+          <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:28" id="0:8071"/>
+          <KeyFrameDouble frame="50" value="0.5" interpolationType="cubic" interpolatorId="0:28" id="0:8072"/>
+          <KeyFrameDouble frame="110" value="1" interpolationType="cubic" interpolatorId="0:28" id="0:8073"/>
+          <KeyFrameDouble frame="170" value="0.65" interpolationType="cubic" interpolatorId="0:28" id="0:8074"/>
+          <KeyFrameDouble frame="240" value="1" interpolationType="cubic" interpolatorId="0:28" id="0:8075"/>
+        </KeyedProperty>
+      </KeyedObject>
     </LinearAnimation>
   </Artboard>
 
@@ -1966,5 +3947,221 @@
     <FormulaTokenParenthesisClose id="0:6295"/>
     <FormulaTokenParenthesisClose id="0:6298"/>
     <FormulaTokenParenthesisClose id="0:6301"/>
+  </DataConverterFormula>
+
+  <DataConverterFormula id="0:6423">
+    <FormulaTokenFunction functionType="9" id="0:6421"/>
+    <FormulaTokenValue operationValue="1.606" id="0:6406"/>
+    <FormulaTokenOperation operationType="2" id="0:6407"/>
+    <FormulaTokenFunction functionType="0" id="0:6418"/>
+    <FormulaTokenValue operationValue="1" id="0:6413"/>
+    <FormulaTokenArgumentSeparator id="0:6419"/>
+    <FormulaTokenFunction functionType="1" id="0:6415"/>
+    <FormulaTokenValue operationValue="0" id="0:6414"/>
+    <FormulaTokenArgumentSeparator id="0:6416"/>
+    <FormulaTokenValue operationValue="5.556" id="0:6408"/>
+    <FormulaTokenOperation operationType="2" id="0:6409"/>
+    <FormulaTokenInput id="0:6410"/>
+    <FormulaTokenOperation operationType="0" id="0:6411"/>
+    <FormulaTokenValue operationValue="0" id="0:6412"/>
+    <FormulaTokenParenthesisClose id="0:6417"/>
+    <FormulaTokenParenthesisClose id="0:6420"/>
+    <FormulaTokenParenthesisClose id="0:6422"/>
+  </DataConverterFormula>
+
+  <DataConverterFormula id="0:6438">
+    <FormulaTokenFunction functionType="0" id="0:6435"/>
+    <FormulaTokenValue operationValue="1" id="0:6430"/>
+    <FormulaTokenArgumentSeparator id="0:6436"/>
+    <FormulaTokenFunction functionType="1" id="0:6432"/>
+    <FormulaTokenValue operationValue="0" id="0:6431"/>
+    <FormulaTokenArgumentSeparator id="0:6433"/>
+    <FormulaTokenValue operationValue="15.873" id="0:6425"/>
+    <FormulaTokenOperation operationType="2" id="0:6426"/>
+    <FormulaTokenInput id="0:6427"/>
+    <FormulaTokenOperation operationType="0" id="0:6428"/>
+    <FormulaTokenValue operationValue="0" id="0:6429"/>
+    <FormulaTokenParenthesisClose id="0:6434"/>
+    <FormulaTokenParenthesisClose id="0:6437"/>
+  </DataConverterFormula>
+
+  <DataConverterFormula id="0:6495">
+    <FormulaTokenFunction functionType="9" id="0:6493"/>
+    <FormulaTokenValue operationValue="1.606" id="0:6478"/>
+    <FormulaTokenOperation operationType="2" id="0:6479"/>
+    <FormulaTokenFunction functionType="0" id="0:6490"/>
+    <FormulaTokenValue operationValue="1" id="0:6485"/>
+    <FormulaTokenArgumentSeparator id="0:6491"/>
+    <FormulaTokenFunction functionType="1" id="0:6487"/>
+    <FormulaTokenValue operationValue="0" id="0:6486"/>
+    <FormulaTokenArgumentSeparator id="0:6488"/>
+    <FormulaTokenValue operationValue="4.762" id="0:6480"/>
+    <FormulaTokenOperation operationType="2" id="0:6481"/>
+    <FormulaTokenInput id="0:6482"/>
+    <FormulaTokenOperation operationType="0" id="0:6483"/>
+    <FormulaTokenValue operationValue="-0.286" id="0:6484"/>
+    <FormulaTokenParenthesisClose id="0:6489"/>
+    <FormulaTokenParenthesisClose id="0:6492"/>
+    <FormulaTokenParenthesisClose id="0:6494"/>
+  </DataConverterFormula>
+
+  <DataConverterFormula id="0:6510">
+    <FormulaTokenFunction functionType="0" id="0:6507"/>
+    <FormulaTokenValue operationValue="1" id="0:6502"/>
+    <FormulaTokenArgumentSeparator id="0:6508"/>
+    <FormulaTokenFunction functionType="1" id="0:6504"/>
+    <FormulaTokenValue operationValue="0" id="0:6503"/>
+    <FormulaTokenArgumentSeparator id="0:6505"/>
+    <FormulaTokenValue operationValue="13.605" id="0:6497"/>
+    <FormulaTokenOperation operationType="2" id="0:6498"/>
+    <FormulaTokenInput id="0:6499"/>
+    <FormulaTokenOperation operationType="0" id="0:6500"/>
+    <FormulaTokenValue operationValue="-0.816" id="0:6501"/>
+    <FormulaTokenParenthesisClose id="0:6506"/>
+    <FormulaTokenParenthesisClose id="0:6509"/>
+  </DataConverterFormula>
+
+  <DataConverterFormula id="0:6567">
+    <FormulaTokenFunction functionType="9" id="0:6565"/>
+    <FormulaTokenValue operationValue="1.606" id="0:6550"/>
+    <FormulaTokenOperation operationType="2" id="0:6551"/>
+    <FormulaTokenFunction functionType="0" id="0:6562"/>
+    <FormulaTokenValue operationValue="1" id="0:6557"/>
+    <FormulaTokenArgumentSeparator id="0:6563"/>
+    <FormulaTokenFunction functionType="1" id="0:6559"/>
+    <FormulaTokenValue operationValue="0" id="0:6558"/>
+    <FormulaTokenArgumentSeparator id="0:6560"/>
+    <FormulaTokenValue operationValue="4.167" id="0:6552"/>
+    <FormulaTokenOperation operationType="2" id="0:6553"/>
+    <FormulaTokenInput id="0:6554"/>
+    <FormulaTokenOperation operationType="0" id="0:6555"/>
+    <FormulaTokenValue operationValue="-0.583" id="0:6556"/>
+    <FormulaTokenParenthesisClose id="0:6561"/>
+    <FormulaTokenParenthesisClose id="0:6564"/>
+    <FormulaTokenParenthesisClose id="0:6566"/>
+  </DataConverterFormula>
+
+  <DataConverterFormula id="0:6582">
+    <FormulaTokenFunction functionType="0" id="0:6579"/>
+    <FormulaTokenValue operationValue="1" id="0:6574"/>
+    <FormulaTokenArgumentSeparator id="0:6580"/>
+    <FormulaTokenFunction functionType="1" id="0:6576"/>
+    <FormulaTokenValue operationValue="0" id="0:6575"/>
+    <FormulaTokenArgumentSeparator id="0:6577"/>
+    <FormulaTokenValue operationValue="11.905" id="0:6569"/>
+    <FormulaTokenOperation operationType="2" id="0:6570"/>
+    <FormulaTokenInput id="0:6571"/>
+    <FormulaTokenOperation operationType="0" id="0:6572"/>
+    <FormulaTokenValue operationValue="-1.667" id="0:6573"/>
+    <FormulaTokenParenthesisClose id="0:6578"/>
+    <FormulaTokenParenthesisClose id="0:6581"/>
+  </DataConverterFormula>
+
+  <DataConverterFormula id="0:6609">
+    <FormulaTokenFunction functionType="0" id="0:6606"/>
+    <FormulaTokenValue operationValue="1" id="0:6601"/>
+    <FormulaTokenArgumentSeparator id="0:6607"/>
+    <FormulaTokenFunction functionType="1" id="0:6603"/>
+    <FormulaTokenValue operationValue="0" id="0:6602"/>
+    <FormulaTokenArgumentSeparator id="0:6604"/>
+    <FormulaTokenValue operationValue="6.25" id="0:6596"/>
+    <FormulaTokenOperation operationType="2" id="0:6597"/>
+    <FormulaTokenInput id="0:6598"/>
+    <FormulaTokenOperation operationType="0" id="0:6599"/>
+    <FormulaTokenValue operationValue="-0.25" id="0:6600"/>
+    <FormulaTokenParenthesisClose id="0:6605"/>
+    <FormulaTokenParenthesisClose id="0:6608"/>
+  </DataConverterFormula>
+
+  <DataConverterFormula id="0:6642">
+    <FormulaTokenFunction functionType="0" id="0:6639"/>
+    <FormulaTokenValue operationValue="1" id="0:6634"/>
+    <FormulaTokenArgumentSeparator id="0:6640"/>
+    <FormulaTokenFunction functionType="1" id="0:6636"/>
+    <FormulaTokenValue operationValue="0" id="0:6635"/>
+    <FormulaTokenArgumentSeparator id="0:6637"/>
+    <FormulaTokenValue operationValue="1.667" id="0:6629"/>
+    <FormulaTokenOperation operationType="2" id="0:6630"/>
+    <FormulaTokenInput id="0:6631"/>
+    <FormulaTokenOperation operationType="0" id="0:6632"/>
+    <FormulaTokenValue operationValue="-0.5" id="0:6633"/>
+    <FormulaTokenParenthesisClose id="0:6638"/>
+    <FormulaTokenParenthesisClose id="0:6641"/>
+  </DataConverterFormula>
+
+  <DataConverterFormula id="0:7210">
+    <FormulaTokenValue operationValue="1.571" id="0:7193"/>
+    <FormulaTokenOperation operationType="0" id="0:7194"/>
+    <FormulaTokenValue operationValue="-1.571" id="0:7195"/>
+    <FormulaTokenOperation operationType="2" id="0:7196"/>
+    <FormulaTokenFunction functionType="0" id="0:7207"/>
+    <FormulaTokenValue operationValue="1" id="0:7202"/>
+    <FormulaTokenArgumentSeparator id="0:7208"/>
+    <FormulaTokenFunction functionType="1" id="0:7204"/>
+    <FormulaTokenValue operationValue="0" id="0:7203"/>
+    <FormulaTokenArgumentSeparator id="0:7205"/>
+    <FormulaTokenValue operationValue="1.613" id="0:7197"/>
+    <FormulaTokenOperation operationType="2" id="0:7198"/>
+    <FormulaTokenInput id="0:7199"/>
+    <FormulaTokenOperation operationType="0" id="0:7200"/>
+    <FormulaTokenValue operationValue="-0.613" id="0:7201"/>
+    <FormulaTokenParenthesisClose id="0:7206"/>
+    <FormulaTokenParenthesisClose id="0:7209"/>
+  </DataConverterFormula>
+
+  <DataConverterFormula id="0:7258">
+    <FormulaTokenValue operationValue="1.571" id="0:7241"/>
+    <FormulaTokenOperation operationType="0" id="0:7242"/>
+    <FormulaTokenValue operationValue="-1.571" id="0:7243"/>
+    <FormulaTokenOperation operationType="2" id="0:7244"/>
+    <FormulaTokenFunction functionType="0" id="0:7255"/>
+    <FormulaTokenValue operationValue="1" id="0:7250"/>
+    <FormulaTokenArgumentSeparator id="0:7256"/>
+    <FormulaTokenFunction functionType="1" id="0:7252"/>
+    <FormulaTokenValue operationValue="0" id="0:7251"/>
+    <FormulaTokenArgumentSeparator id="0:7253"/>
+    <FormulaTokenValue operationValue="2" id="0:7245"/>
+    <FormulaTokenOperation operationType="2" id="0:7246"/>
+    <FormulaTokenInput id="0:7247"/>
+    <FormulaTokenOperation operationType="0" id="0:7248"/>
+    <FormulaTokenValue operationValue="-0.44" id="0:7249"/>
+    <FormulaTokenParenthesisClose id="0:7254"/>
+    <FormulaTokenParenthesisClose id="0:7257"/>
+  </DataConverterFormula>
+
+  <DataConverterFormula id="0:7313">
+    <FormulaTokenValue operationValue="1.571" id="0:7296"/>
+    <FormulaTokenOperation operationType="0" id="0:7297"/>
+    <FormulaTokenValue operationValue="-1.571" id="0:7298"/>
+    <FormulaTokenOperation operationType="2" id="0:7299"/>
+    <FormulaTokenFunction functionType="0" id="0:7310"/>
+    <FormulaTokenValue operationValue="1" id="0:7305"/>
+    <FormulaTokenArgumentSeparator id="0:7311"/>
+    <FormulaTokenFunction functionType="1" id="0:7307"/>
+    <FormulaTokenValue operationValue="0" id="0:7306"/>
+    <FormulaTokenArgumentSeparator id="0:7308"/>
+    <FormulaTokenValue operationValue="2.222" id="0:7300"/>
+    <FormulaTokenOperation operationType="2" id="0:7301"/>
+    <FormulaTokenInput id="0:7302"/>
+    <FormulaTokenOperation operationType="0" id="0:7303"/>
+    <FormulaTokenValue operationValue="-0.222" id="0:7304"/>
+    <FormulaTokenParenthesisClose id="0:7309"/>
+    <FormulaTokenParenthesisClose id="0:7312"/>
+  </DataConverterFormula>
+
+  <DataConverterFormula id="0:7483">
+    <FormulaTokenFunction functionType="0" id="0:7480"/>
+    <FormulaTokenValue operationValue="1" id="0:7475"/>
+    <FormulaTokenArgumentSeparator id="0:7481"/>
+    <FormulaTokenFunction functionType="1" id="0:7477"/>
+    <FormulaTokenValue operationValue="0" id="0:7476"/>
+    <FormulaTokenArgumentSeparator id="0:7478"/>
+    <FormulaTokenValue operationValue="20" id="0:7470"/>
+    <FormulaTokenOperation operationType="2" id="0:7471"/>
+    <FormulaTokenInput id="0:7472"/>
+    <FormulaTokenOperation operationType="0" id="0:7473"/>
+    <FormulaTokenValue operationValue="0" id="0:7474"/>
+    <FormulaTokenParenthesisClose id="0:7479"/>
+    <FormulaTokenParenthesisClose id="0:7482"/>
   </DataConverterFormula>
 </Rive>

@@ -12,10 +12,12 @@ app clips the avatar right of it while it walks through):
 - **rocket**: a small round rocket; its hatch opens, and `lift` raises it out of frame on a flame.
 
 Everything is history-free: `JourneyVM` numbers bind opacity, scale, rotation and position through
-`c + k x` formula converters (and clamped `min` / `max` ones for the book's cover swing and fades
-and the rocket's flame and smoke); one ambient loop turns the portal's swirl and flickers the
-flame. No listeners, no events. Colours outside `emit*` nodes are fitted into every scene's colour
-script, so the file lints clean wherever it is shown.
+`c + k x` formula converters (and clamped `min` / `max` ones for the book's cover swing and fades,
+the clamp windows of `unfold` that stage its riffle and pop-up, with a `cos` for the riffled pages'
+foreshortening, and the rocket's flame and smoke); one ambient loop turns the portal's swirl,
+flickers the flame, breathes the book's light, drifts its motes and flickers its emblems' flames.
+No listeners, no events. Colours outside `emit*` nodes are fitted into every scene's colour script,
+so the file lints clean wherever it is shown.
 
     uv run rive/tools/gen_journeys.py            # writes rive/journeys/
 """
@@ -395,15 +397,534 @@ def ribbon() -> El:
              rotation=-RIBBON_SWING)
 
 
+# ---------------------------------------------------------------- the vignette (v15: riffle, pop-up, emblems, motes)
+#
+# `unfold` stages all of it. The app ramps the number once per beat; the stagger lives here, in clamp windows of
+# it (`window`). Placement keeps the avatar's own beats readable, since the journey draws over the avatar:
+# - the panels stand left of the gutter but never left of VIG_LEFT (the avatar's face box is FACE_BOX);
+# - their floor is the gutter at VIG_FLOOR, above HOOK_ZONE, where the avatar's `grab` / `hang` fist and its own
+#   jacket copy pass (the cover's stub keeps clear of it for the same reason);
+# - the riffle flips on the block's face and folds away onto the stub.
+
+UNFOLD_FLAPS = ((0.00, 0.18), (0.06, 0.27), (0.14, 0.38))             # the riffle: three pages, staggered
+UNFOLD_PANELS = {"Far": (0.10, 0.55), "Mid": (0.22, 0.72), "Near": (0.38, 1.0)}   # the pop-up, tallest first
+UNFOLD_SHAFT = (0.3, 0.9)                                             # the light shaft and its motes
+VIG_FLOOR = 500.0           # artboard y of the vignette's floor at the gutter: the panels' pivot, the shaft's mouth
+VIG_LEFT = 520.0            # the panels' left extent (artboard x)
+FACE_BOX = (260.0, 520.0, 150.0, 450.0)    # the avatar's face at rest (artboard x0, x1, y0, y1): never drawn over
+HOOK_ZONE = (500.0, 640.0, 505.0, 770.0)   # the grab / hang reach, fist and held jacket: no vignette art over it
+PANEL_FLAT = math.pi / 2    # a panel lies flat behind the block: turned clockwise about its pivot onto the floor line
+FLAP_TURN = math.acos(COVER_REST)   # a riffled page turns about the spine until it lies on the cover's stub
+FLAP_FADE = 0.35            # a page fades in over this share of its window as it lifts (on the close, out as it lands)
+FLAPS = ((180.0, 258.0, 482.0), (186.0, 252.0, 485.0), (192.0, 246.0, 488.0))   # width, height, artboard centre y
+MOTES = ((616.0, 470.0, 8.0), (594.0, 412.0, 6.0), (574.0, 348.0, 10.0), (606.0, 292.0, 7.0), (556.0, 232.0, 9.0),
+         (590.0, 172.0, 6.0), (548.0, 112.0, 8.0))   # artboard x, y (at the start of its rise) and size
+MOTE_PHASE, MOTE_RISE = 34, 60.0
+SHAFT_LEAN = 0.22           # the light shaft leans this far left of vertical (rad), from the gutter's mouth
+EMBLEM_AT = (-68.0, -26.0)  # the emblems' base centre, from the vignette's pivot (artboard (572, 474))
+GLYPH_R = MEDALLION_INNER_R - 4   # a medallion glyph's bounding box fits inside this circle
+PAPER, PAPER_SHADE, PAPER_TAN = "FFF3EBDD", "FFE0D2BC", "FFD9C7A8"
+INSET = "FF5A3E30"          # openings (a tent's door, coffee)
+FOIL, FOIL_SHADE, FOIL_INK = "FFDCB46C", "FFB08A48", "FF5A3A1E"
+BREATH = [(0, 0.9), (60, 1.0), (120, 0.88), (180, 1.0), (240, 0.9)]   # the v10 door's glow breath
+
+_windows: dict[tuple[object, ...], El] = {}
+
+
+def window_tokens(a: float, b: float) -> list[El]:
+    k = 1 / (b - a)
+    return clamp01(F.val(k), F.op("*"), *F.inp(), F.op("+"), F.val(-a * k))
+
+
+def window(a: float, b: float) -> El:
+    """`min(1, max(0, (x - a) / (b - a)))`: 0 up to `a`, 1 from `b`, linear between (one shared converter per
+    window)."""
+    key = ("window", round(a, 3), round(b, 3))
+    if key not in _windows:
+        _windows[key] = conv_tokens(*window_tokens(a, b))
+    return _windows[key]
+
+
+def windowed(a: float, b: float, k: float, c: float = 0.0) -> El:
+    """`c + k window(a, b)`: monotonic, from c to c + k over the window."""
+    key = ("linear", round(a, 3), round(b, 3), round(k, 3), round(c, 3))
+    if key not in _windows:
+        _windows[key] = conv_tokens(F.val(c), F.op("+"), F.val(k), F.op("*"), *window_tokens(a, b))
+    return _windows[key]
+
+
+def flipped(a: float, b: float, turn: float) -> El:
+    """`cos(turn window(a, b))`: the projected width of a page turned `turn` rad about the spine over the
+    window (the cover's swing, foreshortened the same way)."""
+    key = ("cos", round(a, 3), round(b, 3), round(turn, 3))
+    if key not in _windows:
+        _windows[key] = conv_tokens(*F.fn("cos", [F.val(turn), F.op("*"), *window_tokens(a, b)]))
+    return _windows[key]
+
+
+def cyclic(points: list[tuple[int, float]], phase: int) -> list[tuple[int, float]]:
+    """Ambient keys for a periodic, piecewise-linear curve given by its (frame, value) points over one loop (the
+    first at frame 0), running `phase` frames late: keys on 0..AMB_FRAMES whose first and last match."""
+    ext = [*points, (AMB_FRAMES, points[0][1])]
+
+    def at(u: float) -> float:
+        u %= AMB_FRAMES
+        for (u0, v0), (u1, v1) in zip(ext, ext[1:]):
+            if u0 <= u <= u1:
+                return v0 + (v1 - v0) * (u - u0) / (u1 - u0)
+        raise AssertionError(u)
+
+    keys = {(u + phase) % AMB_FRAMES: v for u, v in points}
+    keys[0] = keys[AMB_FRAMES] = at(-phase)
+    return sorted(keys.items())
+
+
+def named(root: El, name: str) -> El:
+    """The one element called `name` under `root`."""
+    found = [e for e in _walk(root) if e.attrs.get("name") == name]
+    assert len(found) == 1, (name, len(found))
+    return found[0]
+
+
+def _walk(e: El) -> Iterator[El]:
+    yield e
+    for c in e.children:
+        yield from _walk(c)
+
+
+def star_path(r: float) -> El:
+    """A four-point star's path centred on its shape (as `star4`)."""
+    verts = []
+    for x, y in [(0.0, -r), (r, 0.0), (0.0, r), (-r, 0.0)]:
+        to_c = math.atan2(-y, -x)
+        verts.append(d("CubicDetachedVertex", x=x, y=y, inRotation=float(to_c), inDistance=r * 0.62,
+                       outRotation=float(to_c), outDistance=r * 0.62))
+    return d("PointsPath", *verts, isClosed=True, isClockwise=True, name="Path")
+
+
+def arc(cx: float, cy: float, rx: float, ry: float, a0: float, a1: float, n: int, tilt: float = 0.0) -> list:
+    """`n` points along an ellipse from angle a0 to a1 (rad), the ellipse turned `tilt`."""
+    out = []
+    for i in range(n):
+        a = a0 + (a1 - a0) * i / (n - 1)
+        x, y = rx * math.cos(a), ry * math.sin(a)
+        out.append((cx + x * math.cos(tilt) - y * math.sin(tilt), cy + x * math.sin(tilt) + y * math.cos(tilt)))
+    return out
+
+
+class Kit:
+    """How an emblem is drawn: in the vignette (paper cut-outs, ink, emit lights with their glows) or on the
+    medallion (gold foil stamped into the leather: foil, dark debossed lines and insets, no glows)."""
+
+    def __init__(self, scene: str, foil: bool) -> None:
+        self.foil = foil
+        self.prefix = ("Medallion" if foil else "Vignette") + scene[0].upper() + scene[1:]
+
+    def n(self, part: str, emit: bool = False) -> str:
+        return ("emit" if emit and not self.foil else "") + self.prefix + part
+
+    def paper(self, tone: str = PAPER) -> El:
+        if self.foil:
+            return fill(FOIL_INK if tone == INSET else FOIL if tone == PAPER else FOIL_SHADE)
+        return fill(tone)
+
+    def ink(self, w: float = 3.0) -> El:
+        return line(FOIL_INK if self.foil else INK, w)
+
+    def drawn(self, w: float) -> El:
+        """A stroke drawn on its own (steam): paper in the vignette, which stands over the dark scene."""
+        return line(FOIL if self.foil else PAPER, w)
+
+
+def cut(k: Kit, part: str, pts: list, tone: str = PAPER, w: float = 3.0, **kw: object) -> El:
+    """A paper (or foil) cut-out with an ink outline."""
+    return S(k.n(part), pts, k.paper(tone), k.ink(w), **kw)
+
+
+def lit(k: Kit, part: str, pts: list, light: El | None, **kw: object) -> El:
+    """A glyph part that glows in the vignette (`light`, an emit fill, None on the medallion) and is foil on the
+    medallion."""
+    if k.foil:
+        return S(k.n(part), pts, k.paper(), k.ink(2.5), **kw)
+    return S(k.n(part, emit=True), pts, light, **kw)
+
+
+def lit_disc(k: Kit, part: str, cx: float, cy: float, r: float, light: El | None) -> El:
+    """A round `lit` part (a sun, a moon)."""
+    paints = [k.paper(), k.ink(2.5)] if k.foil else [light]
+    return E(k.n(part, emit=True), cx, cy, 2 * r, 2 * r, *paints)
+
+
+def multi(k: Kit, part: str, paths: list[El], *paints: El, emit: bool = False) -> El:
+    """A shape of several paths (holes with an even-odd fill)."""
+    return d("Shape", *paths, *paints, x=0.0, y=0.0, name=k.n(part, emit=emit))
+
+
+def holed(k: Kit, tone: str = PAPER) -> El:
+    """The kit's fill for a shape whose inner paths are holes (even-odd)."""
+    f = k.paper(tone)
+    f.attrs["fillRule"] = "evenOdd"
+    return f
+
+
+def _living_room(k: Kit) -> list[El]:
+    """An armchair and a floor lamp, its light falling on the chair."""
+    chair = [(-42, 3, "c"), (-42, -10, "c"), (-47, -14, "c3"), (-48, -42, "c6"), (-40, -46, "c3"), (-39, -76, "c12"),
+             (-5, -76, "c12"), (-6, -46, "c3"), (2, -42, "c6"), (1, -14, "c3"), (-4, -10, "c"), (-4, 3, "c"),
+             (-11, 3, "c"), (-11, -8, "c"), (-35, -8, "c"), (-35, 3, "c")]
+    pole = [(17, 3, "c"), (35, 3, "c"), (35, -1, "c2"), (28, -4, "c"), (28, -102, "c"), (24, -102, "c"), (24, -4, "c"),
+            (17, -1, "c2")]
+    out = [S(k.n("Seams"), [(-40, -44, "c"), (-40, -24, "c"), (-6, -24, "c"), (-6, -44, "c")], k.ink(2.5),
+             closed=False),
+           cut(k, "Chair", chair),
+           cut(k, "Shade", [(12, -100, "c2"), (40, -100, "c2"), (34, -136, "c4"), (18, -136, "c4")]),
+           cut(k, "Lamp", pole, w=2.0)]
+    if not k.foil:
+        out.append(S(k.n("LampLight", emit=True), [(14, -100, "c"), (38, -100, "c"), (56, -28, "c"), (-4, -28, "c")],
+                     vfill(-100, -28, [("B0FFE7B0", 0), ("00FFE7B0", 1)], emit=True)))
+    return out
+
+
+def _campfire(k: Kit) -> list[El]:
+    """A tent and a flame on a log (the flame flickers on the ambient loop)."""
+    flame = [(34, 2), (22, -10), (24, -34), (34, -66), (38, -44), (46, -24), (44, -4)]
+    out = [cut(k, "Log", [(14, 8, "c3"), (52, -6, "c3"), (54, 1, "c3"), (16, 15, "c3")], PAPER_SHADE, 2.5),
+           lit(k, "Flame", flame, None if k.foil else vfill(0, -66, [("FFFFF1C8", 0), ("FFFFC46A", 0.45),
+                                                                     ("FFFF8552", 1)], emit=True), x=34.0, y=0.0),
+           cut(k, "Door", [(-24, 3, "c"), (-12, -54, "c2"), (0, 3, "c")], INSET, 2.5),
+           cut(k, "Tent", [(-46, 3, "c"), (-12, -98, "c4"), (24, 3, "c")])]
+    if not k.foil:
+        out.append(E(k.n("FireGlow", emit=True), 34, -26, 100, 100,
+                     rfill(50, [("90FFB060", 0), ("00FF8A40", 1)], emit=True)))
+    return out
+
+
+def palm_frond(cx: float, cy: float, tx: float, ty: float, arch: float, width: float) -> list:
+    """A palm frond's closed outline: a leaf from the crown (cx, cy) to its tip, its spine arching `arch` px up
+    at mid-length (the side fronds droop)."""
+    length = math.hypot(tx - cx, ty - cy)
+    ux, uy = (tx - cx) / length, (ty - cy) / length
+    px, py = -uy, ux                                   # the spine turned clockwise on screen
+    nx, ny = (px, py) if py < 0 else (-px, -py)        # whichever side is up: the spine arches that way
+
+    def at(t: float, side: float) -> tuple[float, float]:
+        bend = 4 * arch * t * (1 - t)
+        w = side * width * math.sin(math.pi * t) ** 0.7
+        return (cx + t * (tx - cx) + bend * nx + w * px, cy + t * (ty - cy) + bend * ny + w * py)
+
+    return [(cx, cy, "c"), at(0.3, -1), at(0.62, -1), (tx, ty, "c2"), at(0.62, 1), at(0.3, 1)]
+
+
+def _beach(k: Kit) -> list[El]:
+    """A palm (five fronds, the side ones drooping), the sun setting beside it."""
+    cx, cy = 4.0, -122.0   # the crown
+    tips = [((-46, -84), 22.0), ((-34, -142), 12.0), ((10, -166), 5.0), ((44, -140), 12.0), ((52, -86), 22.0)]
+    leaves = [smooth_path(d, palm_frond(cx, cy, tx, ty, arch, 0.15 * math.hypot(tx - cx, ty - cy)))
+              for (tx, ty), arch in tips]
+    trunk = [(-20, 3, "c"), (-17, -40), (-9, -82), (1, -120, "c3"), (8, -118, "c3"), (0, -80), (-6, -40), (-5, 3, "c")]
+    out = [multi(k, "Fronds", leaves, k.paper(), k.ink(2.5)),
+           cut(k, "Trunk", trunk, PAPER_SHADE),
+           lit_disc(k, "Sun", 30, -60, 19,
+                    None if k.foil else rfill(19, [("FFFFF2C2", 0), ("FFFFD27A", 1)], emit=True))]
+    if not k.foil:
+        out.append(E(k.n("SunGlow", emit=True), 30, -60, 86, 86,
+                     rfill(43, [("90FFD88A", 0.3), ("00FFD88A", 1)], emit=True)))
+    return out
+
+
+def _deep_space(k: Kit) -> list[El]:
+    """A ringed planet (its ring passing behind and in front of it) and two four-point stars."""
+    cx, cy, tilt = -2.0, -80.0, -0.38
+    ring = [d("Ellipse", width=92.0, height=24.0, x=cx, y=cy, rotation=tilt, name="Path"),
+            d("Ellipse", width=68.0, height=12.0, x=cx, y=cy, rotation=tilt, name="Path")]
+    band = (arc(cx, cy, 46, 12, 0, math.pi, 9, tilt) + arc(cx, cy, 34, 6, math.pi, 0, 9, tilt))
+    band = [(*p, "c") if i in (0, 8, 9, 17) else p for i, p in enumerate(band)]
+
+    def star(part: str, x: float, y: float, r: float) -> El:
+        paints = [k.paper(), k.ink(1.5)] if k.foil else [fill("FFFFF6E0", emit=True)]
+        return d("Shape", star_path(r), *paints, x=x, y=y, name=k.n(part, emit=True))
+
+    return [cut(k, "RingFront", band, PAPER_SHADE, 2.5),
+            E(k.n("Planet"), cx, cy, 58, 58, k.paper(), k.ink()),
+            multi(k, "RingBack", ring, holed(k, PAPER_SHADE), k.ink(2.5)),
+            star("Star", 32, -146, 15),
+            star("StarSmall", -38, -142, 9)]
+
+
+def _cafe(k: Kit) -> list[El]:
+    """A cup on its saucer, steam curling up."""
+    steam = [smooth_path(d, [(-14, -74), (-6, -90), (-16, -106), (-8, -124)], closed=False),
+             smooth_path(d, [(4, -76), (12, -94), (2, -112), (10, -132)], closed=False)]
+    handle = [d("Ellipse", width=30.0, height=34.0, x=30.0, y=-38.0, name="Path"),
+              d("Ellipse", width=14.0, height=18.0, x=30.0, y=-38.0, name="Path")]
+    return [multi(k, "Steam", steam, k.drawn(4.5)),
+            E(k.n("Coffee"), -5, -64, 58, 11, k.paper(INSET), k.ink(2.5)),
+            cut(k, "Cup", [(-31, -10, "c5"), (-35, -64, "c3"), (25, -64, "c3"), (21, -10, "c5")]),
+            multi(k, "Handle", handle, holed(k), k.ink(2.5)),
+            E(k.n("Saucer"), -4, -6, 86, 14, k.paper(PAPER_SHADE), k.ink(2.5))]
+
+
+def _rooftop(k: Kit) -> list[El]:
+    """A railing before the city's roofs, lit windows, a crescent moon."""
+    o, r, c, rc = (-12.0, -132.0), 22.0, (-2.0, -140.0), 19.0
+    dx, dy = c[0] - o[0], c[1] - o[1]
+    dd = math.hypot(dx, dy)
+    base = math.atan2(dy, dx)
+    half = math.acos((dd * dd + r * r - rc * rc) / (2 * dd * r))         # the outer circle's crossing half-angle
+    half_c = math.acos((dd * dd + rc * rc - r * r) / (2 * dd * rc))      # the cut circle's
+    moon = (arc(*o, r, r, base + half, base + math.tau - half, 11)
+            + arc(*c, rc, rc, base + math.pi + half_c, base + math.pi - half_c, 9)[1:-1])
+    moon = [(*p, "c1") if i in (0, 10) else p for i, p in enumerate(moon)]
+    skyline = [(-46, -40, "c"), (-46, -78, "c"), (-30, -78, "c"), (-30, -92, "c"), (-14, -92, "c"), (-14, -70, "c"),
+               (0, -70, "c"), (0, -104, "c2"), (10, -114, "c"), (20, -104, "c2"), (20, -66, "c"), (32, -66, "c"),
+               (32, -84, "c"), (46, -84, "c"), (46, -40, "c")]
+    rails = [d("Rectangle", width=92.0, height=44.0, cornerRadiusTL=3.0, x=0.0, y=-24.0, name="Path"),
+             *[d("Rectangle", width=14.0, height=28.0, x=hx, y=-22.0, name="Path")
+               for hx in (-30.0, -10.0, 10.0, 30.0)]]
+    windows = [d("Rectangle", width=5.0, height=6.0, x=wx, y=wy, name="Path")
+               for wx, wy in ((-38, -66), (-22, -82), (-22, -66), (-7, -58), (10, -96), (10, -80), (26, -56),
+                              (39, -72))]
+    out = [multi(k, "Railing", rails, holed(k), k.ink(2.5)),
+           multi(k, "Windows", windows, *([k.paper(INSET)] if k.foil else [fill("FFFFD48A", emit=True)]), emit=True),
+           cut(k, "Roofs", skyline, PAPER_TAN, 2.5),
+           cut(k, "Moon", moon, w=2.5)]
+    if not k.foil:
+        out.append(E(k.n("MoonGlow", emit=True), o[0], o[1], 68, 68,
+                     rfill(34, [("70FFF3DD", 0.3), ("00FFF3DD", 1)], emit=True)))
+    return out
+
+
+def _mountain_hut(k: Kit) -> list[El]:
+    """A hut's gable, its window lit, before a snow-capped peak."""
+    window_paint = k.paper(INSET) if k.foil else fill("FFFFD08A", emit=True)
+    return [R(k.n("Window", emit=True), -2, -24, 16, 16, 2, window_paint),
+            cut(k, "Hut", [(-30, 3, "c"), (-30, -40, "c"), (-36, -40, "c"), (-2, -74, "c3"), (32, -40, "c"),
+                           (26, -40, "c"), (26, 3, "c")]),
+            cut(k, "Snow", [(-6, -150, "c3"), (-19, -108, "c2"), (-11, -114, "c"), (-4, -102, "c"), (5, -114, "c"),
+                            (12, -107, "c2")], w=2.5),
+            cut(k, "Peak", [(-46, -22, "c"), (-6, -150, "c3"), (46, -22, "c")], PAPER_TAN)]
+
+
+def pine(cx: float, tip: float, base: float, hw: float) -> list:
+    """A three-tier pine's outline (its trunk to y 3)."""
+    right = []
+    for i in range(3):
+        y = tip + (i + 1) * (base - tip) / 3
+        w = hw * (0.45 + 0.55 * (i + 1) / 3)
+        right.append((cx + w, y, "c2"))
+        if i < 2:
+            right.append((cx + w * 0.42, y - 3, "c"))
+    trunk = [(cx + 4, base, "c"), (cx + 4, 3, "c"), (cx - 4, 3, "c"), (cx - 4, base, "c")]
+    left = [(2 * cx - x, y, *rest) for x, y, *rest in reversed(right)]
+    return [(cx, tip, "c2"), *right, *trunk, *left]
+
+
+def _forest_cabin(k: Kit) -> list[El]:
+    """A pair of pines, the near one shorter."""
+    return [cut(k, "PineNear", pine(22, -108, -10, 27)),
+            cut(k, "PineFar", pine(-14, -164, -12, 33), PAPER_TAN)]
+
+
+def _train_compartment(k: Kit) -> list[El]:
+    """A compartment's arched window (hills and the moon outside) over the rails."""
+    frame = [d("Rectangle", width=74.0, height=128.0, linkCornerRadius=False, cornerRadiusTL=37.0, cornerRadiusTR=37.0,
+               cornerRadiusBL=4.0, cornerRadiusBR=4.0, x=0.0, y=-100.0, name="Path"),
+             d("Rectangle", width=52.0, height=108.0, linkCornerRadius=False, cornerRadiusTL=26.0,
+               cornerRadiusTR=26.0, x=0.0, y=-100.0, name="Path")]
+    track = [d("Rectangle", width=92.0, height=5.0, x=0.0, y=-28.0, name="Path"),
+             d("Rectangle", width=92.0, height=5.0, x=0.0, y=-16.0, name="Path"),
+             *[d("Rectangle", width=6.0, height=22.0, x=tx, y=-22.0, name="Path")
+               for tx in (-36.0, -18.0, 0.0, 18.0, 36.0)]]
+    view = "FF46506E"
+    return [multi(k, "Frame", frame, holed(k), k.ink(3)),
+            lit_disc(k, "Moon", 11, -128, 6, None if k.foil else fill("FFFFF3DD", emit=True)),
+            cut(k, "Hills", [(-28, -44, "c"), (-28, -66), (-12, -76), (4, -68), (28, -82, "c"), (28, -44, "c")],
+                PAPER_TAN, 2.0),
+            S(k.n("View"), [(-27, -45, "c"), (-27, -127, "c26"), (27, -127, "c26"), (27, -45, "c")],
+              k.paper(INSET) if k.foil else fill(view)),
+            multi(k, "Track", track, k.paper(PAPER_SHADE), k.ink(2.0))]
+
+
+def _library(k: Kit) -> list[El]:
+    """A stack of books, a candle burning on it (the flame flickers on the ambient loop)."""
+    books = [d("Rectangle", width=86.0, height=20.0, cornerRadiusTL=3.0, x=-4.0, y=-12.0, name="Path"),
+             d("Rectangle", width=70.0, height=18.0, cornerRadiusTL=3.0, x=-8.0, y=-31.0, name="Path"),
+             d("Rectangle", width=58.0, height=16.0, cornerRadiusTL=3.0, x=-2.0, y=-48.0, name="Path")]
+    spines = [smooth_path(d, [(sx, y0), (sx, y1)], closed=False)
+              for sx, y0, y1 in ((28.0, -21.0, -3.0), (16.0, -39.0, -23.0), (-24.0, -55.0, -41.0))]
+    flame = [(5, -100), (-1, -108), (5, -130), (11, -108)]
+    out = [multi(k, "Spines", spines, k.ink(2.5)),
+           multi(k, "Books", books, k.paper(), k.ink(2.5)),
+           lit(k, "Flame", flame, None if k.foil else vfill(0, -30, [("FFFFF1C8", 0), ("FFFFB060", 1)], emit=True),
+               x=5.0, y=-100.0),
+           cut(k, "Candle", [(-2, -56, "c"), (-2, -100, "c2"), (12, -100, "c2"), (12, -56, "c")], w=2.5)]
+    if not k.foil:
+        out.append(E(k.n("CandleGlow", emit=True), 5, -112, 76, 76,
+                     rfill(38, [("90FFD08A", 0), ("00FFB060", 1)], emit=True)))
+    return out
+
+
+EMBLEMS = {"livingRoom": _living_room, "campfire": _campfire, "beach": _beach, "deepSpace": _deep_space,
+           "cafe": _cafe, "rooftop": _rooftop, "mountainHut": _mountain_hut, "forestCabin": _forest_cabin,
+           "trainCompartment": _train_compartment, "library": _library}
+
+
+def glyph_box(shapes: list[El]) -> tuple[float, float, float, float]:
+    """(x0, y0, x1, y1) of a glyph's shapes: their path points and parametric paths (turned ones by their
+    longer side)."""
+    xs: list[float] = []
+    ys: list[float] = []
+    for s in shapes:
+        sx, sy = float(s.attrs.get("x", 0.0)), float(s.attrs.get("y", 0.0))
+        for p in s.children:
+            if p.tag == "PointsPath":
+                for v in p.children:
+                    xs.append(sx + float(v.attrs["x"]))
+                    ys.append(sy + float(v.attrs["y"]))
+            elif p.tag in ("Ellipse", "Rectangle"):
+                px, py = sx + float(p.attrs.get("x", 0.0)), sy + float(p.attrs.get("y", 0.0))
+                w, h = float(p.attrs["width"]) / 2, float(p.attrs["height"]) / 2
+                if p.attrs.get("rotation"):
+                    w = h = max(w, h)
+                xs += [px - w, px + w]
+                ys += [py - h, py + h]
+    return min(xs), min(ys), max(xs), max(ys)
+
+
+def emblem(scene: str, prop: str) -> El:
+    """`Emblem<Scene>` in `PanelNear`: the destination's paper cut-outs, standing on the near ground."""
+    return N(f"Emblem{scene[0].upper()}{scene[1:]}", *EMBLEMS[scene](Kit(scene, foil=False)), bind(prop, 18),
+             x=EMBLEM_AT[0], y=EMBLEM_AT[1], opacity=0.0)
+
+
+def medallion_glyph(scene: str, prop: str) -> El:
+    """`MedallionGlyph<Scene>`: the same emblem small, stamped in foil on the medallion; its bounding box fits
+    inside GLYPH_R, centred on the medallion."""
+    shapes = EMBLEMS[scene](Kit(scene, foil=True))
+    x0, y0, x1, y1 = glyph_box(shapes)
+    s = round(GLYPH_R / (0.5 * math.hypot(x1 - x0, y1 - y0)), 4)
+    return N(f"MedallionGlyph{scene[0].upper()}{scene[1:]}", *shapes, bind(prop, 18),
+             x=round(-s * (x0 + x1) / 2, 3), y=round(-s * (y0 + y1) / 2, 3), scaleX=s, scaleY=s, opacity=0.0)
+
+
+def riffle() -> El:
+    """`BookRiffle`: three printed pages lying on the block's face flick over onto the cover's stub, one after
+    another (each turns FLAP_TURN about the spine, projected: scaleX = cos(FLAP_TURN x its window of `unfold`),
+    the cover's own foreshortening). A page fades in over the first FLAP_FADE of its window as it lifts (on the
+    close, `unfold` falling, it flutters back and fades as it lands) and comes to rest hidden behind the stub, so
+    nothing of the riffle stays."""
+    flaps = []
+    for i, ((a, b), (w, h, cy)) in enumerate(zip(UNFOLD_FLAPS, FLAPS)):
+        page = [(0, -h / 2, "c"), (w - 12, -h / 2, "c10"), (w, -h / 2 + 22), (w - 3, 0), (w, h / 2 - 22),
+                (w - 12, h / 2, "c10"), (0, h / 2, "c")]
+        rows = [(-h / 2 + 52 + 26 * r, w - (40 if r % 3 == 2 else 30)) for r in range(6)]
+        text = d("Shape", *[smooth_path(d, [(28.0, y), (x1, y)], closed=False) for y, x1 in rows],
+                 line(PAPER_TAN, 3), x=0.0, y=0.0, name=f"RiffleFlap{i}Text")
+        flaps.append(N(f"RiffleFlap{i}", text,
+                       S(f"RiffleFlap{i}Page", page, hfill(0, w, [(PAPER_TAN, 0), (PAPER, 0.35), ("FFEEE4D3", 1)]),
+                         line(INK, 2)),
+                       bind("unfold", 16, flipped(a, b, FLAP_TURN)),
+                       bind("unfold", 18, window(a, a + FLAP_FADE * (b - a))),
+                       x=0.0, y=cy - GROUND_Y, opacity=0.0))
+    return N("BookRiffle", *flaps, x=0.0, y=0.0)
+
+
+def panel(name: str, *kids: El) -> El:
+    """`Panel<name>`, pivoting on the vignette's floor at the gutter: flat behind the block (PANEL_FLAT) until its
+    window of `unfold` opens, erect at its end."""
+    a, b = UNFOLD_PANELS[name]
+    return N(f"Panel{name}", *kids, bind("unfold", 15, windowed(a, b, -PANEL_FLAT, PANEL_FLAT)), x=0.0, y=0.0,
+             rotation=PANEL_FLAT)
+
+
+def motes() -> El:
+    """`emitBookMotes`: seven warm motes drifting up the shaft. Each rises MOTE_RISE px and fades in and out over
+    the ambient loop, `MOTE_PHASE` frames after the one before (the portal sparks' stagger); it fades out before
+    it drops back."""
+    dots = []
+    for i, (mx, my, size) in enumerate(MOTES):
+        ph = i * MOTE_PHASE
+        fade = cyclic([(0, 0.0), (40, 0.55), (90, 0.9), (170, 0.25), (228, 0.0)], ph)
+        rise = cyclic([(0, 0.0), (228, -MOTE_RISE), (239, -MOTE_RISE)], ph)
+        y0 = my - VIG_FLOOR
+        dot = E(f"emitBookMote{i}", mx - BLOCK_X0, y0 + rise[0][1], size, size,
+                rfill(size / 2, [("FFFFF8E6", 0), ("FFFFEFC4", 0.45), ("00FFE0A0", 1)], emit=True),
+                opacity=round(fade[0][1], 4))
+        amb_tracks.append(track(d, dot, {"opacity": [(f, round(v, 4), EASE) for f, v in fade],
+                                         "y": [(f, round(y0 + v, 3), "linear") for f, v in rise]}))
+        dots.append(dot)
+    return N("emitBookMotes", *dots, bind("unfold", 18, window(*UNFOLD_SHAFT)), x=0.0, y=0.0, opacity=0.0)
+
+
+def vignette() -> El:
+    """`BookVignette`, behind the page block (a panel flat behind it is hidden): the pop-up. A paper floor slides
+    out of the gutter, then three paper-cut layers rise from it, tallest at the gutter and first, each turning up
+    about the floor's gutter end: `PanelFar` (a ridge in the scene's ambient light, its edge key-lit), `PanelMid`
+    (hills, their crest key-lit) and `PanelNear` (the near ground and the destination's emblem). Behind them the
+    book's light: a soft halo and a shaft rising from the gutter's mouth up-left, warm motes drifting up it."""
+    # the ridge keeps right of the avatar's hair (x <= 557) above the hills' crest
+    far = [(-116, 2, "c"), (-110, -40), (-96, -72), (-84, -112), (-76, -164), (-66, -194, "c6"), (-56, -184),
+           (-46, -222), (-36, -252, "c6"), (-26, -240), (-14, -282), (-4, -304, "c6"), (0, -300, "c"), (0, 2, "c")]
+    far_rim = [p[:2] for p in far[1:-2]]
+    crest = [(-112, -44), (-98, -80), (-80, -98), (-60, -96), (-42, -118), (-24, -128), (-8, -140)]
+    near = [(-118, 2, "c"), (-116, -12), (-98, -22), (-72, -18), (-46, -28), (-22, -26), (0, -34, "c"), (0, 2, "c")]
+    floor = N("VignetteFloor",
+              S("VignetteFloorSlab", [(0, -6, "c"), (-118, -6, "c3"), (-114, 3, "c3"), (0, 3, "c")], fill(PAPER_SHADE),
+                line(INK, 2.5)),
+              bind("unfold", 16, window(0.04, 0.2)), x=0.0, y=0.0, scaleX=0.0)
+    # the light: a soft ray from the mouth (a radial glow squashed into a beam, leaning SHAFT_LEAN left) and a
+    # halo behind the layers; both fade to nothing before the avatar's face box
+    ray = N("emitBookShaftRay",
+            E("emitBookShaftBeam", 0, 0, 600, 600,
+              rfill(300, [("C8FFF0C8", 0), ("70FFE2A8", 0.45), ("00FFD49A", 1)], emit=True, cy=170)),
+            x=-300 * math.sin(SHAFT_LEAN), y=-300 * math.cos(SHAFT_LEAN), rotation=-SHAFT_LEAN, scaleX=0.13)
+    halo = N("emitBookHalo",
+             E("emitBookHaloGlow", 0, 0, 380, 380,
+               rfill(190, [("A8FFE9B8", 0), ("58FFD49A", 0.5), ("00FFD49A", 1)], emit=True)),
+             x=-46.0, y=-190.0, scaleX=0.37)
+    light = N("emitBookShaft", N("emitBookShaftBreath", ray, halo, x=0.0, y=0.0),
+              bind("unfold", 18, window(*UNFOLD_SHAFT)), x=0.0, y=0.0, opacity=0.0)
+    layers = [panel("Near", S("PanelNearGround", near, fill(PAPER), line(INK, 3)),
+                    *[emblem(s, p) for s, p in zip(SCENES, DEST_PROPS)]),
+              panel("Mid", S("PanelMidRim", [(x, y + 3) for x, y in crest],
+                             bound_line("lightKey", 4, SCENES["livingRoom"].key), closed=False),
+                    S("PanelMidHills", [(-118, 2, "c"), *crest, (0, -138, "c"), (0, 2, "c")], fill(PAPER_TAN),
+                      line(INK, 2.5))),
+              panel("Far", S("PanelFarRim", far_rim, bound_line("lightKey", 3, SCENES["livingRoom"].key),
+                             closed=False, opacity=0.7),
+                    S("PanelFarRidge", far, bound_fill("lightAmbient", SCENES["livingRoom"].ambient)))]
+    layers[2].attrs["opacity"] = 0.55
+    return N("BookVignette", motes(), floor, *layers, light, bind("unfold", 18, window(0.0, 0.05)), x=0.0,
+             y=VIG_FLOOR - GROUND_Y, opacity=0.0)
+
+
 def book() -> El:
-    """The standing pop-up storybook, its gutter on the threshold. Back to front: the page block, the
-    interior glow, the cover (and its edge light), the floor spill, then the ribbon with the jacket, in front
-    of everything (RML paints the first child in front), so the hook stays visible over the resting stub."""
+    """The standing pop-up storybook, its gutter on the threshold. Back to front: the vignette (behind the block,
+    so a panel lying flat is hidden), the page block, the interior glow, the riffle, the cover (and its edge
+    light), the floor spill, then the ribbon with the jacket, in front of everything (RML paints the first child
+    in front), so the hook stays visible over the resting stub."""
     spill = E("emitBookSpill", 0, 20, 1040, 60, rfill(520, [("A0FFD49A", 0), ("00FFD49A", 1)], emit=True),
               bind("unfold", 18, conv(0.85)), bind("unfold", 16, conv(0.6, 0.4)), opacity=0.0, scaleX=0.4)
-    return N("Book", ribbon(), spill, cover_edge(), cover(), book_glow(), *page_block(),
+    root = N("Book", ribbon(), spill, cover_edge(), cover(), book_glow(), *page_block(),
              bind("book", 18), bind("book", 16, conv(0.08, 0.92)), bind("book", 17, conv(0.08, 0.92)),
              x=BLOCK_X0, y=GROUND_Y, opacity=0.0)
+    # the riffle, the vignette, the medallion's glyphs and their ambient tracks mint after the book's own drawing
+    # (its ids stay as they were) and slot in
+    kids = root.children
+    kids.insert(kids.index(named(root, "emitBookGlow")), riffle())
+    kids.insert(kids.index(named(root, "BookBlock")) + 1, vignette())
+    medal = named(root, "BookMedallion")
+    medal.children[:0] = [medallion_glyph(s, p) for s, p in zip(SCENES, DEST_PROPS)]
+    amb_tracks.append(track(d, named(root, "emitBookGlow"), {"opacity": BREATH}, ease=EASE))
+    amb_tracks.append(track(d, named(root, "emitBookShaftBreath"), {"opacity": BREATH}, ease=EASE))
+    flicker = [1.0, 1.1, 0.94, 1.08, 0.97, 1.12, 0.95, 1.06]
+    for name, k in (("emitVignetteCampfireFlame", 1.0), ("emitVignetteLibraryFlame", 0.6)):
+        amb_tracks.append(track(d, named(root, name), {"scaleY": [
+            (f, round(1 + k * (flicker[(f // 8) % len(flicker)] - 1), 4) if f < AMB_FRAMES else 1.0)
+            for f in range(0, AMB_FRAMES + 1, 8)]}))
+    amb_tracks.append(track(d, named(root, "emitVignetteDeepSpaceStar"), {"opacity": [
+        (0, 1.0), (50, 0.5), (110, 1.0), (170, 0.65), (240, 1.0)]}, ease=EASE))
+    return root
 
 
 # ---------------------------------------------------------------- path (anchor: bottom centre)
@@ -578,6 +1099,7 @@ def build() -> list[El]:
     amb_tracks.clear()
     converters.clear()
     _convs.clear()
+    _windows.clear()
     d.next = V10_APPEAR_CONV_ID
     conv(0.08, 0.92)
     d.next = V10_DOOR_END
