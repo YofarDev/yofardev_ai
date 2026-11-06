@@ -78,6 +78,18 @@ def test_the_jacket_never_crosses_the_threshold() -> None:
     assert x1 <= jacket_art.RIGHT_LIMIT and y1 - y0 >= 150
 
 
+@pytest.mark.xfail(strict=True, reason="fix round 1 ruling COVER_REST -0.15: the resting stub (x 573-640 with its "
+                   "outline), drawn over the avatar, covers the right third of the avatar's own jacket and its fist at "
+                   "the grab and hang contacts; COVER_REST >= -0.039 clears it (task-1-report, fix round 1)")
+def test_the_resting_cover_leaves_the_avatars_jacket_whole() -> None:
+    """The journey draws over the avatar. At open 1, where the grab and hang contacts fire, the cover's stub must
+    stay right of the avatar's copy of the jacket at the hook, as the door's jamb did (M8: both copies always
+    show whole, so the handoff shows one jacket)."""
+    x0, x1, y0, y1 = jacket_art.extent()
+    stub = gen_journeys.BLOCK_X0 + gen_journeys.COVER_LEN * gen_journeys.COVER_REST - 2.5   # its outline's outer edge
+    assert jacket_art.HOOK[0] + x1 + 1.5 <= stub
+
+
 def test_the_avatar_holds_it_upright_at_the_grip_point(avatar: ET.Element) -> None:
     parents = {c: p for p in avatar.iter() for c in p}
     hang = _named(avatar, "JacketHang")

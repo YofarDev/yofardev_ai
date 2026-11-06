@@ -12,7 +12,7 @@
       </StateMachineLayer>
     </StateMachine>
     <CubicEaseInterpolator x1="0.42" y1="0" x2="0.58" y2="1" id="0:28"/>
-    <Node x="640" y="1000" name="Book" opacity="0" id="0:6336">
+    <Node x="640" y="1000" name="Book" opacity="0" id="0:6368">
       <Node x="8" y="-700" name="Ribbon" rotation="-0.3142" id="0:6077">
         <Node x="-20" y="260" rotation="0.3142" opacity="0" name="RibbonJacketHang" id="0:5076">
           <Node x="0" y="0" name="RibbonJacket" id="0:5074">
@@ -141,234 +141,234 @@
         <DataBindContext sourcePathIds="0:27-0:6002" propertyKey="18" converterId="0:6031" id="0:6032"/>
         <DataBindContext sourcePathIds="0:27-0:6002" propertyKey="16" converterId="0:6038" id="0:6039"/>
       </Shape>
-      <Node x="430" y="0" name="emitCoverEdge" opacity="0" id="0:6118">
-        <Shape x="0" y="0" name="emitCoverEdgeLine" id="0:6115">
-          <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:6114">
-            <CubicDetachedVertex x="0" y="-704" outRotation="1.5708" outDistance="242.6667" inRotation="4.7124" inDistance="0" id="0:6112"/>
-            <CubicDetachedVertex x="0" y="24" outRotation="1.5708" outDistance="0" inRotation="4.7124" inDistance="242.6667" id="0:6113"/>
+      <Node x="430" y="0" name="emitCoverEdge" opacity="0" id="0:6134">
+        <Shape x="0" y="0" name="emitCoverEdgeLine" id="0:6131">
+          <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:6130">
+            <CubicDetachedVertex x="0" y="-704" outRotation="1.5708" outDistance="242.6667" inRotation="4.7124" inDistance="0" id="0:6128"/>
+            <CubicDetachedVertex x="0" y="24" outRotation="1.5708" outDistance="0" inRotation="4.7124" inDistance="242.6667" id="0:6129"/>
           </PointsPath>
-          <Stroke thickness="6" cap="round" join="round" name="Line" id="0:6111">
-            <SolidColor colorValue="FFFFF4DC" id="0:6110"/>
+          <Stroke thickness="6" cap="round" join="round" name="Line" id="0:6127">
+            <SolidColor colorValue="FFFFF4DC" id="0:6126"/>
           </Stroke>
         </Shape>
-        <DataBindContext sourcePathIds="0:27-0:18" propertyKey="13" converterId="0:6093" id="0:6116"/>
-        <DataBindContext sourcePathIds="0:27-0:18" propertyKey="18" converterId="0:6109" id="0:6117"/>
+        <DataBindContext sourcePathIds="0:27-0:18" propertyKey="13" converterId="0:6109" id="0:6132"/>
+        <DataBindContext sourcePathIds="0:27-0:18" propertyKey="18" converterId="0:6125" id="0:6133"/>
       </Node>
-      <Node x="0" y="0" name="BookCover" id="0:6248">
-        <Node x="0" y="0" name="CoverOuter" id="0:6193">
-          <Node x="210" y="-400" name="BookMedallion" id="0:6142">
-            <Shape x="0" y="0" name="MedallionBevel" opacity="0.55" id="0:6128">
-              <PointsPath isClosed="false" isClockwise="true" name="Path" id="0:6127">
-                <CubicDetachedVertex x="-108.1837" y="-28.9877" outRotation="-1.1345" outDistance="12.9657" inRotation="2.0071" inDistance="0" id="0:6122"/>
-                <CubicDetachedVertex x="-91.745" y="-64.2406" outRotation="-0.9599" outDistance="12.7688" inRotation="2.1817" inDistance="12.7688" id="0:6123"/>
-                <CubicDetachedVertex x="-64.2406" y="-91.745" outRotation="-0.6109" outDistance="12.7688" inRotation="2.5307" inDistance="12.7688" id="0:6124"/>
-                <CubicDetachedVertex x="-28.9877" y="-108.1837" outRotation="-0.2618" outDistance="12.7688" inRotation="2.8798" inDistance="12.7688" id="0:6125"/>
-                <CubicDetachedVertex x="9.7614" y="-111.5738" outRotation="-0.0873" outDistance="0" inRotation="3.0543" inDistance="12.9657" id="0:6126"/>
+      <Node x="0" y="0" name="BookCover" id="0:6280">
+        <Node x="0" y="0" name="CoverOuter" id="0:6209">
+          <Node x="65" y="-180" name="BookMedallion" id="0:6158">
+            <Shape x="0" y="0" name="MedallionBevel" opacity="0.55" id="0:6144">
+              <PointsPath isClosed="false" isClockwise="true" name="Path" id="0:6143">
+                <CubicDetachedVertex x="-41.5348" y="-11.1292" outRotation="-1.1345" outDistance="4.9779" inRotation="2.0071" inDistance="0" id="0:6138"/>
+                <CubicDetachedVertex x="-35.2235" y="-24.6638" outRotation="-0.9599" outDistance="4.9023" inRotation="2.1817" inDistance="4.9023" id="0:6139"/>
+                <CubicDetachedVertex x="-24.6638" y="-35.2235" outRotation="-0.6109" outDistance="4.9023" inRotation="2.5307" inDistance="4.9023" id="0:6140"/>
+                <CubicDetachedVertex x="-11.1292" y="-41.5348" outRotation="-0.2618" outDistance="4.9023" inRotation="2.8798" inDistance="4.9023" id="0:6141"/>
+                <CubicDetachedVertex x="3.7477" y="-42.8364" outRotation="-0.0873" outDistance="0" inRotation="3.0543" inDistance="4.9779" id="0:6142"/>
               </PointsPath>
-              <Stroke thickness="3" cap="round" join="round" name="Line" id="0:6121">
-                <SolidColor colorValue="FFEAC28C" id="0:6120">
-                  <DataBindContext sourcePathIds="0:27-0:22" propertyKey="37" id="0:6119"/>
+              <Stroke thickness="3" cap="round" join="round" name="Line" id="0:6137">
+                <SolidColor colorValue="FFEAC28C" id="0:6136">
+                  <DataBindContext sourcePathIds="0:27-0:22" propertyKey="37" id="0:6135"/>
                 </SolidColor>
               </Stroke>
             </Shape>
-            <Shape x="0" y="0" name="MedallionRing" id="0:6132">
-              <Ellipse width="214" height="214" name="Path" id="0:6131"/>
-              <Stroke thickness="2.5" cap="round" join="round" name="Line" id="0:6130">
-                <SolidColor colorValue="FF2A1E24" id="0:6129"/>
+            <Shape x="0" y="0" name="MedallionRing" id="0:6148">
+              <Ellipse width="76" height="76" name="Path" id="0:6147"/>
+              <Stroke thickness="2.5" cap="round" join="round" name="Line" id="0:6146">
+                <SolidColor colorValue="FF2A1E24" id="0:6145"/>
               </Stroke>
             </Shape>
-            <Shape x="0" y="0" name="MedallionDisc" id="0:6141">
-              <Ellipse width="240" height="240" name="Path" id="0:6140"/>
-              <Fill name="Fill" id="0:6137">
-                <RadialGradient startX="0" startY="0" endX="120" endY="0" id="0:6136">
-                  <GradientStop colorValue="FF59382A" position="0" id="0:6133"/>
-                  <GradientStop colorValue="FF462D21" position="0.7" id="0:6134"/>
-                  <GradientStop colorValue="FF39231A" position="1" id="0:6135"/>
+            <Shape x="0" y="0" name="MedallionDisc" id="0:6157">
+              <Ellipse width="96" height="96" name="Path" id="0:6156"/>
+              <Fill name="Fill" id="0:6153">
+                <RadialGradient startX="0" startY="0" endX="48" endY="0" id="0:6152">
+                  <GradientStop colorValue="FF59382A" position="0" id="0:6149"/>
+                  <GradientStop colorValue="FF462D21" position="0.7" id="0:6150"/>
+                  <GradientStop colorValue="FF39231A" position="1" id="0:6151"/>
                 </RadialGradient>
               </Fill>
-              <Stroke thickness="4" cap="round" join="round" name="Line" id="0:6139">
-                <SolidColor colorValue="FF2A1E24" id="0:6138"/>
+              <Stroke thickness="4" cap="round" join="round" name="Line" id="0:6155">
+                <SolidColor colorValue="FF2A1E24" id="0:6154"/>
               </Stroke>
             </Shape>
           </Node>
-          <Shape x="0" y="0" name="CoverTooling" id="0:6150">
-            <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:6149">
-              <StraightVertex x="44" y="-688" radius="14" id="0:6145"/>
-              <StraightVertex x="390" y="-688" radius="14" id="0:6146"/>
-              <StraightVertex x="390" y="-44" radius="14" id="0:6147"/>
-              <StraightVertex x="44" y="-44" radius="14" id="0:6148"/>
+          <Shape x="0" y="0" name="CoverTooling" id="0:6166">
+            <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:6165">
+              <StraightVertex x="128" y="-688" radius="14" id="0:6161"/>
+              <StraightVertex x="390" y="-688" radius="14" id="0:6162"/>
+              <StraightVertex x="390" y="-44" radius="14" id="0:6163"/>
+              <StraightVertex x="128" y="-44" radius="14" id="0:6164"/>
             </PointsPath>
-            <Stroke thickness="3" cap="round" join="round" name="Line" id="0:6144">
-              <SolidColor colorValue="FF4A2E22" id="0:6143"/>
+            <Stroke thickness="3" cap="round" join="round" name="Line" id="0:6160">
+              <SolidColor colorValue="FF4A2E22" id="0:6159"/>
             </Stroke>
           </Shape>
-          <Shape x="0" y="0" name="CoverRim" opacity="0.6" id="0:6158">
-            <PointsPath isClosed="false" isClockwise="true" name="Path" id="0:6157">
-              <CubicDetachedVertex x="26" y="-723" outRotation="0" outDistance="64.6667" inRotation="3.1416" inDistance="0" id="0:6154"/>
-              <CubicDetachedVertex x="220" y="-723" outRotation="0.0027" outDistance="60.6674" inRotation="3.1443" inDistance="64.6664" id="0:6155"/>
-              <CubicDetachedVertex x="402" y="-722" outRotation="0.0055" outDistance="0" inRotation="3.1471" inDistance="60.6676" id="0:6156"/>
+          <Shape x="0" y="0" name="CoverRim" opacity="0.6" id="0:6174">
+            <PointsPath isClosed="false" isClockwise="true" name="Path" id="0:6173">
+              <CubicDetachedVertex x="26" y="-723" outRotation="0" outDistance="64.6667" inRotation="3.1416" inDistance="0" id="0:6170"/>
+              <CubicDetachedVertex x="220" y="-723" outRotation="0.0027" outDistance="60.6674" inRotation="3.1443" inDistance="64.6664" id="0:6171"/>
+              <CubicDetachedVertex x="402" y="-722" outRotation="0.0055" outDistance="0" inRotation="3.1471" inDistance="60.6676" id="0:6172"/>
             </PointsPath>
-            <Stroke thickness="4" cap="round" join="round" name="Line" id="0:6153">
-              <SolidColor colorValue="FFEAC28C" id="0:6152">
-                <DataBindContext sourcePathIds="0:27-0:22" propertyKey="37" id="0:6151"/>
+            <Stroke thickness="4" cap="round" join="round" name="Line" id="0:6169">
+              <SolidColor colorValue="FFEAC28C" id="0:6168">
+                <DataBindContext sourcePathIds="0:27-0:22" propertyKey="37" id="0:6167"/>
               </SolidColor>
             </Stroke>
           </Shape>
-          <Shape x="0" y="0" name="CoverGroove" id="0:6164">
-            <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:6163">
-              <CubicDetachedVertex x="20" y="-722" outRotation="1.5708" outDistance="250.6667" inRotation="4.7124" inDistance="0" id="0:6161"/>
-              <CubicDetachedVertex x="20" y="30" outRotation="1.5708" outDistance="0" inRotation="4.7124" inDistance="250.6667" id="0:6162"/>
+          <Shape x="0" y="0" name="CoverGroove" id="0:6180">
+            <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:6179">
+              <CubicDetachedVertex x="9" y="-722" outRotation="1.5708" outDistance="250.6667" inRotation="4.7124" inDistance="0" id="0:6177"/>
+              <CubicDetachedVertex x="9" y="30" outRotation="1.5708" outDistance="0" inRotation="4.7124" inDistance="250.6667" id="0:6178"/>
             </PointsPath>
-            <Stroke thickness="3" cap="round" join="round" name="Line" id="0:6160">
-              <SolidColor colorValue="FF3D271D" id="0:6159"/>
+            <Stroke thickness="3" cap="round" join="round" name="Line" id="0:6176">
+              <SolidColor colorValue="FF3D271D" id="0:6175"/>
             </Stroke>
           </Shape>
-          <Shape x="0" y="0" name="CoverLeather" id="0:6177">
-            <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:6176">
-              <StraightVertex x="0" y="40" id="0:6172"/>
-              <StraightVertex x="0" y="-728" id="0:6173"/>
-              <StraightVertex x="430" y="-728" radius="24" id="0:6174"/>
-              <StraightVertex x="430" y="40" id="0:6175"/>
+          <Shape x="0" y="0" name="CoverLeather" id="0:6193">
+            <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:6192">
+              <StraightVertex x="0" y="40" id="0:6188"/>
+              <StraightVertex x="0" y="-728" id="0:6189"/>
+              <StraightVertex x="430" y="-728" radius="24" id="0:6190"/>
+              <StraightVertex x="430" y="40" id="0:6191"/>
             </PointsPath>
-            <Fill name="Fill" id="0:6169">
-              <LinearGradient startX="0" startY="0" endX="430" endY="0" id="0:6168">
-                <GradientStop colorValue="FF5F3B2B" position="0" id="0:6165"/>
-                <GradientStop colorValue="FF794F38" position="0.35" id="0:6166"/>
-                <GradientStop colorValue="FF6A4330" position="1" id="0:6167"/>
+            <Fill name="Fill" id="0:6185">
+              <LinearGradient startX="0" startY="0" endX="430" endY="0" id="0:6184">
+                <GradientStop colorValue="FF5F3B2B" position="0" id="0:6181"/>
+                <GradientStop colorValue="FF794F38" position="0.35" id="0:6182"/>
+                <GradientStop colorValue="FF6A4330" position="1" id="0:6183"/>
               </LinearGradient>
             </Fill>
-            <Stroke thickness="5" cap="round" join="round" name="Line" id="0:6171">
-              <SolidColor colorValue="FF2A1E24" id="0:6170"/>
+            <Stroke thickness="5" cap="round" join="round" name="Line" id="0:6187">
+              <SolidColor colorValue="FF2A1E24" id="0:6186"/>
             </Stroke>
           </Shape>
-          <DataBindContext sourcePathIds="0:27-0:18" propertyKey="18" converterId="0:6191" id="0:6192"/>
+          <DataBindContext sourcePathIds="0:27-0:18" propertyKey="18" converterId="0:6207" id="0:6208"/>
         </Node>
-        <Node x="0" y="0" name="CoverInner" opacity="0" id="0:6230">
-          <Shape x="0" y="0" name="CoverInnerFrame" id="0:6201">
-            <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:6200">
-              <StraightVertex x="30" y="-698" radius="10" id="0:6196"/>
-              <StraightVertex x="400" y="-698" radius="10" id="0:6197"/>
-              <StraightVertex x="400" y="-30" radius="10" id="0:6198"/>
-              <StraightVertex x="30" y="-30" radius="10" id="0:6199"/>
+        <Node x="0" y="0" name="CoverInner" opacity="0" id="0:6246">
+          <Shape x="0" y="0" name="CoverInnerFrame" id="0:6217">
+            <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:6216">
+              <StraightVertex x="30" y="-698" radius="10" id="0:6212"/>
+              <StraightVertex x="400" y="-698" radius="10" id="0:6213"/>
+              <StraightVertex x="400" y="-30" radius="10" id="0:6214"/>
+              <StraightVertex x="30" y="-30" radius="10" id="0:6215"/>
             </PointsPath>
-            <Stroke thickness="3" cap="round" join="round" name="Line" id="0:6195">
-              <SolidColor colorValue="FF2A1E24" id="0:6194"/>
+            <Stroke thickness="3" cap="round" join="round" name="Line" id="0:6211">
+              <SolidColor colorValue="FF2A1E24" id="0:6210"/>
             </Stroke>
           </Shape>
-          <Shape x="0" y="0" name="CoverPaper" id="0:6214">
-            <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:6213">
-              <StraightVertex x="0" y="40" id="0:6209"/>
-              <StraightVertex x="0" y="-728" id="0:6210"/>
-              <StraightVertex x="430" y="-728" radius="24" id="0:6211"/>
-              <StraightVertex x="430" y="40" id="0:6212"/>
+          <Shape x="0" y="0" name="CoverPaper" id="0:6230">
+            <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:6229">
+              <StraightVertex x="0" y="40" id="0:6225"/>
+              <StraightVertex x="0" y="-728" id="0:6226"/>
+              <StraightVertex x="430" y="-728" radius="24" id="0:6227"/>
+              <StraightVertex x="430" y="40" id="0:6228"/>
             </PointsPath>
-            <Fill name="Fill" id="0:6206">
-              <LinearGradient startX="0" startY="0" endX="430" endY="0" id="0:6205">
-                <GradientStop colorValue="FFE0D2BC" position="0" id="0:6202"/>
-                <GradientStop colorValue="FFF3EBDD" position="0.22" id="0:6203"/>
-                <GradientStop colorValue="FFEEE4D3" position="1" id="0:6204"/>
+            <Fill name="Fill" id="0:6222">
+              <LinearGradient startX="0" startY="0" endX="430" endY="0" id="0:6221">
+                <GradientStop colorValue="FFE0D2BC" position="0" id="0:6218"/>
+                <GradientStop colorValue="FFF3EBDD" position="0.22" id="0:6219"/>
+                <GradientStop colorValue="FFEEE4D3" position="1" id="0:6220"/>
               </LinearGradient>
             </Fill>
-            <Stroke thickness="5" cap="round" join="round" name="Line" id="0:6208">
-              <SolidColor colorValue="FF2A1E24" id="0:6207"/>
+            <Stroke thickness="5" cap="round" join="round" name="Line" id="0:6224">
+              <SolidColor colorValue="FF2A1E24" id="0:6223"/>
             </Stroke>
           </Shape>
-          <DataBindContext sourcePathIds="0:27-0:18" propertyKey="18" converterId="0:6228" id="0:6229"/>
+          <DataBindContext sourcePathIds="0:27-0:18" propertyKey="18" converterId="0:6244" id="0:6245"/>
         </Node>
-        <DataBindContext sourcePathIds="0:27-0:18" propertyKey="16" converterId="0:6246" id="0:6247"/>
+        <DataBindContext sourcePathIds="0:27-0:18" propertyKey="16" converterId="0:6278" id="0:6279"/>
       </Node>
-      <Node x="0" y="0" name="emitBookGlow" id="0:6280">
-        <Node x="0" y="-340" name="emitBookGlowWindow" scaleX="0.1111" opacity="0" id="0:6279">
-          <Shape x="0" y="0" name="emitBookGlowCore" id="0:6277">
-            <Ellipse width="720" height="720" name="Path" id="0:6276"/>
-            <Fill name="Fill" id="0:6275">
-              <RadialGradient startX="0" startY="0" endX="360" endY="0" id="0:6274">
-                <GradientStop colorValue="FFFFF4DC" position="0" id="0:6271"/>
-                <GradientStop colorValue="B0FFD49A" position="0.4" id="0:6272"/>
-                <GradientStop colorValue="00E89A4E" position="1" id="0:6273"/>
+      <Node x="0" y="0" name="emitBookGlow" id="0:6312">
+        <Node x="0" y="-340" name="emitBookGlowWindow" scaleX="0.1111" opacity="0" id="0:6311">
+          <Shape x="0" y="0" name="emitBookGlowCore" id="0:6309">
+            <Ellipse width="720" height="720" name="Path" id="0:6308"/>
+            <Fill name="Fill" id="0:6307">
+              <RadialGradient startX="0" startY="0" endX="360" endY="0" id="0:6306">
+                <GradientStop colorValue="FFFFF4DC" position="0" id="0:6303"/>
+                <GradientStop colorValue="B0FFD49A" position="0.4" id="0:6304"/>
+                <GradientStop colorValue="00E89A4E" position="1" id="0:6305"/>
               </RadialGradient>
             </Fill>
           </Shape>
-          <DataBindContext sourcePathIds="0:27-0:18" propertyKey="18" converterId="0:6270" id="0:6278"/>
+          <DataBindContext sourcePathIds="0:27-0:18" propertyKey="18" converterId="0:6302" id="0:6310"/>
         </Node>
       </Node>
-      <Shape x="0" y="0" name="BookRim" opacity="0.6" id="0:6321">
-        <PointsPath isClosed="false" isClockwise="true" name="Path" id="0:6320">
-          <CubicDetachedVertex x="3" y="-520" outRotation="-1.5708" outDistance="46.6667" inRotation="1.5708" inDistance="0" id="0:6315"/>
-          <CubicDetachedVertex x="3" y="-660" outRotation="-1.4785" outDistance="14.3401" inRotation="1.6631" inDistance="46.0187" id="0:6316"/>
-          <CubicDetachedVertex x="19.6949" y="-700.3051" outRotation="-0.7854" outDistance="13.435" inRotation="2.3562" inDistance="13.435" id="0:6317"/>
-          <CubicDetachedVertex x="60" y="-717" outRotation="-0.0694" outDistance="65.9164" inRotation="3.0722" inDistance="14.3783" id="0:6318"/>
-          <CubicDetachedVertex x="260" y="-717" outRotation="0" outDistance="0" inRotation="3.1416" inDistance="66.6667" id="0:6319"/>
+      <Shape x="0" y="0" name="BookRim" opacity="0.6" id="0:6353">
+        <PointsPath isClosed="false" isClockwise="true" name="Path" id="0:6352">
+          <CubicDetachedVertex x="3" y="-520" outRotation="-1.5708" outDistance="46.6667" inRotation="1.5708" inDistance="0" id="0:6347"/>
+          <CubicDetachedVertex x="3" y="-660" outRotation="-1.4785" outDistance="14.3401" inRotation="1.6631" inDistance="46.0187" id="0:6348"/>
+          <CubicDetachedVertex x="19.6949" y="-700.3051" outRotation="-0.7854" outDistance="13.435" inRotation="2.3562" inDistance="13.435" id="0:6349"/>
+          <CubicDetachedVertex x="60" y="-717" outRotation="-0.0694" outDistance="65.9164" inRotation="3.0722" inDistance="14.3783" id="0:6350"/>
+          <CubicDetachedVertex x="260" y="-717" outRotation="0" outDistance="0" inRotation="3.1416" inDistance="66.6667" id="0:6351"/>
         </PointsPath>
-        <Stroke thickness="4" cap="round" join="round" name="Line" id="0:6314">
-          <SolidColor colorValue="FFEAC28C" id="0:6313">
-            <DataBindContext sourcePathIds="0:27-0:22" propertyKey="37" id="0:6312"/>
+        <Stroke thickness="4" cap="round" join="round" name="Line" id="0:6346">
+          <SolidColor colorValue="FFEAC28C" id="0:6345">
+            <DataBindContext sourcePathIds="0:27-0:22" propertyKey="37" id="0:6344"/>
           </SolidColor>
         </Stroke>
       </Shape>
-      <Shape x="0" y="0" name="BookShade" opacity="0.45" id="0:6332">
-        <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:6331">
-          <StraightVertex x="400" y="40" id="0:6325"/>
-          <CubicDetachedVertex x="400" y="-712" outRotation="-1.5177" outDistance="12.6778" inRotation="1.6239" inDistance="238.3432" id="0:6326"/>
-          <CubicDetachedVertex x="440" y="-712" outRotation="0.3045" outDistance="11.7861" inRotation="3.4461" inDistance="12.6725" id="0:6327"/>
-          <CubicDetachedVertex x="470" y="-690" outRotation="0.8622" outDistance="6.6288" inRotation="4.0038" inDistance="11.8103" id="0:6328"/>
-          <StraightVertex x="476" y="-670" id="0:6329"/>
-          <StraightVertex x="476" y="40" id="0:6330"/>
+      <Shape x="0" y="0" name="BookShade" opacity="0.45" id="0:6364">
+        <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:6363">
+          <StraightVertex x="400" y="40" id="0:6357"/>
+          <CubicDetachedVertex x="400" y="-712" outRotation="-1.5177" outDistance="12.6778" inRotation="1.6239" inDistance="238.3432" id="0:6358"/>
+          <CubicDetachedVertex x="440" y="-712" outRotation="0.3045" outDistance="11.7861" inRotation="3.4461" inDistance="12.6725" id="0:6359"/>
+          <CubicDetachedVertex x="470" y="-690" outRotation="0.8622" outDistance="6.6288" inRotation="4.0038" inDistance="11.8103" id="0:6360"/>
+          <StraightVertex x="476" y="-670" id="0:6361"/>
+          <StraightVertex x="476" y="40" id="0:6362"/>
         </PointsPath>
-        <Fill name="Fill" id="0:6324">
-          <SolidColor colorValue="FF2C3346" id="0:6323">
-            <DataBindContext sourcePathIds="0:27-0:24" propertyKey="37" id="0:6322"/>
+        <Fill name="Fill" id="0:6356">
+          <SolidColor colorValue="FF2C3346" id="0:6355">
+            <DataBindContext sourcePathIds="0:27-0:24" propertyKey="37" id="0:6354"/>
           </SolidColor>
         </Fill>
       </Shape>
-      <Shape x="0" y="0" name="BookPageEdge0" id="0:6299">
-        <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:6298">
-          <CubicDetachedVertex x="12" y="-680" outRotation="1.5708" outDistance="236" inRotation="4.7124" inDistance="0" id="0:6296"/>
-          <CubicDetachedVertex x="12" y="28" outRotation="1.5708" outDistance="0" inRotation="4.7124" inDistance="236" id="0:6297"/>
+      <Shape x="0" y="0" name="BookPageEdge0" id="0:6331">
+        <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:6330">
+          <CubicDetachedVertex x="12" y="-680" outRotation="1.5708" outDistance="236" inRotation="4.7124" inDistance="0" id="0:6328"/>
+          <CubicDetachedVertex x="12" y="28" outRotation="1.5708" outDistance="0" inRotation="4.7124" inDistance="236" id="0:6329"/>
         </PointsPath>
-        <Stroke thickness="2" cap="round" join="round" name="Line" id="0:6295">
-          <SolidColor colorValue="FFE8DCC8" id="0:6294"/>
+        <Stroke thickness="2" cap="round" join="round" name="Line" id="0:6327">
+          <SolidColor colorValue="FFE8DCC8" id="0:6326"/>
         </Stroke>
       </Shape>
-      <Shape x="0" y="0" name="BookPageEdge1" id="0:6305">
-        <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:6304">
-          <CubicDetachedVertex x="21" y="-680" outRotation="1.5708" outDistance="236" inRotation="4.7124" inDistance="0" id="0:6302"/>
-          <CubicDetachedVertex x="21" y="28" outRotation="1.5708" outDistance="0" inRotation="4.7124" inDistance="236" id="0:6303"/>
+      <Shape x="0" y="0" name="BookPageEdge1" id="0:6337">
+        <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:6336">
+          <CubicDetachedVertex x="21" y="-680" outRotation="1.5708" outDistance="236" inRotation="4.7124" inDistance="0" id="0:6334"/>
+          <CubicDetachedVertex x="21" y="28" outRotation="1.5708" outDistance="0" inRotation="4.7124" inDistance="236" id="0:6335"/>
         </PointsPath>
-        <Stroke thickness="2" cap="round" join="round" name="Line" id="0:6301">
-          <SolidColor colorValue="FFE8DCC8" id="0:6300"/>
+        <Stroke thickness="2" cap="round" join="round" name="Line" id="0:6333">
+          <SolidColor colorValue="FFE8DCC8" id="0:6332"/>
         </Stroke>
       </Shape>
-      <Shape x="0" y="0" name="BookPageEdge2" id="0:6311">
-        <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:6310">
-          <CubicDetachedVertex x="30" y="-680" outRotation="1.5708" outDistance="236" inRotation="4.7124" inDistance="0" id="0:6308"/>
-          <CubicDetachedVertex x="30" y="28" outRotation="1.5708" outDistance="0" inRotation="4.7124" inDistance="236" id="0:6309"/>
+      <Shape x="0" y="0" name="BookPageEdge2" id="0:6343">
+        <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:6342">
+          <CubicDetachedVertex x="30" y="-680" outRotation="1.5708" outDistance="236" inRotation="4.7124" inDistance="0" id="0:6340"/>
+          <CubicDetachedVertex x="30" y="28" outRotation="1.5708" outDistance="0" inRotation="4.7124" inDistance="236" id="0:6341"/>
         </PointsPath>
-        <Stroke thickness="2" cap="round" join="round" name="Line" id="0:6307">
-          <SolidColor colorValue="FFE8DCC8" id="0:6306"/>
+        <Stroke thickness="2" cap="round" join="round" name="Line" id="0:6339">
+          <SolidColor colorValue="FFE8DCC8" id="0:6338"/>
         </Stroke>
       </Shape>
-      <Shape x="0" y="0" name="BookBlock" id="0:6293">
-        <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:6292">
-          <StraightVertex x="0" y="40" id="0:6288"/>
-          <StraightVertex x="0" y="-720" radius="60" id="0:6289"/>
-          <StraightVertex x="480" y="-720" radius="60" id="0:6290"/>
-          <StraightVertex x="480" y="40" id="0:6291"/>
+      <Shape x="0" y="0" name="BookBlock" id="0:6325">
+        <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:6324">
+          <StraightVertex x="0" y="40" id="0:6320"/>
+          <StraightVertex x="0" y="-720" radius="60" id="0:6321"/>
+          <StraightVertex x="480" y="-720" radius="60" id="0:6322"/>
+          <StraightVertex x="480" y="40" id="0:6323"/>
         </PointsPath>
-        <Fill name="Fill" id="0:6285">
-          <LinearGradient startX="0" startY="0" endX="480" endY="0" id="0:6284">
-            <GradientStop colorValue="FF4E3024" position="0" id="0:6281"/>
-            <GradientStop colorValue="FF6A4330" position="0.3" id="0:6282"/>
-            <GradientStop colorValue="FF5E3C2C" position="1" id="0:6283"/>
+        <Fill name="Fill" id="0:6317">
+          <LinearGradient startX="0" startY="0" endX="480" endY="0" id="0:6316">
+            <GradientStop colorValue="FF4E3024" position="0" id="0:6313"/>
+            <GradientStop colorValue="FF6A4330" position="0.3" id="0:6314"/>
+            <GradientStop colorValue="FF5E3C2C" position="1" id="0:6315"/>
           </LinearGradient>
         </Fill>
-        <Stroke thickness="5" cap="round" join="round" name="Line" id="0:6287">
-          <SolidColor colorValue="FF2A1E24" id="0:6286"/>
+        <Stroke thickness="5" cap="round" join="round" name="Line" id="0:6319">
+          <SolidColor colorValue="FF2A1E24" id="0:6318"/>
         </Stroke>
       </Shape>
-      <DataBindContext sourcePathIds="0:27-0:6000" propertyKey="18" id="0:6333"/>
-      <DataBindContext sourcePathIds="0:27-0:6000" propertyKey="16" converterId="0:151" id="0:6334"/>
-      <DataBindContext sourcePathIds="0:27-0:6000" propertyKey="17" converterId="0:151" id="0:6335"/>
+      <DataBindContext sourcePathIds="0:27-0:6000" propertyKey="18" id="0:6365"/>
+      <DataBindContext sourcePathIds="0:27-0:6000" propertyKey="16" converterId="0:151" id="0:6366"/>
+      <DataBindContext sourcePathIds="0:27-0:6000" propertyKey="17" converterId="0:151" id="0:6367"/>
     </Node>
     <Node x="860" y="1000" name="Path" opacity="0" id="0:708">
       <Node x="-150" y="0" name="FernA" rotation="-0.08" id="0:226">
@@ -1826,10 +1826,10 @@
     <FormulaTokenInput id="0:6074"/>
   </DataConverterFormula>
 
-  <DataConverterFormula id="0:6093">
+  <DataConverterFormula id="0:6109">
     <FormulaTokenValue operationValue="430" id="0:6078"/>
     <FormulaTokenOperation operationType="1" id="0:6079"/>
-    <FormulaTokenValue operationValue="817" id="0:6080"/>
+    <FormulaTokenValue operationValue="430" id="0:6080"/>
     <FormulaTokenOperation operationType="2" id="0:6081"/>
     <FormulaTokenFunction functionType="0" id="0:6090"/>
     <FormulaTokenValue operationValue="1" id="0:6085"/>
@@ -1837,102 +1837,134 @@
     <FormulaTokenFunction functionType="1" id="0:6087"/>
     <FormulaTokenValue operationValue="0" id="0:6086"/>
     <FormulaTokenArgumentSeparator id="0:6088"/>
-    <FormulaTokenValue operationValue="1.25" id="0:6082"/>
+    <FormulaTokenValue operationValue="2" id="0:6082"/>
     <FormulaTokenOperation operationType="2" id="0:6083"/>
     <FormulaTokenInput id="0:6084"/>
     <FormulaTokenParenthesisClose id="0:6089"/>
     <FormulaTokenParenthesisClose id="0:6092"/>
-  </DataConverterFormula>
-
-  <DataConverterFormula id="0:6109">
-    <FormulaTokenFunction functionType="1" id="0:6106"/>
-    <FormulaTokenValue operationValue="0" id="0:6094"/>
+    <FormulaTokenOperation operationType="0" id="0:6093"/>
+    <FormulaTokenValue operationValue="-64.5" id="0:6094"/>
+    <FormulaTokenOperation operationType="2" id="0:6095"/>
+    <FormulaTokenFunction functionType="0" id="0:6106"/>
+    <FormulaTokenValue operationValue="1" id="0:6101"/>
     <FormulaTokenArgumentSeparator id="0:6107"/>
-    <FormulaTokenFunction functionType="0" id="0:6103"/>
-    <FormulaTokenValue operationValue="2.375" id="0:6095"/>
-    <FormulaTokenOperation operationType="2" id="0:6096"/>
-    <FormulaTokenInput id="0:6097"/>
+    <FormulaTokenFunction functionType="1" id="0:6103"/>
+    <FormulaTokenValue operationValue="0" id="0:6102"/>
     <FormulaTokenArgumentSeparator id="0:6104"/>
-    <FormulaTokenValue operationValue="1.727" id="0:6098"/>
+    <FormulaTokenValue operationValue="2" id="0:6096"/>
+    <FormulaTokenOperation operationType="2" id="0:6097"/>
+    <FormulaTokenInput id="0:6098"/>
     <FormulaTokenOperation operationType="0" id="0:6099"/>
-    <FormulaTokenValue operationValue="-1.727" id="0:6100"/>
-    <FormulaTokenOperation operationType="2" id="0:6101"/>
-    <FormulaTokenInput id="0:6102"/>
+    <FormulaTokenValue operationValue="-1" id="0:6100"/>
     <FormulaTokenParenthesisClose id="0:6105"/>
     <FormulaTokenParenthesisClose id="0:6108"/>
   </DataConverterFormula>
 
-  <DataConverterFormula id="0:6191">
-    <FormulaTokenFunction functionType="0" id="0:6188"/>
-    <FormulaTokenValue operationValue="1" id="0:6183"/>
-    <FormulaTokenArgumentSeparator id="0:6189"/>
-    <FormulaTokenFunction functionType="1" id="0:6185"/>
-    <FormulaTokenValue operationValue="0" id="0:6184"/>
-    <FormulaTokenArgumentSeparator id="0:6186"/>
-    <FormulaTokenValue operationValue="4.711" id="0:6178"/>
-    <FormulaTokenOperation operationType="0" id="0:6179"/>
-    <FormulaTokenValue operationValue="-10" id="0:6180"/>
-    <FormulaTokenOperation operationType="2" id="0:6181"/>
-    <FormulaTokenInput id="0:6182"/>
-    <FormulaTokenParenthesisClose id="0:6187"/>
-    <FormulaTokenParenthesisClose id="0:6190"/>
+  <DataConverterFormula id="0:6125">
+    <FormulaTokenFunction functionType="1" id="0:6122"/>
+    <FormulaTokenValue operationValue="0" id="0:6110"/>
+    <FormulaTokenArgumentSeparator id="0:6123"/>
+    <FormulaTokenFunction functionType="0" id="0:6119"/>
+    <FormulaTokenValue operationValue="2" id="0:6111"/>
+    <FormulaTokenOperation operationType="2" id="0:6112"/>
+    <FormulaTokenInput id="0:6113"/>
+    <FormulaTokenArgumentSeparator id="0:6120"/>
+    <FormulaTokenValue operationValue="2" id="0:6114"/>
+    <FormulaTokenOperation operationType="0" id="0:6115"/>
+    <FormulaTokenValue operationValue="-2" id="0:6116"/>
+    <FormulaTokenOperation operationType="2" id="0:6117"/>
+    <FormulaTokenInput id="0:6118"/>
+    <FormulaTokenParenthesisClose id="0:6121"/>
+    <FormulaTokenParenthesisClose id="0:6124"/>
   </DataConverterFormula>
 
-  <DataConverterFormula id="0:6228">
-    <FormulaTokenFunction functionType="0" id="0:6225"/>
-    <FormulaTokenValue operationValue="1" id="0:6220"/>
-    <FormulaTokenArgumentSeparator id="0:6226"/>
-    <FormulaTokenFunction functionType="1" id="0:6222"/>
-    <FormulaTokenValue operationValue="0" id="0:6221"/>
-    <FormulaTokenArgumentSeparator id="0:6223"/>
-    <FormulaTokenValue operationValue="-3.711" id="0:6215"/>
-    <FormulaTokenOperation operationType="0" id="0:6216"/>
-    <FormulaTokenValue operationValue="10" id="0:6217"/>
-    <FormulaTokenOperation operationType="2" id="0:6218"/>
-    <FormulaTokenInput id="0:6219"/>
-    <FormulaTokenParenthesisClose id="0:6224"/>
-    <FormulaTokenParenthesisClose id="0:6227"/>
+  <DataConverterFormula id="0:6207">
+    <FormulaTokenFunction functionType="0" id="0:6204"/>
+    <FormulaTokenValue operationValue="1" id="0:6199"/>
+    <FormulaTokenArgumentSeparator id="0:6205"/>
+    <FormulaTokenFunction functionType="1" id="0:6201"/>
+    <FormulaTokenValue operationValue="0" id="0:6200"/>
+    <FormulaTokenArgumentSeparator id="0:6202"/>
+    <FormulaTokenValue operationValue="5.5" id="0:6194"/>
+    <FormulaTokenOperation operationType="0" id="0:6195"/>
+    <FormulaTokenValue operationValue="-10" id="0:6196"/>
+    <FormulaTokenOperation operationType="2" id="0:6197"/>
+    <FormulaTokenInput id="0:6198"/>
+    <FormulaTokenParenthesisClose id="0:6203"/>
+    <FormulaTokenParenthesisClose id="0:6206"/>
   </DataConverterFormula>
 
-  <DataConverterFormula id="0:6246">
-    <FormulaTokenValue operationValue="1" id="0:6231"/>
-    <FormulaTokenOperation operationType="1" id="0:6232"/>
-    <FormulaTokenValue operationValue="1.9" id="0:6233"/>
+  <DataConverterFormula id="0:6244">
+    <FormulaTokenFunction functionType="0" id="0:6241"/>
+    <FormulaTokenValue operationValue="1" id="0:6236"/>
+    <FormulaTokenArgumentSeparator id="0:6242"/>
+    <FormulaTokenFunction functionType="1" id="0:6238"/>
+    <FormulaTokenValue operationValue="0" id="0:6237"/>
+    <FormulaTokenArgumentSeparator id="0:6239"/>
+    <FormulaTokenValue operationValue="-4.5" id="0:6231"/>
+    <FormulaTokenOperation operationType="0" id="0:6232"/>
+    <FormulaTokenValue operationValue="10" id="0:6233"/>
     <FormulaTokenOperation operationType="2" id="0:6234"/>
-    <FormulaTokenFunction functionType="0" id="0:6243"/>
-    <FormulaTokenValue operationValue="1" id="0:6238"/>
-    <FormulaTokenArgumentSeparator id="0:6244"/>
-    <FormulaTokenFunction functionType="1" id="0:6240"/>
-    <FormulaTokenValue operationValue="0" id="0:6239"/>
-    <FormulaTokenArgumentSeparator id="0:6241"/>
-    <FormulaTokenValue operationValue="1.25" id="0:6235"/>
-    <FormulaTokenOperation operationType="2" id="0:6236"/>
-    <FormulaTokenInput id="0:6237"/>
-    <FormulaTokenParenthesisClose id="0:6242"/>
-    <FormulaTokenParenthesisClose id="0:6245"/>
+    <FormulaTokenInput id="0:6235"/>
+    <FormulaTokenParenthesisClose id="0:6240"/>
+    <FormulaTokenParenthesisClose id="0:6243"/>
   </DataConverterFormula>
 
-  <DataConverterFormula id="0:6270">
-    <FormulaTokenFunction functionType="1" id="0:6267"/>
-    <FormulaTokenValue operationValue="0" id="0:6249"/>
-    <FormulaTokenArgumentSeparator id="0:6268"/>
-    <FormulaTokenFunction functionType="0" id="0:6264"/>
-    <FormulaTokenValue operationValue="1" id="0:6250"/>
-    <FormulaTokenArgumentSeparator id="0:6265"/>
-    <FormulaTokenFunction functionType="0" id="0:6261"/>
-    <FormulaTokenValue operationValue="-0.5" id="0:6251"/>
-    <FormulaTokenOperation operationType="0" id="0:6252"/>
-    <FormulaTokenValue operationValue="10" id="0:6253"/>
-    <FormulaTokenOperation operationType="2" id="0:6254"/>
-    <FormulaTokenInput id="0:6255"/>
-    <FormulaTokenArgumentSeparator id="0:6262"/>
-    <FormulaTokenValue operationValue="9.5" id="0:6256"/>
-    <FormulaTokenOperation operationType="0" id="0:6257"/>
-    <FormulaTokenValue operationValue="-10" id="0:6258"/>
-    <FormulaTokenOperation operationType="2" id="0:6259"/>
-    <FormulaTokenInput id="0:6260"/>
-    <FormulaTokenParenthesisClose id="0:6263"/>
-    <FormulaTokenParenthesisClose id="0:6266"/>
-    <FormulaTokenParenthesisClose id="0:6269"/>
+  <DataConverterFormula id="0:6278">
+    <FormulaTokenValue operationValue="1" id="0:6247"/>
+    <FormulaTokenOperation operationType="1" id="0:6248"/>
+    <FormulaTokenValue operationValue="1" id="0:6249"/>
+    <FormulaTokenOperation operationType="2" id="0:6250"/>
+    <FormulaTokenFunction functionType="0" id="0:6259"/>
+    <FormulaTokenValue operationValue="1" id="0:6254"/>
+    <FormulaTokenArgumentSeparator id="0:6260"/>
+    <FormulaTokenFunction functionType="1" id="0:6256"/>
+    <FormulaTokenValue operationValue="0" id="0:6255"/>
+    <FormulaTokenArgumentSeparator id="0:6257"/>
+    <FormulaTokenValue operationValue="2" id="0:6251"/>
+    <FormulaTokenOperation operationType="2" id="0:6252"/>
+    <FormulaTokenInput id="0:6253"/>
+    <FormulaTokenParenthesisClose id="0:6258"/>
+    <FormulaTokenParenthesisClose id="0:6261"/>
+    <FormulaTokenOperation operationType="0" id="0:6262"/>
+    <FormulaTokenValue operationValue="-0.15" id="0:6263"/>
+    <FormulaTokenOperation operationType="2" id="0:6264"/>
+    <FormulaTokenFunction functionType="0" id="0:6275"/>
+    <FormulaTokenValue operationValue="1" id="0:6270"/>
+    <FormulaTokenArgumentSeparator id="0:6276"/>
+    <FormulaTokenFunction functionType="1" id="0:6272"/>
+    <FormulaTokenValue operationValue="0" id="0:6271"/>
+    <FormulaTokenArgumentSeparator id="0:6273"/>
+    <FormulaTokenValue operationValue="2" id="0:6265"/>
+    <FormulaTokenOperation operationType="2" id="0:6266"/>
+    <FormulaTokenInput id="0:6267"/>
+    <FormulaTokenOperation operationType="0" id="0:6268"/>
+    <FormulaTokenValue operationValue="-1" id="0:6269"/>
+    <FormulaTokenParenthesisClose id="0:6274"/>
+    <FormulaTokenParenthesisClose id="0:6277"/>
+  </DataConverterFormula>
+
+  <DataConverterFormula id="0:6302">
+    <FormulaTokenFunction functionType="1" id="0:6299"/>
+    <FormulaTokenValue operationValue="0" id="0:6281"/>
+    <FormulaTokenArgumentSeparator id="0:6300"/>
+    <FormulaTokenFunction functionType="0" id="0:6296"/>
+    <FormulaTokenValue operationValue="1" id="0:6282"/>
+    <FormulaTokenArgumentSeparator id="0:6297"/>
+    <FormulaTokenFunction functionType="0" id="0:6293"/>
+    <FormulaTokenValue operationValue="-2" id="0:6283"/>
+    <FormulaTokenOperation operationType="0" id="0:6284"/>
+    <FormulaTokenValue operationValue="100" id="0:6285"/>
+    <FormulaTokenOperation operationType="2" id="0:6286"/>
+    <FormulaTokenInput id="0:6287"/>
+    <FormulaTokenArgumentSeparator id="0:6294"/>
+    <FormulaTokenValue operationValue="9.5" id="0:6288"/>
+    <FormulaTokenOperation operationType="0" id="0:6289"/>
+    <FormulaTokenValue operationValue="-10" id="0:6290"/>
+    <FormulaTokenOperation operationType="2" id="0:6291"/>
+    <FormulaTokenInput id="0:6292"/>
+    <FormulaTokenParenthesisClose id="0:6295"/>
+    <FormulaTokenParenthesisClose id="0:6298"/>
+    <FormulaTokenParenthesisClose id="0:6301"/>
   </DataConverterFormula>
 </Rive>

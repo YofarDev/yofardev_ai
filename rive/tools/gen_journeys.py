@@ -233,16 +233,22 @@ BLOCK_CORNER = 60.0             # the block's top corners
 COVER_LEN = 430.0               # the front cover, hinge to free edge
 COVER_TOP = BLOCK_TOP - 8.0     # the board stands proud of the pages
 COVER_CORNER = 24.0             # the board's free-edge top corner
-# The swing: the cover's scaleX = 1 - SWING_K clamp01(SWING_M open) around the hinge. 1 at open 0 (closed
-# on the block, the free edge at artboard x 1070), 0 at open EDGE_ON (edge-on), 1 - SWING_K from open
-# 1 / SWING_M on (swung left, the free edge at x 253). The cover is drawn closed (pointing right, the outer
-# face as read): the open cover shows its inner face mirrored (symmetric art).
-SWING_K, SWING_M = 1.9, 1.25
-EDGE_ON = 1.0 / (SWING_K * SWING_M)   # 0.421
+# The swing (fix round 1): the cover's scaleX around the hinge falls from 1 at open 0 (closed on the block, the
+# free edge at artboard x 1070) to 0 at open EDGE_ON (edge-on, at the gutter; slope x span = 2) and on to
+# COVER_REST at open 1 (standing open just past perpendicular: a stub of |COVER_REST| x COVER_LEN = 64.5 px
+# left of the gutter, x 575-640, clear of the avatar's band). Two clamped segments, so the cover keeps moving
+# to open 1: one clamp reaching COVER_REST would stop it dead at open 0.575, mid-ramp. The cover is drawn
+# closed (pointing right, the outer face as read): past edge-on it shows its inner face, mirrored.
+EDGE_ON = 0.5
+COVER_REST = -0.15
 FACE_FADE = 0.05                # the outer and inner faces cross over open EDGE_ON -/+ FACE_FADE
-GLOW_WINDOW = (0.05, 0.95)      # the interior glow shows only between these opens (the crack and the passage)
-GLOW_RAMP = 0.1                 # ... at full from this far inside the window
-MEDALLION_X, MEDALLION_Y, MEDALLION_R = 210.0, -400.0, 120.0   # on the cover: artboard (850, 600) closed
+GLOW_WINDOW = (0.02, 0.95)      # the interior glow shows only between these opens (the crack and the passage)
+GLOW_RISE = 0.01                # ... full from GLOW_WINDOW[0] + this (open 0.03, the end of the crack) ...
+GLOW_FALL = 0.1                 # ... to GLOW_WINDOW[1] - this
+# the medallion's centre in artboard space with the cover closed (inside the portrait band, x < 800, and below
+# the jacket hanging from the closed ribbon, x 595-700, y 545-754), its radius and its inner ring's
+MEDALLION_X, MEDALLION_Y = 705.0, 820.0
+MEDALLION_R, MEDALLION_INNER_R = 48.0, 38.0
 RIBBON_PIVOT = (8.0, -700.0)    # the ribbon's knob on the block's top edge: artboard (648, 300)
 RIBBON_SWING = math.radians(18.0)   # the tail's turn from open (open 1, its tip on the hook) to closed
 # ids kept from the files before v15 (see build() and ribbon())
@@ -273,12 +279,13 @@ def page_block() -> list[El]:
 
 def book_glow() -> El:
     """`emitBookGlow`: a soft warm lens along the gutter (x 600-680), shown only inside GLOW_WINDOW of
-    `open`; the bind sits on `emitBookGlowWindow`, leaving `emitBookGlow` free for an ambient key."""
+    `open` (full from the end of the crack until GLOW_FALL before the window closes); the bind sits on
+    `emitBookGlowWindow`, leaving `emitBookGlow` free for an ambient key."""
     a, b = GLOW_WINDOW
-    g = 1 / GLOW_RAMP
+    up, down = 1 / GLOW_RISE, 1 / GLOW_FALL
     window = conv_tokens(*F.fn("max", [F.val(0)], F.fn("min", [F.val(1)], F.fn(
-        "min", [F.val(-g * a), F.op("+"), F.val(g), F.op("*"), *F.inp()],
-        [F.val(g * b), F.op("+"), F.val(-g), F.op("*"), *F.inp()]))))
+        "min", [F.val(-up * a), F.op("+"), F.val(up), F.op("*"), *F.inp()],
+        [F.val(down * b), F.op("+"), F.val(-down), F.op("*"), *F.inp()]))))
     core = E("emitBookGlowCore", 0, 0, 720, 720,
              rfill(360, [("FFFFF4DC", 0), ("B0FFD49A", 0.4), ("00E89A4E", 1)], emit=True))
     lens = N("emitBookGlowWindow", core, bind("open", 18, window), x=0.0, y=(BLOCK_TOP + BLOCK_BOTTOM) / 2,
@@ -287,31 +294,44 @@ def book_glow() -> El:
 
 
 def medallion(*glyphs: El) -> El:
-    """`BookMedallion`, embossed on the cover's outer face: a stamped leather disc with a double ink ring
-    and a key-lit bevel; the destination emblem glyphs (one per `dest*` number) draw on top of it."""
-    r = MEDALLION_R
-    bevel = S("MedallionBevel", [(112 * math.cos(math.radians(a)), 112 * math.sin(math.radians(a)))
+    """`BookMedallion`, embossed on the cover's outer face at artboard (MEDALLION_X, MEDALLION_Y) when closed:
+    a stamped leather disc with a double ink ring and a key-lit bevel; the destination emblem glyphs (one per
+    `dest*` number, inside MEDALLION_INNER_R) draw on top of it."""
+    r, ri = MEDALLION_R, MEDALLION_INNER_R
+    rb = (r + ri) / 2   # the bevel runs between the two rings
+    bevel = S("MedallionBevel", [(rb * math.cos(math.radians(a)), rb * math.sin(math.radians(a)))
                                  for a in (195, 215, 235, 255, 275)],
               bound_line("lightKey", 3, SCENES["livingRoom"].key), closed=False, opacity=0.55)
-    ring = E("MedallionRing", 0, 0, 2 * r - 26, 2 * r - 26, line(INK, 2.5))
+    ring = E("MedallionRing", 0, 0, 2 * ri, 2 * ri, line(INK, 2.5))
     disc = E("MedallionDisc", 0, 0, 2 * r, 2 * r, rfill(r, [("FF5A3424", 0), ("FF472A1C", 0.7), ("FF3A2218", 1)]),
              line(INK, 4))
-    return N("BookMedallion", *glyphs, bevel, ring, disc, x=MEDALLION_X, y=MEDALLION_Y)
+    return N("BookMedallion", *glyphs, bevel, ring, disc, x=MEDALLION_X - BLOCK_X0, y=MEDALLION_Y - GROUND_Y)
+
+
+def swing_tokens(scale: float) -> list[El]:
+    """`scale` x the cover's scaleX as formula tokens on `open`: scale (1 - clamp01(open / EDGE_ON)
+    + COVER_REST clamp01((open - EDGE_ON) / (1 - EDGE_ON)))."""
+    a, b = 1 / EDGE_ON, 1 / (1 - EDGE_ON)
+    return [F.val(scale), F.op("-"), F.val(scale), F.op("*"), *clamp01(F.val(a), F.op("*"), *F.inp()),
+            F.op("+"), F.val(scale * COVER_REST), F.op("*"),
+            *clamp01(F.val(b), F.op("*"), *F.inp(), F.op("+"), F.val(-b * EDGE_ON))]
 
 
 def cover() -> El:
-    """`BookCover`, hinged at the gutter (x 0), its scaleX the swing. `CoverOuter` (leather, the medallion)
-    crossfades into `CoverInner` (paper, an ink margin frame) while it passes edge-on."""
+    """`BookCover`, hinged at the gutter (x 0), its scaleX the swing. `CoverOuter` (leather, the medallion in
+    the spine-side band, left of the tooled frame) crossfades into `CoverInner` (paper, an ink margin frame)
+    while it passes edge-on."""
     board = [(0, BLOCK_BOTTOM, "c"), (0, COVER_TOP, "c"), (COVER_LEN, COVER_TOP, f"c{COVER_CORNER:g}"),
              (COVER_LEN, BLOCK_BOTTOM, "c")]
     g = 0.5 / FACE_FADE
+    tool_x0 = MEDALLION_X + MEDALLION_R - BLOCK_X0 + 15   # the frame's spine-side rail clears the medallion
     outer = N("CoverOuter",
               medallion(),
-              S("CoverTooling", [(44, COVER_TOP + 40, "c14"), (COVER_LEN - 40, COVER_TOP + 40, "c14"),
-                                 (COVER_LEN - 40, -44, "c14"), (44, -44, "c14")], line("FF4A2E22", 3)),
+              S("CoverTooling", [(tool_x0, COVER_TOP + 40, "c14"), (COVER_LEN - 40, COVER_TOP + 40, "c14"),
+                                 (COVER_LEN - 40, -44, "c14"), (tool_x0, -44, "c14")], line("FF4A2E22", 3)),
               S("CoverRim", [(26, COVER_TOP + 5), (220, COVER_TOP + 5), (COVER_LEN - 28, COVER_TOP + 6)],
                 bound_line("lightKey", 4, SCENES["livingRoom"].key), closed=False, opacity=0.6),
-              S("CoverGroove", [(20, COVER_TOP + 6), (20, 30)], line("FF3E2418", 3), closed=False),
+              S("CoverGroove", [(9, COVER_TOP + 6), (9, 30)], line("FF3E2418", 3), closed=False),
               S("CoverLeather", board, hfill(0, COVER_LEN, [("FF5E3A2A", 0), ("FF7A4E36", 0.35), ("FF6A4330", 1)]),
                 line(INK, 5)),
               bind("open", 18, conv_tokens(*clamp01(F.val(0.5 + g * EDGE_ON), F.op("+"), F.val(-g), F.op("*"),
@@ -325,16 +345,15 @@ def cover() -> El:
               bind("open", 18, conv_tokens(*clamp01(F.val(0.5 - g * EDGE_ON), F.op("+"), F.val(g), F.op("*"),
                                                     *F.inp()))),
               x=0.0, y=0.0, opacity=0.0)
-    swing = conv_tokens(F.val(1), F.op("-"), F.val(SWING_K), F.op("*"), *clamp01(F.val(SWING_M), F.op("*"), *F.inp()))
+    swing = conv_tokens(*swing_tokens(1.0))
     return N("BookCover", outer, inner, bind("open", 16, swing), x=0.0, y=0.0)
 
 
 def cover_edge() -> El:
     """`emitCoverEdge`: a 6 px light stroke riding the cover's free edge (x = COVER_LEN x the swing's scaleX),
-    outside the scaled cover so it keeps its width edge-on, where it is brightest: its opacity rises from 0
-    at open 0 to 1 at EDGE_ON and falls back to 0 at open 1 (1 - |1 - 2 open| when EDGE_ON is 0.5)."""
-    free_x = conv_tokens(F.val(COVER_LEN), F.op("-"), F.val(COVER_LEN * SWING_K), F.op("*"),
-                         *clamp01(F.val(SWING_M), F.op("*"), *F.inp()))
+    outside the scaled cover so it keeps its width edge-on, where it is brightest: its opacity is
+    1 - |1 - 2 open| (EDGE_ON 0.5), from 0 at open 0 to 1 edge-on and back to 0 as the cover comes to rest."""
+    free_x = conv_tokens(*swing_tokens(COVER_LEN))
     glint = conv_tokens(*F.fn("max", [F.val(0)], F.fn(
         "min", [F.val(1 / EDGE_ON), F.op("*"), *F.inp()],
         [F.val(1 / (1 - EDGE_ON)), F.op("+"), F.val(-1 / (1 - EDGE_ON)), F.op("*"), *F.inp()])))
@@ -377,7 +396,8 @@ def ribbon() -> El:
 
 def book() -> El:
     """The standing pop-up storybook, its gutter on the threshold. Back to front: the page block, the
-    interior glow, the cover (and its edge light), the floor spill, the ribbon with the jacket."""
+    interior glow, the cover (and its edge light), the floor spill, then the ribbon with the jacket, in front
+    of everything (RML paints the first child in front), so the hook stays visible over the resting stub."""
     spill = E("emitBookSpill", 0, 20, 1040, 60, rfill(520, [("A0FFD49A", 0), ("00FFD49A", 1)], emit=True),
               bind("unfold", 18, conv(0.85)), bind("unfold", 16, conv(0.6, 0.4)), opacity=0.0, scaleX=0.4)
     return N("Book", ribbon(), spill, cover_edge(), cover(), book_glow(), *page_block(),
