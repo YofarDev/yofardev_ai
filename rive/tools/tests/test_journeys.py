@@ -1,8 +1,11 @@
-"""Moonshot M7 Task 7: the journey thresholds (contract v10), checked on the generated RML."""
+"""Moonshot M7 Task 7: the journey thresholds (contract v10; v15: the storybook threshold replaces the
+door), checked on the generated RML."""
 
 from __future__ import annotations
 
 import os
+from pathlib import Path
+import subprocess
 import sys
 import xml.etree.ElementTree as ET
 
@@ -13,7 +16,11 @@ import art_bible  # noqa: E402
 import gen_journeys  # noqa: E402
 from rml import render  # noqa: E402
 
-FAMILY_ROOT = {"door": "Door", "path": "Path", "portal": "Portal", "rocket": "Rocket"}
+FAMILY_ROOT = {"book": "Book", "path": "Path", "portal": "Portal", "rocket": "Rocket"}
+DEST = ("destLivingRoom", "destCampfire", "destBeach", "destDeepSpace", "destCafe", "destRooftop", "destMountainHut",
+        "destForestCabin", "destTrainCompartment", "destLibrary")
+ROOT = Path(__file__).resolve().parents[3]
+V11 = "42114e9"   # the last commit with the v10 door (and the v11 jacket on its peg)
 
 
 @pytest.fixture(scope="module")
@@ -44,9 +51,10 @@ def test_names_and_view_model(root: ET.Element) -> None:
     (vm,) = root.findall("ViewModel")
     assert vm.get("name") == "JourneyVM" and ab.get("viewModelId") == vm.get("id")
     props = {e.get("name"): e.tag for e in vm if e.tag.startswith("ViewModelProperty")}
-    assert props == {**{n: "ViewModelPropertyNumber" for n in ("door", "path", "portal", "rocket", "open", "lift",
-                                                               "jacket")},  # v11: jacket
+    assert props == {**{n: "ViewModelPropertyNumber" for n in ("book", "path", "portal", "rocket", "open", "lift",
+                                                               "jacket", "unfold", *DEST)},  # v11 jacket, v15 book
                      "lightKey": "ViewModelPropertyColor", "lightAmbient": "ViewModelPropertyColor"}
+    assert gen_journeys.DEST_PROPS == DEST  # one per scene, in `AvatarScene` order
     # draws outside its bounds: the thresholds run past the frame's right edge (landscape windows)
     assert ab.get("clip") == "false"
 
@@ -84,11 +92,58 @@ def test_open_and_lift_drive_only_their_parts(root: ET.Element) -> None:
 def test_the_threshold_is_at_x_640(root: ET.Element) -> None:
     assert gen_journeys.THRESHOLD_X == 640.0
     nodes = {e.get("name"): e for e in root.iter("Node")}
-    # each family's left edge sits within 20 px of the threshold
-    assert abs(float(nodes["Door"].get("x")) - gen_journeys.DOOR_HW - 640) <= 20
+    # each family's left edge sits within 20 px of the threshold (the book's gutter is on it)
+    assert float(nodes["Book"].get("x")) == gen_journeys.BLOCK_X0 == 640.0
     assert abs(float(nodes["Rocket"].get("x")) - gen_journeys.ROCKET_HW - 640) <= 20
     assert abs(float(nodes["Portal"].get("x")) - gen_journeys.RING_W / 2 - 640) <= 20
     assert abs(float(nodes["Path"].get("x")) - 220 - 640) <= 20
+
+
+def _num(e: ET.Element) -> int:
+    return int(e.get("id").split(":")[1])
+
+
+def test_v15_mints_only_from_its_range(root: ET.Element) -> None:
+    """v15: the book's numbers and drawing take ids from V15_ID_START, except what it keeps: the v11 jacket
+    (with its opacity bind and hang node) and the appear converter the v10 door shared with the rocket."""
+    vm = root.find("ViewModel")
+    v15 = {e.get("name"): e for e in vm if e.get("name") in ("book", "unfold", *DEST)}
+    assert len(v15) == 12 and all(_num(e) >= gen_journeys.V15_ID_START for e in v15.values())
+    book = next(e for e in root.iter("Node") if e.get("name") == "Book")
+    hang = next(e for e in book.iter("Node") if e.get("name") == "RibbonJacketHang")
+    kept = {e for e in hang.iter() if gen_journeys.M8_ID_START <= _num(e) < gen_journeys.V15_ID_START}
+    assert {_num(e) for e in kept} == set(range(gen_journeys.V11_JACKET_ID, gen_journeys.V11_JACKET_ID + 62))
+    assert all(_num(e) >= gen_journeys.V15_ID_START for e in book.iter() if e not in kept)
+    shared = {b.get("converterId") for b in book.iter("DataBindContext") if b.get("converterId")}
+    assert {c for c in shared if int(c.split(":")[1]) < gen_journeys.V15_ID_START} == {"0:151"}
+
+
+def test_v15_keeps_every_earlier_id(root: ET.Element) -> None:
+    """Every element of the v11 file outside the door (its subtree, its own converters and ambient track,
+    the `door` number) keeps its id and tag."""
+    try:
+        text = subprocess.run(["git", "show", f"{V11}:rive/journeys/journeys.rml"], cwd=ROOT, capture_output=True,
+                              text=True, check=True).stdout
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        pytest.skip(f"git history with {V11} not available")
+    old = ET.fromstring(text)
+    door = next(e for e in old.iter("Node") if e.get("name") == "Door")
+    gone = {e.get("id") for e in door.iter()}
+    used_elsewhere = {b.get("converterId") for b in old.iter("DataBindContext") if b.get("id") not in gone}
+    door_convs = {b.get("converterId") for b in door.iter("DataBindContext")} - used_elsewhere
+    for conv in old.findall("DataConverterFormula"):
+        if conv.get("id") in door_convs:
+            gone |= {e.get("id") for e in conv.iter()}
+    for ko in old.iter("KeyedObject"):
+        if ko.get("objectId") in gone:
+            gone |= {e.get("id") for e in ko.iter()}
+    number = next(e for e in old.iter("ViewModelPropertyNumber") if e.get("name") == "door")
+    gone |= {number.get("id")} | {e.get("id") for e in old.iter("ViewModelInstanceNumber")
+                                  if e.get("viewModelPropertyId") == number.get("id")}
+    new = {e.get("id"): e.tag for e in root.iter() if e.get("id")}
+    moved = [(e.get("id"), e.tag, e.get("name")) for e in old.iter()
+             if e.get("id") and e.get("id") not in gone and new.get(e.get("id")) != e.tag]
+    assert not moved, moved[:10]
 
 
 def _strip_emissive(el: ET.Element) -> None:

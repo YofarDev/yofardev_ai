@@ -1,5 +1,6 @@
-"""Moonshot M8 Task 3: the jacket (ruling 5, contract v11 `AvatarVM.jacket`, `JourneyVM.jacket`), on the
-generated avatar and journey RML; the render gates run when the `rive` CLI is on PATH."""
+"""Moonshot M8 Task 3: the jacket (ruling 5, contract v11 `AvatarVM.jacket`, `JourneyVM.jacket`; v15: it hangs
+from the book's ribbon, no longer the door's peg), on the generated avatar and journey RML; the render gates
+run when the `rive` CLI is on PATH."""
 
 from __future__ import annotations
 
@@ -63,7 +64,7 @@ def test_names_and_defaults(avatar: ET.Element, journey: ET.Element) -> None:
 
 def test_one_drawing_in_both_files(avatar: ET.Element, journey: ET.Element) -> None:
     held = _named(avatar, "Jacket")
-    hung = _named(journey, "DoorJacket")
+    hung = _named(journey, "RibbonJacket")
     assert _drawing(held) == _drawing(hung)
     assert 3 <= len([e for e in held.iter("Shape")]) <= 5
 
@@ -71,9 +72,9 @@ def test_one_drawing_in_both_files(avatar: ET.Element, journey: ET.Element) -> N
 def test_the_jacket_never_crosses_the_threshold() -> None:
     x0, x1, y0, y1 = jacket_art.extent()
     assert jacket_art.HOOK[0] + x1 <= gen_journeys.THRESHOLD_X  # the app clips the avatar right of it
-    # the jamb (journey, drawn over the avatar) never covers the avatar's copy: left of its outer edge + stroke
-    jamb = gen_journeys.DOOR_X - gen_journeys.DOOR_HW - 2.5
-    assert jacket_art.HOOK[0] + x1 + 1.5 <= jamb
+    # the page block (journey, drawn over the avatar) never covers the avatar's copy: left of its outline
+    edge = gen_journeys.BLOCK_X0 - 2.5
+    assert jacket_art.HOOK[0] + x1 + 1.5 <= edge
     assert x1 <= jacket_art.RIGHT_LIMIT and y1 - y0 >= 150
 
 
@@ -126,20 +127,34 @@ def test_the_jacket_layer(avatar: ET.Element) -> None:
     assert sorted(c.get("value") for c in conds) == ["false", "true"]
 
 
-def test_the_door_peg_and_its_jacket(journey: ET.Element) -> None:
-    door = _named(journey, "Door")
-    kids = list(door)
-    peg, coat = _named(journey, "DoorPeg"), _named(journey, "DoorJacketHang")
-    assert kids.index(peg) < kids.index(coat)  # the peg in front of the collar loop
-    hook = (jacket_art.HOOK[0] - gen_journeys.DOOR_X, jacket_art.HOOK[1] - gen_journeys.GROUND_Y)
-    for n in (peg, coat):
-        assert (float(n.get("x")), float(n.get("y"))) == hook
+def _turn(journey: ET.Element, node: ET.Element) -> tuple[float, float]:
+    """(c, k) of the `c + k open` converter bound to `node`'s rotation."""
+    (b,) = [b for b in node.findall("DataBindContext") if b.get("propertyKey") == "15"]
+    conv = next(c for c in journey.iter("DataConverterFormula") if c.get("id") == b.get("converterId"))
+    assert [t.tag for t in conv] == ["FormulaTokenValue", "FormulaTokenOperation", "FormulaTokenValue",
+                                     "FormulaTokenOperation", "FormulaTokenInput"]
+    c, k = (float(t.get("operationValue")) for t in conv if t.tag == "FormulaTokenValue")
+    return c, k
+
+
+def test_the_ribbon_and_its_jacket(journey: ET.Element) -> None:
+    """v15: the jacket hangs from the ribbon's tail tip, in front of the tail. At open 1 (the grab and hang
+    contacts) the tail is unturned and its tip on the hook; the jacket counter-turns, so it hangs plumb at
+    every open."""
+    book, ribbon, coat = _named(journey, "Book"), _named(journey, "Ribbon"), _named(journey, "RibbonJacketHang")
+    kids = list(ribbon)
+    assert kids.index(coat) < kids.index(_named(journey, "RibbonTail", "Shape"))
+    assert tuple(sum(float(n.get(k)) for n in (book, ribbon, coat)) for k in ("x", "y")) == jacket_art.HOOK
+    (c, k), counter = _turn(journey, ribbon), _turn(journey, coat)
+    assert c + k == 0 and k > 0   # unturned at open 1; closed, the tip swings right, over the closed cover
+    assert counter == (-c, -k)
     assert float(coat.get("opacity")) == 0.0
     props = {e.get("id"): e.get("name") for e in journey.iter() if e.tag.startswith("ViewModelProperty")}
     binds = [(props[b.get("sourcePathIds").split("-")[1]], b.get("propertyKey")) for b in coat.findall("DataBindContext")]
-    assert binds == [("jacket", "18")]
-    assert all(int(e.get("id").split(":")[1]) >= gen_journeys.M8_ID_START for e in [peg, coat, *peg.iter(), *coat.iter()]
-               if e.get("id"))
+    assert binds == [("jacket", "18"), ("open", "15")]
+    # the v11 jacket (drawing, opacity bind, hang node) keeps its ids; only the turn's bind is v15
+    v11 = [e for e in coat.iter() if int(e.get("id").split(":")[1]) < gen_journeys.V15_ID_START]
+    assert len(v11) == 62 and all(int(e.get("id").split(":")[1]) >= gen_journeys.V11_JACKET_ID for e in v11)
 
 
 # ------------------------------------------------------------------ renders (need the rive CLI)
@@ -165,19 +180,12 @@ def _shot(proj: Path, png: Path, *args: str) -> np.ndarray:
 
 
 @needs_rive
-def test_the_door_at_jacket_0_draws_as_in_m7_but_its_peg() -> None:
-    """jacket 0: the door draws exactly as M7's except inside the peg's box (the peg is new door art)."""
+def test_path_portal_rocket_draw_as_in_m7() -> None:
+    """v15 replaced the door (and its peg) with the book; the other thresholds draw exactly as M7's."""
     proj = ROOT / "rive" / "journeys"
     with tempfile.TemporaryDirectory() as t:
         tmp = Path(t)
         ref = _base(tmp / "ref", "rive/journeys/journeys.rml", proj / "rive.yaml")
-        hx, hy = jacket_art.HOOK
-        for args in (["--data=door=1"], ["--data=door=1", "--data=open=1"], ["--data=door=1", "--data=open=0.5"]):
-            a = _shot(ref, tmp / "a.png", *args, "--advance=2")
-            b = _shot(proj, tmp / "b.png", *args, "--advance=2")
-            diff = np.abs(a - b).max(axis=2) > 0
-            diff[int(hy) - 12:int(hy) + 12, int(hx) - 24:int(hx) + 8] = False
-            assert not diff.any(), args
         for fam in ("path", "portal", "rocket"):
             a = _shot(ref, tmp / "a.png", f"--data={fam}=1", "--advance=2")
             b = _shot(proj, tmp / "b.png", f"--data={fam}=1", "--advance=2")
