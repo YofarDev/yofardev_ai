@@ -77,6 +77,7 @@ GLOW_ZONE = (600, 680, 570, 760)
 # floor slab (y >= 494) and the landed page stubs (x >= 633)
 EMBLEM_ZONE = (515, 585, 290, 490)
 MEDALLION_ZONE = (651, 759, 766, 874)   # MEDALLION_X/Y +/- MEDALLION_R + 4
+RIFFLE_BOX = (260, 800, 200, 990)       # in frame: both bands the riffle pages may cross at 0.2
 # rocket tapers to its nose and stands on legs: its solid hull spans y 330-830
 FAMILY_BAND = {"rocket": (650, 790, 330, 830)}
 
@@ -177,18 +178,16 @@ def changed(a: np.ndarray, b: np.ndarray, box: tuple[int, int, int, int], thr: f
 
 def riffle_rows(u: float) -> tuple[float, float]:
     """(y0, y1) the riffle pages occupy on the right page at `unfold` u, + 4 px of outline: each
-    flap's window and foreshortening evaluated exactly as the file's converters compute them (a
-    landed page lies on the stub, left of the gutter, and reaches no right-page pixel)."""
-    y0, y1 = H, 0.0
-    for (a, b), (_, h, cy) in zip(gen_journeys.UNFOLD_FLAPS, gen_journeys.FLAPS):
-        fade = min(1.0, max(0.0, (u - a) / (gen_journeys.FLAP_FADE * (b - a))))
-        if fade <= 0:
-            continue
-        t = min(1.0, max(0.0, (u - a) / (b - a)))
-        if math.cos(gen_journeys.FLAP_TURN * t) <= 0:
-            continue   # landed on the stub, which stays left of the gutter
-        y0, y1 = min(y0, cy - h / 2), max(y1, cy + h / 2)
-    return y0 - 4, y1 + 4
+    flap's window and foreshortening evaluated exactly as the file's converters compute them. A
+    landed page lies on the stub, left of the gutter, and reaches no right-page pixel; (0, 0) when
+    no flap is airborne."""
+    rows = [(cy - h / 2, cy + h / 2)
+            for (a, b), (_, h, cy) in zip(gen_journeys.UNFOLD_FLAPS, gen_journeys.FLAPS)
+            if min(1.0, max(0.0, (u - a) / (gen_journeys.FLAP_FADE * (b - a)))) > 0
+            and math.cos(gen_journeys.FLAP_TURN * min(1.0, max(0.0, (u - a) / (b - a)))) > 0]
+    if not rows:
+        return 0.0, 0.0
+    return min(r0 for r0, _ in rows) - 4, max(r1 for _, r1 in rows) + 4
 
 
 def gates(r: JourneyRenderer) -> list[str]:
@@ -209,9 +208,9 @@ def gates(r: JourneyRenderer) -> list[str]:
 
     # the book: the static block, then the staged beats
     shut, opn = shown["book"], opened["book"]
-    for label, pose in (("closed", shut), ("open", opn)):
+    for label, value, pose in (("closed", 0, shut), ("open", 1, opn)):
         c = cover(pose, BAND)
-        lines.append(f"book band at open 0 ({label}): {c * 100:.1f} % ({'ok' if c >= 0.85 else 'FAIL'})")
+        lines.append(f"book band at open {value} ({label}): {c * 100:.1f} % ({'ok' if c >= 0.85 else 'FAIL'})")
     frac, n, mean = changed(opn, shut, LEFT_BAND)
     lines.append(f"book `open` lands in-frame: left band changed {frac * 100:.1f} % ({n} px, mean {mean:.1f}/255) "
                  f"({'ok' if frac >= 0.02 else 'FAIL'})")
@@ -221,15 +220,16 @@ def gates(r: JourneyRenderer) -> list[str]:
                  f"({'ok' if frac >= 0.02 else 'FAIL'})")
     early = r.render({"book": 1.0, "open": 1.0, "unfold": 0.2, "destBeach": 1.0})
     mid = r.render({"book": 1.0, "open": 1.0, "unfold": 0.6, "destBeach": 1.0})
-    frac, n, _ = changed(early, opn, (260, 800, 200, 990))
-    lines.append(f"book riffle moves pixels at unfold 0.2: {frac * 100:.1f} % ({n} px) "
-                 f"({'ok' if frac >= 0.01 else 'FAIL'})")
+    frac, n, _ = changed(early, opn, RIFFLE_BOX)
+    lines.append(f"book riffle moves pixels at unfold 0.2 in x {RIFFLE_BOX[0]}-{RIFFLE_BOX[1]}: "
+                 f"{frac * 100:.1f} % ({n} px) ({'ok' if frac >= 0.01 else 'FAIL'})")
     ry0, ry1 = riffle_rows(0.2)
     _, n_hero, _ = changed(early, opn, RIGHT_PAGE)
     d = np.abs(early[RIGHT_PAGE[2]:RIGHT_PAGE[3], RIGHT_PAGE[0]:RIGHT_PAGE[1], :3]
                - opn[RIGHT_PAGE[2]:RIGHT_PAGE[3], RIGHT_PAGE[0]:RIGHT_PAGE[1], :3]).max(axis=2)
     ys = np.nonzero(d > 2)[0] + RIGHT_PAGE[2]
-    strayed = int(((ys < ry0) | (ys > ry1)).sum())
+    # with no flap airborne (0, 0) every changed pixel would stray
+    strayed = int(((ys < ry0) | (ys > ry1)).sum()) if ry1 > ry0 else n_hero
     lines.append(f"book hero not risen at unfold 0.2 (starts 0.45): {n_hero} px changed in the card's box, all "
                  f"inside the riffle's rows y {ry0:.0f}-{ry1:.0f}: {strayed} strayed "
                  f"({'ok' if strayed == 0 else 'FAIL'})")
@@ -240,6 +240,7 @@ def gates(r: JourneyRenderer) -> list[str]:
     lines.append(f"book emblem erects by unfold 0.6: emblem zone changed {frac * 100:.1f} % ({n} px) "
                  f"({'ok' if frac >= 0.01 else 'FAIL'})")
     dests = {}
+    assert len(SCENES) == len(gen_journeys.DEST_PROPS), (SCENES, gen_journeys.DEST_PROPS)
     for scene, prop in zip(SCENES, gen_journeys.DEST_PROPS):
         dests[scene] = r.render({"book": 1.0, "open": 1.0, "unfold": 1.0, prop: 1.0})
     worst = (1.0, "")
