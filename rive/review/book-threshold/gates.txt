@@ -1,0 +1,29 @@
+all zero draws nothing: max alpha 0 (ok)
+open + lift + jacket + unfold + dest at 1, no family: max alpha 0 (ok)
+book shows through `book`: cover 14.9 % (ok)
+path shows through `path`: cover 18.3 % (ok)
+portal shows through `portal`: cover 11.2 % (ok)
+rocket shows through `rocket`: cover 16.1 % (ok)
+book band at open 0 (closed): 91.1 % (ok)
+book band at open 0 (open): 89.9 % (ok)
+book `open` lands in-frame: left band changed 3.9 % (11649 px, mean 7.5/255) (ok)
+book `unfold` changes the left band (0 -> 1): 10.3 % (30865 px, mean 21.1/255) (ok)
+book riffle moves pixels at unfold 0.2: 8.4 % (35934 px) (ok)
+book hero not risen at unfold 0.2 (starts 0.45): 31848 px changed in the card's box, all inside the riffle's rows y 288-518: 0 strayed (ok)
+book PanelNear flat at unfold 0.2: emblem zone changed 0 px (ok)
+book emblem erects by unfold 0.6: emblem zone changed 82.1 % (11497 px) (ok)
+book dest* erect alone: worst pairwise diff in the card's box 21.45 % (campfire vs cafe) (ok)
+book no snap at the grab handover (unfold 0.89 vs 1): left band changed 0.54 % visible (1611 px; 3597 px over 2/255 - the shaft's fade tail) (ok)
+book closed medallion: dest lights 867 px inside it, 0 outside (ok)
+book crack glow at open 0.02: default 0 px, cool 0 px; the cool key re-lights it: 0 px change
+book crack glow at open 0.03: default 7129 px, cool 7129 px; the cool key re-lights it: 6765 px change
+book crack glow at open 0.05: default 7129 px, cool 7129 px; the cool key re-lights it: 6765 px change
+book crack glow at open 0.07: default 7319 px, cool 7319 px; the cool key re-lights it: 6765 px change
+book crack glow at open 0.1: default 7509 px, cool 7509 px; the cool key re-lights it: 6765 px change
+book crack glow visible at open 0.03 (default rig): 7129 px near the gutter (ok)
+path open 1 covers the threshold band: 100.0 % (ok)
+portal open 1 covers the threshold band: 86.4 % (ok)
+rocket open 1 covers the threshold band: 99.9 % (ok)
+rocket `open` moves the threshold: mean delta 49.2/255 (ok)
+rocket at lift 1 has left: cover 0.48 % (ok)
+ambient loop seam (frame 0 vs 240, book erected): 0.00 % (ok)
