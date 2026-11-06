@@ -1,0 +1,28 @@
+every frame non-empty (0 blank or near-black on the stage): ok
+captured frames: 719: ok
+network attempts during the run: 0: ok
+camera cuts only at sentence starts: 0 of 0 (shots seen: wide): ok
+journeys during the run: 4 (want 4): ok
+journey book → campfire: beats pullBack/open/grab/exit/close/arriveOpen/enter/hang/arriveClose/vanish in order: ok
+journey book → campfire: family ['book']: ok
+journey book → campfire: camera wide after the pull-back in 100% of samples (want >= 95%): ok
+journey book → campfire: avatar off screen only while clipped (0 of 100 samples not): ok
+journey book → campfire: scene switched behind the closed threshold (first sample in campfire: arriveOpen): ok
+journey path → beach: beats pullBack/open/exit/close/arriveOpen/enter/arriveClose/vanish in order: ok
+journey path → beach: family ['path']: ok
+journey path → beach: camera wide after the pull-back in 100% of samples (want >= 95%): ok
+journey path → beach: avatar off screen only while clipped (0 of 84 samples not): ok
+journey path → beach: scene switched behind the closed threshold (first sample in beach: arriveOpen): ok
+journey rocket → deepSpace: beats pullBack/open/exit/close/cut/arriveOpen/enter/arriveClose/vanish in order: ok
+journey rocket → deepSpace: family ['rocket']: ok
+journey rocket → deepSpace: camera wide after the pull-back in 100% of samples (want >= 95%): ok
+journey rocket → deepSpace: avatar off screen only while clipped (0 of 164 samples not): ok
+journey rocket → deepSpace: scene switched behind the closed threshold (first sample in deepSpace: cut): ok
+journey portal → livingRoom: beats pullBack/open/exit/close/arriveOpen/enter/arriveClose/vanish in order: ok
+journey portal → livingRoom: family ['portal']: ok
+journey portal → livingRoom: camera wide after the pull-back in 100% of samples (want >= 95%): ok
+journey portal → livingRoom: avatar off screen only while clipped (0 of 125 samples not): ok
+journey portal → livingRoom: scene switched behind the closed threshold (first sample in livingRoom: arriveOpen): ok
+every threshold family played: ['book', 'path', 'portal', 'rocket']: ok
+tour.gif 3590676 B (budget 4194304): ok
+tour.mp4 2627434 B: info

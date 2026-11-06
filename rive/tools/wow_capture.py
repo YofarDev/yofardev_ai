@@ -188,7 +188,7 @@ def gates_wow2(tl: dict) -> list[str]:
 
 
 # ---------------------------------------------------------------- M7: journeys
-# M8: the door family adds `grab` (after open) and `hang` (after enter)
+# M8: the book family adds `grab` (after open) and `hang` (after enter)
 PHASES = ["pullBack", "open", "grab", "exit", "close", "cut", "arriveOpen", "enter", "hang", "arriveClose",
           "vanish"]
 # beats in which the avatar is clipped at the threshold (journey_choreography.dart)
@@ -264,7 +264,7 @@ def gates_wow3(tl: dict) -> list[str]:
     runs = journeys(s)
     g.append(_line(f"journeys during the run: {len(runs)} (want 1)", len(runs) == 1))
     if runs:
-        g += _journey_gates(runs[0], "door", "beach")
+        g += _journey_gates(runs[0], "book", "beach")
     beach = [x for x in s if x["scene"] == "beach"]
     dusk = min((x["dusk"] for x in beach), default=0.0)
     g.append(_line(f"the beach at the local sunset: dusk min {dusk:.2f} (want >= 0.5)", dusk >= 0.5 and bool(beach)))
@@ -287,8 +287,8 @@ def foley(events: list[dict], kind: str | None = None) -> list[dict]:
 
 
 def jacket_gates(run: list[dict], events: list[dict]) -> list[str]:
-    """The door journey's jacket (M8 rulings 5-6, 18): grabbed before the walk out, hung after the walk in,
-    always on exactly one of the peg and the hand, steps during both walks and a cloth sound at each contact."""
+    """The book journey's jacket (M8 rulings 5-6, 18): grabbed before the walk out, hung after the walk in,
+    always on exactly one of the ribbon and the hand, steps during both walks and a cloth sound at each contact."""
     g = []
     order = phase_order(run)
     g.append(_line(f"jacket beats: grab before exit, hang after enter ({'/'.join(order)})",
@@ -314,7 +314,7 @@ def jacket_gates(run: list[dict], events: list[dict]) -> list[str]:
             contacts.append(sum(1 for e in foley(events, "cloth") if xs[0] <= e["ms"] <= xs[-1] + 100))
     g.append(_line(f"a cloth sound at each contact: {contacts} (want [1, 1])", contacts == [1, 1]))
     end = run[-1]
-    g.append(_line(f"the jacket left with the door: hand {end['jacket']} at the last journey sample",
+    g.append(_line(f"the jacket left with the book: hand {end['jacket']} at the last journey sample",
                    not end["jacket"]))
     return g
 
@@ -350,7 +350,7 @@ def gates_npc(tl: dict) -> list[str]:
     return g
 
 
-TOUR_FAMILIES = {"campfire": "door", "beach": "path", "deepSpace": "rocket", "livingRoom": "portal"}
+TOUR_FAMILIES = {"campfire": "book", "beach": "path", "deepSpace": "rocket", "livingRoom": "portal"}
 
 
 def gates_tour(tl: dict) -> list[str]:
@@ -383,14 +383,14 @@ PULL_ACTIONS = {"cord": {"lightsOff", "lightsOn"}, "rope": {"bell"},
 
 def ruled_family(origin: str, to: str) -> str:
     """M9 ruling 5, M11 ruling 6: to deepSpace rocket, from deepSpace portal, between two of the open-air
-    scenes (campfire, beach, forestCabin) path, else door."""
+    scenes (campfire, beach, forestCabin) path, else book."""
     if to == "deepSpace":
         return "rocket"
     if origin == "deepSpace":
         return "portal"
     if origin in PATH_SCENES and to in PATH_SCENES:
         return "path"
-    return "door"
+    return "book"
 
 
 def _kind(tl: dict) -> str:
@@ -574,7 +574,7 @@ def _drawn_after_cut(tl: dict, run: list[dict], origin: str, to: str) -> tuple[b
 
 def gates_pairs(tl: dict) -> list[str]:
     """`WOW=pairs` (M9 ruling 20; M11: 90 pairs): every ordered pair of `SCENES` once, each in its ruled family, the destination drawn
-    after every cut, one jacket at a time on the door, no blank frame (checked on the frames), 0 network."""
+    after every cut, one jacket at a time on the book, no blank frame (checked on the frames), 0 network."""
     g = _common(tl)
     runs = _runs_with_pairs(tl)
     asked = [(e["from"], e["to"]) for e in tl["events"] if e["type"] == "journey"]
@@ -584,7 +584,7 @@ def gates_pairs(tl: dict) -> list[str]:
     g.append(_line(f"every ordered pair once: {len(set(asked))} distinct of {len(asked)} asked "
                    f"({len(every - set(asked))} missing)", set(asked) == every and len(asked) == len(every)))
     bad_family, bad_beats, bad_scene, bad_drawn = [], [], [], []
-    two = none_ = shown_n = doors = 0
+    two = none_ = shown_n = books = 0
     for run, a, b in runs:
         want = ruled_family(a, b)
         fam = {x["family"] for x in run}
@@ -599,8 +599,8 @@ def gates_pairs(tl: dict) -> list[str]:
         ok, why = _drawn_after_cut(tl, run, a, b)
         if not ok:
             bad_drawn.append(f"{a}->{b} {why}")
-        if want == "door" and run and "jacket" in run[0]:
-            doors += 1
+        if want == "book" and run and "jacket" in run[0]:
+            books += 1
             shown = [x for x in run if x["journey"] not in ("pullBack", "vanish")]
             shown_n += len(shown)
             two += sum(1 for x in shown if x["jacket"] and x["journeyJacket"] > 0.5)
@@ -613,8 +613,8 @@ def gates_pairs(tl: dict) -> list[str]:
                    + (f" (bad: {'; '.join(bad_scene)})" if bad_scene else ""), not bad_scene and bool(runs)))
     g.append(_line(f"destination file drawn after the cut: {len(runs) - len(bad_drawn)}/{len(runs)}"
                    + (f" (bad: {'; '.join(bad_drawn)})" if bad_drawn else ""), not bad_drawn and bool(runs)))
-    g.append(_line(f"door journeys ({doors}): one jacket at a time: {two} samples with two, {none_} with none "
-                   f"(of {shown_n})", doors > 0 and not two and not none_))
+    g.append(_line(f"book journeys ({books}): one jacket at a time: {two} samples with two, {none_} with none "
+                   f"(of {shown_n})", books > 0 and not two and not none_))
     fams = {}
     for run, a, b in runs:
         fams[ruled_family(a, b)] = fams.get(ruled_family(a, b), 0) + 1
@@ -664,7 +664,7 @@ def gates_tour7(tl: dict) -> list[str]:
                    hats == ["santaHat"] and tops == ["christmasSweater"]))
     families = {x["family"] for run in runs for x in run}
     g.append(_line(f"every threshold family played: {sorted(families)}",
-                   families == {"door", "path", "portal", "rocket"}))
+                   families == {"book", "path", "portal", "rocket"}))
     return g
 
 
@@ -1176,13 +1176,13 @@ def beats(tl: dict) -> list[tuple[str, float, float]]:
             if _kind(tl) == "wow3":
                 grabbed = any(x["journey"] == "grab" for x in run)
                 out += [("2 wide: the camera pulls back", at("open"), 1.0),
-                        ("3 grabs the jacket from the peg" if grabbed else "3 the door opens, gaze leads",
+                        ("3 grabs the jacket from the ribbon" if grabbed else "3 the book opens, gaze leads",
                          at("grab", 0.45) if grabbed else at("open", 0.9), 1.0),
                         ("4 walks out through it", at("exit", 0.5), 1.0),
-                        ("5 match cut: the same door, the beach", at("arriveOpen", 0.2), 1.0),
+                        ("5 match cut: the same book, the beach", at("arriveOpen", 0.2), 1.0),
                         ("6 walks in at sunset", at("enter", 0.6), 1.0)]
                 if any(x["journey"] == "hang" for x in run):
-                    out.append(("7 hangs the jacket on the door", at("hang", 0.5), 1.0))
+                    out.append(("7 hangs the jacket on the book", at("hang", 0.5), 1.0))
                 out.append(("8 settled" if grabbed else "7 settled",
                             min(run[-1]["ms"] + 1500, tl["frames"][-1]["ms"]), 1.0))
             else:

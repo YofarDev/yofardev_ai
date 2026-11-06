@@ -356,6 +356,26 @@ imports and the design-layer rules, so `flutter test` fails on violation.
   wows: `wow_capture_test.dart --dart-define=TIER=ultra|low` (wow1 pinned to 22:00), assembled without a
   GIF; `rive/tools/wow_compare.py` writes the then-vs-now sheets. Moonshot report:
   `rive/review/m12/README.md`
+- Storybook threshold (contract v15, 2026-11-06): the `door` journey family is now the pop-up
+  **book** (`JourneyFamily.book`; 66 of the 90 pairs, the planner's other rulings unchanged) —
+  `journey.riv` gains `book`, `unfold` (the riffle + the pop-up vignette; the other thresholds
+  ignore it) and one `dest<Scene>` per scene (exactly one nonzero: the vignette and the closed
+  cover's foil medallion show that scene — the destination on the exit side, the origin from the
+  cut on) plus `vignetteKey` / `vignetteAmbient` (the card glows in the OTHER scene's rig; the
+  book's own rim keeps `lightKey` / `lightAmbient`). The staging is app-side in
+  `JourneyChoreography` (`JourneyTiming` holds the windows): open = crack (a slow barely-open
+  sliver) → cover swing around the spine (edge-on glint, lands 1010 ms) → riffle (from 850 ms,
+  overlapping the swing's tail) → panels and hero card erect (fully landed at unfold 0.89, so the
+  grab/exit rows snapping `unfold` to 1 change nothing); close = a 200 ms fold flutter → cover
+  fall with a rebound; the arrival swing runs hold → 450 ms without the crack. Foley rides the
+  book's beats through `AvatarCubit`'s optional `FoleyService` (paper 850 ms into open, click
+  580 ms into close, paper 470 ms into arriveOpen; reduced journeys stay quiet). The jacket hangs
+  on the **ribbon** now — it replaces the door's peg at the same hook point (628, 560), the
+  grab/hang beats unchanged. Book ids mint from `gen_journeys.V15_ID_START = 6000` (the v10 door
+  ids stay unused). The rive CLI stays pinned 1.8.x via the `~/.rive/bin/rive` shim (1.9+
+  watermarks local builds until a `rive push` bind; pre-1.9 binaries self-block on a newer
+  manifest). The wow harness gates assert family `book`. Evidence (strips, beats, gates, wow3 +
+  the four-family tour): `rive/review/book-threshold/`
 - TTS (Kokoro, 2026-11-01): the default voice is Kokoro-82M v1.0 int8 through `sherpa_onnx`
   **pinned 1.13.3** (all eight `sherpa_onnx_*` platform packages pinned in `dependency_overrides`):
   2.x dropped espeak-ng, and 1.13.3 is the last release whose bundled ONNX Runtime (1.24.3 on

@@ -506,7 +506,7 @@ final Map<String, _Script> _scripts = <String, _Script>{
       ),
     ],
   ),
-  // M7 Wow #3: changing scene is a journey (living room → beach, the door),
+  // M7 Wow #3 (v15): changing scene is a journey (living room → beach, the book),
   // landing at the user's local sunset (the harness pins the clock).
   'wow3': _Script(
     scene: AvatarScene.livingRoom,
@@ -541,8 +541,8 @@ final Map<String, _Script> _scripts = <String, _Script>{
       ),
     ],
   ),
-  // M7: one journey per threshold family, no speech (door, path, rocket,
-  // portal), in the morning.
+  // M7 (v15): one journey per threshold family, no speech (book, path,
+  // rocket, portal), in the morning.
   'tour': _Script(
     scene: AvatarScene.livingRoom,
     rain: 0,
