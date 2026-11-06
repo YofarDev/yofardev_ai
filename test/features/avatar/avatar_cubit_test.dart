@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:fake_async/fake_async.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:yofardev_ai/core/models/avatar_config.dart';
@@ -13,6 +14,7 @@ import 'package:yofardev_ai/core/models/result.dart';
 import 'package:yofardev_ai/features/sound/sound.dart';
 import 'package:yofardev_ai/features/avatar/avatar.dart';
 import 'package:yofardev_ai/core/services/audio/audio_player_service.dart';
+import 'package:yofardev_ai/core/services/audio/foley_service.dart';
 import 'package:yofardev_ai/core/services/app_lifecycle_service.dart';
 import 'package:yofardev_ai/core/models/app_lifecycle_event.dart';
 import 'package:yofardev_ai/features/avatar/domain/models/avatar_animation.dart';
@@ -1126,6 +1128,196 @@ void main() {
       });
     });
 
+    group('journey foley (book: paper at the riffles, click at the cover)', () {
+      // A cubit with the foley fake, built inside the fake zone.
+      AvatarCubit foleyCubit(
+        _RecordingFoley foley, {
+        bool Function()? motion,
+      }) => AvatarCubit(
+        mockAvatarRepository,
+        mockAnimationService,
+        mockAudioPlayerService,
+        MockAppLifecycleService(),
+        PropReactionService(),
+        _FakeSoundRepository(),
+        foley: foley,
+        reduceMotion: motion,
+      );
+
+      test('a book journey plays paper at the open riffle, click at the '
+          'cover land and paper at the arrival riffle', () {
+        fakeAsync((FakeAsync async) {
+          final _RecordingFoley foley = _RecordingFoley(() => async.elapsed);
+          final AvatarCubit cubit = foleyCubit(foley);
+          void expectKinds(List<String> kinds) => expect(
+            foley.plays
+                .map((({String kind, Duration at}) p) => p.kind)
+                .toList(),
+            kinds,
+          );
+
+          cubit.setValuesBasedOnScreenWidth(screenWidth: 400);
+          cubit.onNewAvatarConfig(
+            'chat1',
+            AvatarConfig(
+              background: AvatarScene.beach,
+              specials: AvatarSpecials.leaveAndComeBack,
+            ),
+          );
+
+          async.elapse(JourneyTiming.pullBack);
+          expect(cubit.state.journey!.phase, JourneyPhase.open);
+          // the riffle is 850 ms into the open beat
+          async.elapse(const Duration(milliseconds: 849));
+          expectKinds(<String>[]);
+          async.elapse(const Duration(milliseconds: 1));
+          expectKinds(<String>['paper']);
+
+          async.elapse(
+            JourneyTiming.open -
+                const Duration(milliseconds: 850) +
+                JourneyTiming.grab,
+          );
+          expect(cubit.state.journey!.phase, JourneyPhase.exit);
+          cubit.onPresenceDone('outOfScreen');
+          async.flushMicrotasks();
+          expect(cubit.state.journey!.phase, JourneyPhase.close);
+          // the cover lands 580 ms into the close beat
+          async.elapse(const Duration(milliseconds: 579));
+          expectKinds(<String>['paper']);
+          async.elapse(const Duration(milliseconds: 1));
+          expectKinds(<String>['paper', 'click']);
+
+          async.elapse(
+            JourneyTiming.closeOf(JourneyFamily.book) -
+                const Duration(milliseconds: 580),
+          );
+          expect(cubit.state.journey!.phase, JourneyPhase.cut);
+          cubit.onSceneShown(AvatarScene.beach);
+          async.flushMicrotasks();
+          expect(cubit.state.journey!.phase, JourneyPhase.arriveOpen);
+          // the arrival riffle is 470 ms into the arriveOpen beat
+          async.elapse(const Duration(milliseconds: 469));
+          expectKinds(<String>['paper', 'click']);
+          async.elapse(const Duration(milliseconds: 1));
+          expectKinds(<String>['paper', 'click', 'paper']);
+
+          async.elapse(
+            JourneyTiming.arriveOpenOf(JourneyFamily.book) -
+                const Duration(milliseconds: 470),
+          );
+          expect(cubit.state.journey!.phase, JourneyPhase.enter);
+          cubit.onPresenceDone('onScreen');
+          async.flushMicrotasks();
+          async.elapse(JourneyTiming.hang);
+          expect(cubit.state.journey!.phase, JourneyPhase.arriveClose);
+          // the arrival close is the quiet one; the run plays exactly three
+          async.elapse(JourneyTiming.close + JourneyTiming.vanish);
+          async.flushMicrotasks();
+          expect(cubit.state.journey, isNull);
+          expectKinds(<String>['paper', 'click', 'paper']);
+          cubit.close();
+        });
+      });
+
+      test('a chat switch mid-beat plays nothing further', () {
+        fakeAsync((FakeAsync async) {
+          final _RecordingFoley foley = _RecordingFoley(() => async.elapsed);
+          final AvatarCubit cubit = foleyCubit(foley);
+
+          cubit.setValuesBasedOnScreenWidth(screenWidth: 400);
+          cubit.onNewAvatarConfig(
+            'chat1',
+            AvatarConfig(
+              background: AvatarScene.beach,
+              specials: AvatarSpecials.leaveAndComeBack,
+            ),
+          );
+          // the open riffle fires; the close click is still pending when the
+          // chat switches
+          async.elapse(
+            JourneyTiming.pullBack +
+                const Duration(milliseconds: 850) +
+                JourneyTiming.open -
+                const Duration(milliseconds: 850) +
+                JourneyTiming.grab,
+          );
+          cubit.onPresenceDone('outOfScreen');
+          async.flushMicrotasks();
+          expect(cubit.state.journey!.phase, JourneyPhase.close);
+          expect(
+            foley.plays.map((({String kind, Duration at}) p) => p.kind),
+            <String>['paper'],
+          );
+          cubit.loadAvatar('chat2');
+          async.flushMicrotasks();
+          expect(cubit.state.journey, isNull);
+          async.elapse(const Duration(seconds: 5));
+          expect(
+            foley.plays.map((({String kind, Duration at}) p) => p.kind),
+            <String>['paper'],
+          );
+          cubit.close();
+        });
+      });
+
+      test('a journey through another threshold sounds nothing (no riffle, '
+          'no cover outside the book)', () {
+        fakeAsync((FakeAsync async) {
+          final _RecordingFoley foley = _RecordingFoley(() => async.elapsed);
+          final AvatarCubit cubit = foleyCubit(foley);
+
+          cubit.setValuesBasedOnScreenWidth(screenWidth: 400);
+          cubit.onNewAvatarConfig(
+            'chat1',
+            AvatarConfig(
+              background: AvatarScene.deepSpace,
+              specials: AvatarSpecials.leaveAndComeBack,
+            ),
+          );
+          expect(cubit.state.journey!.family, JourneyFamily.rocket);
+          // through open (no riffle in it), the close beat and its lift-off
+          async.elapse(JourneyTiming.pullBack + JourneyTiming.open);
+          expect(cubit.state.journey!.phase, JourneyPhase.exit);
+          cubit.onPresenceDone('outOfScreen');
+          async.flushMicrotasks();
+          async.elapse(
+            JourneyTiming.closeOf(JourneyFamily.rocket) +
+                JourneyTiming.arriveOpenOf(JourneyFamily.rocket) +
+                const Duration(seconds: 1),
+          );
+          async.flushMicrotasks();
+          expect(foley.plays, isEmpty);
+          cubit.close();
+        });
+      });
+
+      test('the reduced journey plays nothing', () {
+        fakeAsync((FakeAsync async) {
+          final _RecordingFoley foley = _RecordingFoley(() => async.elapsed);
+          final AvatarCubit cubit = foleyCubit(foley, motion: () => true);
+
+          cubit.setValuesBasedOnScreenWidth(screenWidth: 400);
+          cubit.onNewAvatarConfig(
+            'chat1',
+            AvatarConfig(
+              background: AvatarScene.beach,
+              specials: AvatarSpecials.leaveAndComeBack,
+            ),
+          );
+          expect(cubit.state.journey!.reduced, isTrue);
+          async.elapse(JourneyTiming.reducedFade);
+          cubit.onSceneShown(AvatarScene.beach);
+          async.flushMicrotasks();
+          async.elapse(JourneyTiming.reducedFade + const Duration(seconds: 1));
+          async.flushMicrotasks();
+          expect(cubit.state.journey, isNull);
+          expect(foley.plays, isEmpty);
+          cubit.close();
+        });
+      });
+    });
+
     group('AvatarAnimationService Integration', () {
       test('initializes and subscribes to AvatarAnimationService', () {
         // The cubit should be created successfully with the animation service
@@ -1435,6 +1627,37 @@ class _FakeSoundRepository implements SoundRepository {
 
   @override
   Future<Result<bool>> get isPlaying async => Result<bool>.ok(false);
+}
+
+/// Records the journey's foley kinds with the fake-zone clock (the test's
+/// `async.elapsed`), so the runs can be asserted kind by kind.
+class _RecordingFoley extends FoleyService {
+  _RecordingFoley(this.clock)
+    : super(
+        createPlayer: () =>
+            throw UnimplementedError('no foley players in cubit tests'),
+        haptics: _NoHaptics(),
+        enabled: ValueNotifier<bool>(true),
+      );
+
+  final Duration Function() clock;
+
+  final List<({String kind, Duration at})> plays =
+      <({String kind, Duration at})>[];
+
+  @override
+  void play(String kind, {bool haptic = true}) {
+    plays.add((kind: kind, at: clock()));
+  }
+}
+
+/// A haptics sink the foley fake never reaches (`play` is overridden).
+class _NoHaptics implements HapticsSink {
+  @override
+  void selectionClick() {}
+
+  @override
+  void lightImpact() {}
 }
 
 /// An animation service whose stream the test drives.

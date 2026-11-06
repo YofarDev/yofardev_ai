@@ -371,6 +371,8 @@ Future<void> setupServiceLocator({
       director: getIt<PerformanceDirector>(),
       // Reduce motion turns a journey into a cross-fade cut (ruling 18).
       reduceMotion: () => getIt<ReduceMotionSource>().value,
+      // the book journey's riffles and cover land (v15)
+      foley: getIt<FoleyService>(),
     ),
   );
   getIt.registerFactory<TalkingCubit>(

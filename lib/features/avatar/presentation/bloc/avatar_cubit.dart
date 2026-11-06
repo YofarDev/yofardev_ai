@@ -15,6 +15,7 @@ import '../../domain/repositories/avatar_repository.dart';
 import '../../../../core/res/app_constants.dart';
 import '../../../../core/services/app_lifecycle_service.dart';
 import '../../../../core/services/audio/audio_player_service.dart';
+import '../../../../core/services/audio/foley_service.dart';
 import '../../../../features/avatar/domain/services/avatar_animation_service.dart';
 import '../../../../features/avatar/domain/services/prop_reaction_service.dart';
 import '../../../sound/sound.dart';
@@ -37,8 +38,10 @@ class AvatarCubit extends Cubit<AvatarState> {
     this._soundRepository, {
     PerformanceDirector? director,
     bool Function()? reduceMotion,
+    FoleyService? foley,
   }) : _director = director,
        _reduceMotion = reduceMotion ?? _motionOn,
+       _foley = foley,
        super(
          const AvatarState(avatar: Avatar(), avatarConfig: AvatarConfig()),
        ) {
@@ -112,6 +115,10 @@ class AvatarCubit extends Cubit<AvatarState> {
   /// The system's reduce-motion switch, read when a journey starts (M11
   /// ruling 18: on, a scene change is a cross-fade cut).
   final bool Function() _reduceMotion;
+
+  /// The journey's app-timed foley (the book's riffles and cover land, see
+  /// [_foleyLater]). Optional: without it a journey is silent.
+  final FoleyService? _foley;
 
   static bool _motionOn() => false;
 
@@ -540,6 +547,11 @@ class AvatarCubit extends Cubit<AvatarState> {
         journeyJacket: journey.hasJacket ? 1 : 0,
       ),
     );
+    // the book's cover swings, then the pages riffle (v15 staging); the other
+    // thresholds stage nothing, so they sound nothing
+    if (journey.family == JourneyFamily.book) {
+      unawaited(_foleyLater(const Duration(milliseconds: 850), 'paper', gone));
+    }
     await Future<void>.delayed(JourneyTiming.open);
     if (gone()) return;
 
@@ -572,6 +584,10 @@ class AvatarCubit extends Cubit<AvatarState> {
 
     journey = _beat(journey, JourneyPhase.close);
     _emitIfOpen(state.copyWith(journey: journey));
+    // the book's cover lands on the far page
+    if (journey.family == JourneyFamily.book) {
+      unawaited(_foleyLater(const Duration(milliseconds: 580), 'click', gone));
+    }
     await Future<void>.delayed(JourneyTiming.closeOf(family));
     if (gone()) return;
 
@@ -585,6 +601,10 @@ class AvatarCubit extends Cubit<AvatarState> {
 
     journey = _beat(journey, JourneyPhase.arriveOpen);
     _emitIfOpen(state.copyWith(journey: journey));
+    // the arrival book stages its own swing and riffle
+    if (journey.family == JourneyFamily.book) {
+      unawaited(_foleyLater(const Duration(milliseconds: 470), 'paper', gone));
+    }
     await Future<void>.delayed(JourneyTiming.arriveOpenOf(family));
     if (gone()) return;
 
@@ -764,6 +784,22 @@ class AvatarCubit extends Cubit<AvatarState> {
   JourneyState _beat(JourneyState journey, JourneyPhase phase) {
     AppLogger.debug('journey: $phase', tag: 'AvatarCubit');
     return journey.next(phase);
+  }
+
+  /// One app-timed journey foley (the book's riffles and cover land, v15):
+  /// [kind] plays [delay] after its beat's emit, unless the journey was
+  /// stopped meanwhile ([gone] — a chat switch's epoch bump, or the cubit
+  /// closing). The sound-effects setting gates [FoleyService]; a world event
+  /// never haptic.
+  Future<void> _foleyLater(
+    Duration delay,
+    String kind,
+    bool Function() gone,
+  ) async {
+    await Future<void>.delayed(delay);
+    if (!gone() && !isClosed) {
+      _foley?.play(kind, haptic: false);
+    }
   }
 
   /// Ends the gaze lead: the head goes back to the director's gaze.
