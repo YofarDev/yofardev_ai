@@ -235,12 +235,13 @@ COVER_TOP = BLOCK_TOP - 8.0     # the board stands proud of the pages
 COVER_CORNER = 24.0             # the board's free-edge top corner
 # The swing (fix round 1): the cover's scaleX around the hinge falls from 1 at open 0 (closed on the block, the
 # free edge at artboard x 1070) to 0 at open EDGE_ON (edge-on, at the gutter; slope x span = 2) and on to
-# COVER_REST at open 1 (standing open just past perpendicular: a stub of |COVER_REST| x COVER_LEN = 64.5 px
-# left of the gutter, x 575-640, clear of the avatar's band). Two clamped segments, so the cover keeps moving
-# to open 1: one clamp reaching COVER_REST would stop it dead at open 0.575, mid-ramp. The cover is drawn
+# COVER_REST at open 1 (fully folded back: a stub of |COVER_REST| x COVER_LEN = 15 px left of the gutter, x 625-640
+# (fix round 2), clear of the avatar's band and right of the avatar's own jacket at the hook, x <= 619, so the grab
+# and hang handoffs show the fist and one whole jacket). Two clamped segments, so the cover keeps moving to open 1:
+# one clamp reaching COVER_REST would stop it dead just past edge-on, mid-ramp. The cover is drawn
 # closed (pointing right, the outer face as read): past edge-on it shows its inner face, mirrored.
 EDGE_ON = 0.5
-COVER_REST = -0.15
+COVER_REST = -0.035
 FACE_FADE = 0.05                # the outer and inner faces cross over open EDGE_ON -/+ FACE_FADE
 GLOW_WINDOW = (0.02, 0.95)      # the interior glow shows only between these opens (the crack and the passage)
 GLOW_RISE = 0.01                # ... full from GLOW_WINDOW[0] + this (open 0.03, the end of the crack) ...

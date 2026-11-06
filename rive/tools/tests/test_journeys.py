@@ -160,15 +160,15 @@ def _converter(root: ET.Element, node: str, key: int) -> ET.Element:
 
 
 def test_the_cover_swing(root: ET.Element) -> None:
-    """Fix round 1: closed at open 0, edge-on at open 0.5, a stub of COVER_REST (about -0.15: x 575-640, clear
-    of the avatar's band) at open 1, monotonic and still moving until open 1; the edge light rides the free
-    edge and peaks edge-on; the faces swap there."""
+    """Fix rounds 1-2: closed at open 0, edge-on at open 0.5, a stub of COVER_REST (-0.035: x 625-640, clear of
+    the avatar's band and of its jacket at the hook) at open 1, monotonic and still moving until open 1; the edge
+    light rides the free edge and peaks edge-on; the faces swap there."""
     grid = [i / 100 for i in range(101)]
     swing = [_eval(_converter(root, "BookCover", 16), x) for x in grid]
-    assert swing[0] == 1 and swing[50] == pytest.approx(0, abs=1e-9) and swing[-1] == pytest.approx(-0.15)
+    assert swing[0] == 1 and swing[50] == pytest.approx(0, abs=1e-9) and swing[-1] == pytest.approx(-0.035)
     assert gen_journeys.EDGE_ON == 0.5 and swing[-1] == pytest.approx(gen_journeys.COVER_REST)
     assert all(b < a for a, b in zip(swing, swing[1:]))   # it never stops before open 1
-    assert 570 <= gen_journeys.BLOCK_X0 + gen_journeys.COVER_LEN * swing[-1] <= 580
+    assert 620 <= gen_journeys.BLOCK_X0 + gen_journeys.COVER_LEN * swing[-1] <= 630
     edge = _converter(root, "emitCoverEdge", 13)
     assert all(_eval(edge, x) == pytest.approx(gen_journeys.COVER_LEN * s) for x, s in zip(grid, swing))
     glint = _converter(root, "emitCoverEdge", 18)

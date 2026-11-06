@@ -1843,7 +1843,7 @@
     <FormulaTokenParenthesisClose id="0:6089"/>
     <FormulaTokenParenthesisClose id="0:6092"/>
     <FormulaTokenOperation operationType="0" id="0:6093"/>
-    <FormulaTokenValue operationValue="-64.5" id="0:6094"/>
+    <FormulaTokenValue operationValue="-15.05" id="0:6094"/>
     <FormulaTokenOperation operationType="2" id="0:6095"/>
     <FormulaTokenFunction functionType="0" id="0:6106"/>
     <FormulaTokenValue operationValue="1" id="0:6101"/>
@@ -1927,7 +1927,7 @@
     <FormulaTokenParenthesisClose id="0:6258"/>
     <FormulaTokenParenthesisClose id="0:6261"/>
     <FormulaTokenOperation operationType="0" id="0:6262"/>
-    <FormulaTokenValue operationValue="-0.15" id="0:6263"/>
+    <FormulaTokenValue operationValue="-0.035" id="0:6263"/>
     <FormulaTokenOperation operationType="2" id="0:6264"/>
     <FormulaTokenFunction functionType="0" id="0:6275"/>
     <FormulaTokenValue operationValue="1" id="0:6270"/>
