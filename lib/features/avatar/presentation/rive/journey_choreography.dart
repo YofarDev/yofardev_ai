@@ -84,8 +84,8 @@ class _SwingCurve extends Curve {
   }
 }
 
-/// The cover's fall (v15): ease-in-out cubic's inverse — a slow start
-/// dropping faster as it goes — lands shut at 86 % of the span, then the
+/// The cover's fall (v15): `1 − easeInCubic` — a slow start dropping faster
+/// as it goes — lands shut at 86 % of the span, then the
 /// rebound: the closedness dips 4 % below shut for the last 60 ms of the
 /// window (the cover springs back open a crack, +0.04) and settles shut at
 /// the beat's end.

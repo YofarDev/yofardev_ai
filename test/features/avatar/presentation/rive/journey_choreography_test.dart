@@ -183,6 +183,8 @@ void main() {
       0,
     ); // the swing starts at the hold
     expect(_at(JourneyPhase.arriveOpen, 570).open, 1); // the swing has landed
+    // the arrival riffle must finish inside the beat (1000 ms)
+    expect(_at(JourneyPhase.arriveOpen, 980).unfold, 1);
     expect(_at(JourneyPhase.enter, 0).open, 1);
     expect(_at(JourneyPhase.arriveClose, 640).open, 0); // the fall lands
     expect(_at(JourneyPhase.vanish, 0).show, 1);
