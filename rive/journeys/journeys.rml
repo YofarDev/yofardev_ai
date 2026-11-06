@@ -5849,11 +5849,11 @@
     <FormulaTokenFunction functionType="1" id="0:7205"/>
     <FormulaTokenValue operationValue="0" id="0:7204"/>
     <FormulaTokenArgumentSeparator id="0:7206"/>
-    <FormulaTokenValue operationValue="8.065" id="0:7198"/>
+    <FormulaTokenValue operationValue="9.804" id="0:7198"/>
     <FormulaTokenOperation operationType="2" id="0:7199"/>
     <FormulaTokenInput id="0:7200"/>
     <FormulaTokenOperation operationType="0" id="0:7201"/>
-    <FormulaTokenValue operationValue="-7.065" id="0:7202"/>
+    <FormulaTokenValue operationValue="-7.725" id="0:7202"/>
     <FormulaTokenParenthesisClose id="0:7207"/>
     <FormulaTokenParenthesisClose id="0:7210"/>
   </DataConverterFormula>
@@ -5869,11 +5869,11 @@
     <FormulaTokenFunction functionType="1" id="0:7223"/>
     <FormulaTokenValue operationValue="0" id="0:7222"/>
     <FormulaTokenArgumentSeparator id="0:7224"/>
-    <FormulaTokenValue operationValue="2.016" id="0:7216"/>
+    <FormulaTokenValue operationValue="2.451" id="0:7216"/>
     <FormulaTokenOperation operationType="2" id="0:7217"/>
     <FormulaTokenInput id="0:7218"/>
     <FormulaTokenOperation operationType="0" id="0:7219"/>
-    <FormulaTokenValue operationValue="-0.766" id="0:7220"/>
+    <FormulaTokenValue operationValue="-0.931" id="0:7220"/>
     <FormulaTokenParenthesisClose id="0:7225"/>
     <FormulaTokenParenthesisClose id="0:7228"/>
     <FormulaTokenOperation operationType="1" id="0:7229"/>
@@ -5885,11 +5885,11 @@
     <FormulaTokenFunction functionType="1" id="0:7239"/>
     <FormulaTokenValue operationValue="0" id="0:7238"/>
     <FormulaTokenArgumentSeparator id="0:7240"/>
-    <FormulaTokenValue operationValue="8.065" id="0:7232"/>
+    <FormulaTokenValue operationValue="9.804" id="0:7232"/>
     <FormulaTokenOperation operationType="2" id="0:7233"/>
     <FormulaTokenInput id="0:7234"/>
     <FormulaTokenOperation operationType="0" id="0:7235"/>
-    <FormulaTokenValue operationValue="-7.065" id="0:7236"/>
+    <FormulaTokenValue operationValue="-7.725" id="0:7236"/>
     <FormulaTokenParenthesisClose id="0:7241"/>
     <FormulaTokenParenthesisClose id="0:7244"/>
   </DataConverterFormula>

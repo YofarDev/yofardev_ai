@@ -426,7 +426,9 @@ def ribbon() -> El:
 # All of it is lit by the scene NOT on screen (VIGNETTE_LIGHTS): the contrast with the room is the beat.
 
 UNFOLD_FLAPS = ((0.00, 0.18), (0.06, 0.27), (0.14, 0.38))             # the riffle: three pages, staggered
-UNFOLD_PANELS = {"Far": (0.10, 0.55), "Mid": (0.22, 0.72), "Near": (0.38, 1.0)}   # the pop-up, tallest first
+# the pop-up, tallest first; Near's touchdown ends by unfold 0.89 = the open beat's 1400 ms on the plan's
+# ramp(850, 750, easeOut), so the app's snap to 1 at the grab skips nothing (0.95 would still be mid-touchdown)
+UNFOLD_PANELS = {"Far": (0.10, 0.55), "Mid": (0.22, 0.72), "Near": (0.38, 0.89)}
 UNFOLD_SHAFT = (0.3, 0.9)                                             # the light shaft and its motes
 VIG_FLOOR = 500.0           # artboard y of the vignette's floor at the gutter: the panels' pivot, the shaft's mouth
 VIG_LEFT = 520.0            # the panels' left extent (artboard x)

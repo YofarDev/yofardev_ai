@@ -292,7 +292,7 @@ def test_the_unfold_windows(root: ET.Element) -> None:
     cos of the turn), the panels turn up from flat, tallest first."""
     grid = [i / 200 for i in range(201)]
     assert gen_journeys.UNFOLD_FLAPS == ((0.00, 0.18), (0.06, 0.27), (0.14, 0.38))
-    assert gen_journeys.UNFOLD_PANELS == {"Far": (0.10, 0.55), "Mid": (0.22, 0.72), "Near": (0.38, 1.0)}
+    assert gen_journeys.UNFOLD_PANELS == {"Far": (0.10, 0.55), "Mid": (0.22, 0.72), "Near": (0.38, 0.89)}
     assert gen_journeys.UNFOLD_SHAFT == (0.3, 0.9)
     for i, (a, b) in enumerate(gen_journeys.UNFOLD_FLAPS):
         width = [_eval(_converter(root, f"RiffleFlap{i}", 16), x) for x in grid]
