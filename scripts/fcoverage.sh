@@ -35,7 +35,14 @@ LCOV="${FCOVERAGE_LCOV:-coverage/lcov.info}"
 
 if [[ -z "${FCOVERAGE_LCOV:-}" ]]; then
   echo "[fcoverage] running flutter test --coverage (the full suite)…"
-  flutter test --coverage
+  # A stale lcov must not pass for this run's output.
+  rm -f "$LCOV"
+  # Coverage is still written when a test fails; a load-sensitive timing test
+  # (speech_analyzer, chat_tts preroll) flaking under --coverage must not hide
+  # the table. Report the suite failure, then measure what was produced.
+  if ! flutter test --coverage; then
+    echo "[fcoverage] warning: the suite reported failures (timing tests can flake under --coverage load); measuring the produced lcov anyway — run flutter test to check the suite itself" >&2
+  fi
 fi
 
 if [[ ! -f "$LCOV" ]]; then
