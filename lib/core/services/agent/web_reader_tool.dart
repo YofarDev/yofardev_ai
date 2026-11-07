@@ -5,32 +5,17 @@ import '../../models/function_info.dart';
 
 import 'agent_tool.dart';
 
+/// Reads the rendered text content of [uri].
+typedef PageTextFetcher = Future<String> Function(Uri uri);
+
 class WebReaderTool extends AgentTool {
-  @override
-  String get name => 'getTextContentFromWebsite';
+  /// [fetchText] is a test seam (default: the headless webview reader).
+  WebReaderTool({PageTextFetcher? fetchText})
+    : _fetchText = fetchText ?? _readPageWithHeadlessWebView;
 
-  @override
-  String get description => 'Get the rendered text content of a webpage.';
+  final PageTextFetcher _fetchText;
 
-  @override
-  List<Parameter> get parameters => <Parameter>[
-    Parameter(
-      name: 'url',
-      type: 'string',
-      description: 'The URL of the webpage.',
-    ),
-  ];
-
-  @override
-  Map<String, String> get requiredConfigKeys => <String, String>{};
-
-  @override
-  Future<String> execute(
-    Map<String, dynamic> args,
-    Map<String, dynamic> configValues,
-  ) async {
-    final String url = args['url'] as String? ?? '';
-    final Uri uri = Uri.parse(url);
+  static Future<String> _readPageWithHeadlessWebView(Uri uri) async {
     final Completer<String> completer = Completer<String>();
 
     // Note: HeadlessInAppWebView might need to be run on the main thread or have platform specific constraints.
@@ -56,5 +41,33 @@ class WebReaderTool extends AgentTool {
     return completer.future.whenComplete(() {
       headlessWebView.dispose();
     });
+  }
+
+  @override
+  String get name => 'getTextContentFromWebsite';
+
+  @override
+  String get description => 'Get the rendered text content of a webpage.';
+
+  @override
+  List<Parameter> get parameters => <Parameter>[
+    Parameter(
+      name: 'url',
+      type: 'string',
+      description: 'The URL of the webpage.',
+    ),
+  ];
+
+  @override
+  Map<String, String> get requiredConfigKeys => <String, String>{};
+
+  @override
+  Future<String> execute(
+    Map<String, dynamic> args,
+    Map<String, dynamic> configValues,
+  ) async {
+    final String url = args['url'] as String? ?? '';
+    final Uri uri = Uri.parse(url);
+    return _fetchText(uri);
   }
 }

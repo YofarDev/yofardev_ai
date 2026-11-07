@@ -3,7 +3,16 @@ import '../../models/function_info.dart';
 import 'news_service.dart';
 import 'agent_tool.dart';
 
+/// Fetches the day's most shared articles as the string for the LLM.
+typedef NewsFetch = Future<String> Function(String apiKey);
+
 class NewsTool extends AgentTool {
+  /// [fetch] is a test seam (default: [NewsService]).
+  NewsTool({NewsFetch? fetch})
+    : _fetch = fetch ?? NewsService.getMostPopularNewsOfTheDay;
+
+  final NewsFetch _fetch;
+
   @override
   String get name => 'getMostPopularNewsOfTheDay';
 
@@ -31,7 +40,7 @@ class NewsTool extends AgentTool {
     }
 
     try {
-      return await NewsService.getMostPopularNewsOfTheDay(apiKey);
+      return await _fetch(apiKey);
     } catch (e) {
       return 'Error getting news: $e';
     }

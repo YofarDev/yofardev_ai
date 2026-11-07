@@ -3,7 +3,21 @@ import '../../models/function_info.dart';
 import 'google_search_service.dart';
 import 'agent_tool.dart';
 
+/// Runs the query and returns the raw result rows.
+typedef GoogleSearchFetch =
+    Future<List<Map<String, dynamic>>> Function(
+      String query,
+      String apiKey,
+      String engineId,
+    );
+
 class GoogleSearchTool extends AgentTool {
+  /// [search] is a test seam (default: [GoogleSearchService]).
+  GoogleSearchTool({GoogleSearchFetch? search})
+    : _search = search ?? GoogleSearchService.searchGoogle;
+
+  final GoogleSearchFetch _search;
+
   @override
   String get name => 'searchGoogle';
 
@@ -45,8 +59,11 @@ class GoogleSearchTool extends AgentTool {
     }
 
     try {
-      final List<Map<String, dynamic>> results =
-          await GoogleSearchService.searchGoogle(query, apiKey, engineId);
+      final List<Map<String, dynamic>> results = await _search(
+        query,
+        apiKey,
+        engineId,
+      );
       return results.toString();
     } catch (e) {
       return 'Error executing Google Search: $e';

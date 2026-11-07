@@ -3,7 +3,17 @@ import '../../models/function_info.dart';
 import 'alarm_service.dart';
 import 'agent_tool.dart';
 
+/// Sets the alarm; returns the service's own result string.
+typedef AlarmSetter =
+    Future<String> Function(int minutesFromNow, String message);
+
 class AlarmTool extends AgentTool {
+  /// [setAlarm] is a test seam (default: [AlarmService]).
+  AlarmTool({AlarmSetter? setAlarm})
+    : _setAlarm = setAlarm ?? AlarmService.setAlarm;
+
+  final AlarmSetter _setAlarm;
+
   @override
   String get name => 'setAlarm';
 
@@ -35,8 +45,8 @@ class AlarmTool extends AgentTool {
     final int minutesFromNow = args['minutesFromNow'] as int? ?? 0;
     final String message = args['message'] as String? ?? 'Hello world!';
 
-    // Call the existing service
-    await AlarmService.setAlarm(minutesFromNow, message);
+    // Call the service through the seam
+    await _setAlarm(minutesFromNow, message);
     return 'Alarm set for $minutesFromNow minutes from now with message: "$message"';
   }
 }
