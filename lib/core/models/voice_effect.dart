@@ -1,17 +1,4 @@
-/// Voice effect configuration for TTS
-class VoiceEffect {
-  final double pitch;
-  final double speedRate;
-
-  const VoiceEffect({required this.pitch, required this.speedRate});
-
-  VoiceEffect copyWith({double? pitch, double? speedRate}) {
-    return VoiceEffect(
-      pitch: pitch ?? this.pitch,
-      speedRate: speedRate ?? this.speedRate,
-    );
-  }
-
-  @override
-  String toString() => 'VoiceEffect(pitch: $pitch, speedRate: $speedRate)';
-}
+/// A post-processing preset for the TTS voice, picked by the costume the
+/// avatar wears (`CostumeExtension.voiceEffect`). Values are only ever
+/// appended.
+enum VoiceEffect { none, batman, robocop }

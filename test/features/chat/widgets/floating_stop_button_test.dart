@@ -380,6 +380,9 @@ class MockTtsQueueService implements TtsQueueService {
 
   @override
   String? peekLanguage(String audioPath) => null;
+
+  @override
+  String peekAnalysisPath(String audioPath) => audioPath;
 }
 
 class MockAvatarAnimationService implements AvatarAnimationService {

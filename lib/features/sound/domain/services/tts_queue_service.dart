@@ -34,6 +34,10 @@ class TtsQueueService {
   /// Language of each parked sentence, keyed by audio path, dropped with its
   /// text (the speech analysis reads it ahead of playback).
   final Map<String, String> _languageByPath = <String, String>{};
+
+  /// Dry WAV of each parked sentence whose voice effect wrote a processed
+  /// copy, keyed by the played (processed) path, dropped with its text.
+  final Map<String, String> _dryPathByPath = <String, String>{};
   final Uuid _uuid = const Uuid();
 
   bool _isProcessing = false;
@@ -94,6 +98,7 @@ class TtsQueueService {
   String? consumeText(String audioPath) {
     final String? text = _textByPath.remove(audioPath);
     _languageByPath.remove(audioPath);
+    _dryPathByPath.remove(audioPath);
     if (text != null) _notifyIfDrained();
     return text;
   }
@@ -107,6 +112,13 @@ class TtsQueueService {
   /// path is [audioPath], without consuming it; null when unknown or already
   /// consumed.
   String? peekLanguage(String audioPath) => _languageByPath[audioPath];
+
+  /// The file the speech analysis reads for the item played from
+  /// [audioPath], without consuming it: the dry WAV when a voice effect
+  /// wrote a processed copy (lip-sync follows the clean voice), else
+  /// [audioPath] itself (also once consumed).
+  String peekAnalysisPath(String audioPath) =>
+      _dryPathByPath[audioPath] ?? audioPath;
 
   /// Deletes a played audio file (scratch cleanup; the synthesizer owns the
   /// IO). Safe to call for a path that no longer exists.
@@ -162,6 +174,7 @@ class TtsQueueService {
     _cuesByPath.clear();
     _textByPath.clear();
     _languageByPath.clear();
+    _dryPathByPath.clear();
     _isProcessing = false;
     AppLogger.debug('TTS queue cleared', tag: 'TtsQueueService');
   }
@@ -243,7 +256,7 @@ class TtsQueueService {
         tag: 'TtsQueueService',
       );
 
-      // Generate audio (with neutral voice effects for post-processing)
+      // Generate the dry audio (the synthesizers ignore the voice effect).
       final String rawAudioPath = await _ttsSynthesizer.synthesize(
         text: item.text,
         language: item.language,
@@ -251,7 +264,8 @@ class TtsQueueService {
       );
       abortIfCleared();
 
-      // Apply post-processing voice effects using FFmpeg
+      // The costume's voice effect, written to a processed copy (the raw
+      // path itself when there is none or it failed).
       final String processedAudioPath = await _voiceEffectsService
           .applyVoiceEffects(rawAudioPath, item.voiceEffect);
       abortIfCleared();
@@ -263,6 +277,9 @@ class TtsQueueService {
       }
       _textByPath[processedAudioPath] = item.text;
       _languageByPath[processedAudioPath] = item.language;
+      if (processedAudioPath != rawAudioPath) {
+        _dryPathByPath[processedAudioPath] = rawAudioPath;
+      }
 
       // Update item as completed
       _queue[0] = item.copyWith(

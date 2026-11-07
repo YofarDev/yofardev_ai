@@ -1,65 +1,68 @@
+import 'dart:io';
+import 'dart:isolate';
+import 'dart:typed_data';
+
+import 'package:flutter/foundation.dart' show kIsWeb;
+
 import '../../models/voice_effect.dart';
 import '../../utils/logger.dart';
+import 'voice_fx/voice_fx.dart';
+import 'wav_pcm.dart';
 
-/// Service for applying post-processing voice effects to audio files
-///
-/// NOTE: Currently a placeholder that logs effects. Actual audio processing
-/// can be added later using:
-/// - FFmpeg (once package issues are resolved)
-/// - Platform-specific native code (AVAudioEngine on iOS/macOS, SoundPool on Android)
-/// - Web Audio API on web
-///
-/// The infrastructure is in place - just add actual processing in _applyEffects()
+/// Applies the costume's [VoiceEffect] to a synthesized TTS WAV with
+/// [VoiceFx] (pure Dart, off the UI isolate).
 class VoiceEffectsService {
-  /// Apply voice effects to an audio file and return the path to the processed file
-  ///
-  /// Currently returns the input path (no processing). This is intentional as
-  /// a placeholder while the voice effect values are being tuned.
-  Future<String> applyVoiceEffects(
-    String inputPath,
-    VoiceEffect voiceEffect,
-  ) async {
-    // Skip processing if no effect is needed
-    if (!_hasEffectsToApply(voiceEffect)) {
+  /// Ends the name of every processed copy.
+  static const String _processedSuffix = '_fx.wav';
+
+  /// The path of [inputPath] processed by [effect], written next to it as
+  /// `<input path without .wav>_fx.wav` with the same sample count and rate.
+  /// [inputPath] itself when there is nothing to apply ([VoiceEffect.none],
+  /// web) or the processing failed (logged: the sentence plays dry).
+  Future<String> applyVoiceEffects(String inputPath, VoiceEffect effect) async {
+    if (effect == VoiceEffect.none || kIsWeb) {
       return inputPath;
     }
-
     try {
-      AppLogger.info(
-        '🎭 Voice Effects: pitch=${voiceEffect.pitch}, speed=${voiceEffect.speedRate}',
-        tag: 'VoiceEffects',
-      );
-
-      // TODO: Implement actual audio processing
-      // For now, the architecture is in place:
-      // - VoiceEffect values are set per costume in avatar_config.dart
-      // - This service is called in the TTS pipeline
-      // - Just add the actual DSP here
-
-      // When ready to implement, options are:
-      // 1. FFmpeg via package (awaiting fixed download links)
-      // 2. Native platform channels (Swift/Kotlin)
-      // 3. Pure Dart audio processing
-
-      return inputPath;
-    } catch (e) {
+      final Uint8List dryBytes = await File(inputPath).readAsBytes();
+      final Uint8List processed = await _processInIsolate(dryBytes, effect);
+      final String outputPath = _outputPathOf(inputPath);
+      await File(outputPath).writeAsBytes(processed, flush: true);
+      return outputPath;
+    } catch (e, stackTrace) {
       AppLogger.error(
-        'Failed to apply voice effects',
+        'Voice effect ${effect.name} failed for $inputPath, playing it dry',
         tag: 'VoiceEffectsService',
         error: e,
+        stackTrace: stackTrace,
       );
       return inputPath;
     }
   }
 
-  /// Check if there are any effects to apply
-  bool _hasEffectsToApply(VoiceEffect effect) {
-    // Check if pitch modification is needed (not 1.0)
-    if (effect.pitch != 1.0) return true;
+  /// The dry WAV the processed copy at [path] was written from
+  /// (`<name>_fx.wav` → `<name>.wav`); null when [path] is no processed
+  /// copy.
+  static String? dryPathOf(String path) => path.endsWith(_processedSuffix)
+      ? '${path.substring(0, path.length - _processedSuffix.length)}.wav'
+      : null;
 
-    // Check if speed modification is needed (not 1.0)
-    if (effect.speedRate != 1.0) return true;
-
-    return false;
+  static String _outputPathOf(String inputPath) {
+    final String stem = inputPath.endsWith('.wav')
+        ? inputPath.substring(0, inputPath.length - '.wav'.length)
+        : inputPath;
+    return '$stem$_processedSuffix';
   }
+
+  /// Static so the isolate closure captures only the bytes and the effect.
+  static Future<Uint8List> _processInIsolate(
+    Uint8List wavBytes,
+    VoiceEffect effect,
+  ) => Isolate.run<Uint8List>(() {
+    final WavPcm dry = WavPcm.decode(wavBytes);
+    return WavPcm(
+      sampleRate: dry.sampleRate,
+      samples: VoiceFx.process(dry.samples, dry.sampleRate, effect),
+    ).encodePcm16();
+  }, debugName: 'voice_fx');
 }

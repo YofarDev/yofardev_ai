@@ -161,13 +161,15 @@ class ChatTtsCubit extends Cubit<ChatTtsState> {
 
     // Same for the speech analysis (off the UI isolate). The sentence text
     // and its language are parked in the queue until playback consumes
-    // them: peek, not consume.
+    // them: peek, not consume. A voice-effect sentence is analysed from its
+    // dry WAV (the visemes follow the clean voice); the future stays keyed
+    // by the played path.
     _timelineFutures.putIfAbsent(
       audioPath,
       () =>
           Future<SpeechTimeline?>(
             () => _audioAmplitudeService.analyzeSpeech(
-              audioPath,
+              _ttsQueueManager.peekAnalysisPath(audioPath),
               text: _ttsQueueManager.peekText(audioPath),
               language: _ttsQueueManager.peekLanguage(audioPath) ?? 'en',
             ),

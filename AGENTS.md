@@ -422,6 +422,10 @@ imports and the design-layer rules, so `flutter test` fails on violation.
   (not in `fverify.sh`). The pure-Dart sherpa example must never load the pub-cache dylib directly
   on macOS (an aborted run left the file un-rsync-able by Xcode; `rm -rf` the package and
   `flutter pub get` fixes it)
+- Costume voice effects live in `core/services/audio/voice_fx/` (`VoiceFx`: pure Dart,
+  duration-preserving, Batman and RoboCop only, picked by `AvatarCostume.voiceEffect`; tuning
+  constants at the top of `voice_fx.dart`); `VoiceEffectsService` writes `<name>_fx.wav` next to
+  the dry WAV, and the speech analysis reads the dry WAV via `TtsQueueService.peekAnalysisPath`
 - Fresh worktree: `rive_native` host tests fail with "Failed to lookup symbol 'init'" until
   `mkdir -p build/rive_native && ln -sfn ~/.pub-cache/hosted/pub.dev/rive_native-0.1.11/native build/rive_native/native`
   (gitignored)

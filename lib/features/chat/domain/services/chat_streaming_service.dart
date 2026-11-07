@@ -10,7 +10,6 @@ import '../../../../core/models/chat_entry.dart';
 import '../../../../core/models/function_info.dart';
 import '../../../../core/models/llm_config.dart';
 import '../../../../core/models/llm_message.dart';
-import '../../../../core/models/voice_effect.dart';
 import '../../../../core/repositories/settings_repository.dart';
 import '../../../../core/services/agent/tool_registry.dart';
 import '../../../../core/services/audio/interruption_service.dart';
@@ -325,12 +324,14 @@ class ChatStreamingService {
       /// Hands one delivery's cues to the avatar: on its TTS queue item (so
       /// they fire when that audio starts), or straight away in text-only
       /// mode. A cue-only delivery (empty text) becomes a cue-only item.
+      /// The voice effect is the costume worn now: a `change_avatar` tool
+      /// mid-reply changes the voice of the sentences after it.
       void deliverCues(String cleanText, List<AvatarCue> cues) {
         if (!onlyText) {
           _ttsQueueManager?.enqueue(
             text: cleanText,
             language: language,
-            voiceEffect: VoiceEffect(pitch: 1.0, speedRate: 1.0),
+            voiceEffect: (currentAvatar?.call() ?? avatar).costume.voiceEffect,
             cues: cues,
           );
         } else if (cues.isNotEmpty) {

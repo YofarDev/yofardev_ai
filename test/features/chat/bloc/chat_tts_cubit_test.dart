@@ -45,6 +45,16 @@ class MockTtsQueueService extends Mock implements TtsQueueService {
       super.noSuchMethod(Invocation.method(#deleteAudio, <String>[audioPath]))
           as Future<void>;
 
+  /// Stubbable; unstubbed it answers like the real queue when no voice
+  /// effect wrote a copy: the played path itself.
+  @override
+  String peekAnalysisPath(String audioPath) =>
+      super.noSuchMethod(
+            Invocation.method(#peekAnalysisPath, <String>[audioPath]),
+          )
+          as String? ??
+      audioPath;
+
   @override
   Future<void> enqueue({
     required String text,
@@ -596,6 +606,44 @@ void main() {
             language: 'en',
           ),
         ).called(1);
+      });
+
+      test('a voice-effect sentence is analysed from its dry WAV, '
+          'its amplitudes and playback from the processed file', () async {
+        const String dry = '/tmp/tts/speech_dry.wav';
+        when(() => mockTtsManager.peekAnalysisPath(path)).thenReturn(dry);
+        when(() => mockTtsManager.peekText(path)).thenReturn('Big boat.');
+        when(() => mockTtsManager.peekLanguage(path)).thenReturn('en');
+        when(
+          () => mockAmplitudeService.analyzeSpeech(
+            dry,
+            text: any(named: 'text'),
+            language: any(named: 'language'),
+          ),
+        ).thenAnswer((_) async => analysed);
+
+        mockTtsManager.emitAudioPath(path);
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+
+        verify(
+          () => mockAmplitudeService.analyzeSpeech(
+            dry,
+            text: 'Big boat.',
+            language: 'en',
+          ),
+        ).called(1);
+        verifyNever(
+          () => mockAmplitudeService.analyzeSpeech(
+            path,
+            text: any(named: 'text'),
+            language: any(named: 'language'),
+          ),
+        );
+        verify(() => mockAmplitudeService.extractAmplitudes(path)).called(1);
+        verifyNever(() => mockAmplitudeService.extractAmplitudes(dry));
+        verify(() => mockPlayerService.play(path)).called(1);
+        // The analysis still goes to the sentence played from [path].
+        expect(mockTtsPlaybackService.timelines, <SpeechTimeline?>[analysed]);
       });
 
       test(

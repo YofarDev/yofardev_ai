@@ -104,6 +104,37 @@ class WavPcm {
     return WavPcm(sampleRate: sampleRate, samples: samples);
   }
 
+  /// The samples as a mono 16-bit PCM WAV with the canonical 44-byte
+  /// header, clamped to [-1, 1]; [decode] reads it back.
+  Uint8List encodePcm16() {
+    const int headerBytes = 44;
+    final int dataBytes = samples.length * 2;
+    final Uint8List bytes = Uint8List(headerBytes + dataBytes);
+    final ByteData out = ByteData.sublistView(bytes);
+    void writeId(int offset, String id) =>
+        bytes.setRange(offset, offset + 4, id.codeUnits);
+
+    writeId(0, 'RIFF');
+    out.setUint32(4, 36 + dataBytes, Endian.little);
+    writeId(8, 'WAVE');
+    writeId(12, 'fmt ');
+    out.setUint32(16, 16, Endian.little); // fmt payload size
+    out.setUint16(20, 1, Endian.little); // PCM
+    out.setUint16(22, 1, Endian.little); // mono
+    out.setUint32(24, sampleRate, Endian.little);
+    out.setUint32(28, sampleRate * 2, Endian.little); // byte rate
+    out.setUint16(32, 2, Endian.little); // block align
+    out.setUint16(34, 16, Endian.little); // bits per sample
+    writeId(36, 'data');
+    out.setUint32(40, dataBytes, Endian.little);
+    for (int i = 0; i < samples.length; i++) {
+      // × 32768 inverts decode's ÷ 32768; full-scale +1 clips to 32767.
+      final int value = (samples[i].clamp(-1.0, 1.0) * 32768).round();
+      out.setInt16(headerBytes + i * 2, math.min(value, 32767), Endian.little);
+    }
+    return bytes;
+  }
+
   static String _chunkId(Uint8List bytes, int offset) =>
       String.fromCharCodes(bytes, offset, offset + 4);
 }

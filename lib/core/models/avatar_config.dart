@@ -4,7 +4,6 @@ import 'avatar_mood.dart';
 import 'avatar_scene.dart';
 import 'sound_effects.dart';
 import '../utils/extensions.dart';
-import '../utils/platform_utils.dart';
 import 'chat.dart';
 import 'voice_effect.dart';
 
@@ -284,24 +283,14 @@ extension AvatarSceneNewChatPool on AvatarScene {
 }
 
 extension CostumeExtension on AvatarCostume {
-  VoiceEffect getVoiceEffect() {
-    switch (this) {
-      case AvatarCostume.batman:
-        return VoiceEffect(
-          pitch: PlatformUtils.checkPlatform() == 'Web' ? 0.1 : 0.7,
-          speedRate: 0.4,
-        );
-      case AvatarCostume.robocop:
-        return VoiceEffect(pitch: 0.5, speedRate: 0.25);
-      case AvatarCostume.singularity:
-        return VoiceEffect(pitch: 0.6, speedRate: 0.6);
-      default:
-        return VoiceEffect(
-          pitch: 1,
-          speedRate: PlatformUtils.checkPlatform() == 'Web' ? 1 : 0.5,
-        );
-    }
-  }
+  /// The post-processing the voice gets while this costume is worn.
+  VoiceEffect get voiceEffect => switch (this) {
+    AvatarCostume.batman => VoiceEffect.batman,
+    AvatarCostume.robocop => VoiceEffect.robocop,
+    AvatarCostume.none ||
+    AvatarCostume.soubrette ||
+    AvatarCostume.singularity => VoiceEffect.none,
+  };
 }
 
 extension ChatPersonaAvatar on ChatPersona {

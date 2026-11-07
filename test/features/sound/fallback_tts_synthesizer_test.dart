@@ -31,7 +31,7 @@ void main() {
   Future<String> say(TtsSynthesizer synth) => synth.synthesize(
     text: 'Salut',
     language: 'fr',
-    voiceEffect: const VoiceEffect(pitch: 1, speedRate: 1),
+    voiceEffect: VoiceEffect.none,
   );
 
   test('speaks with the primary when it works', () async {

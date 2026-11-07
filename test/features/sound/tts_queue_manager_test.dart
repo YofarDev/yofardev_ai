@@ -19,7 +19,7 @@ class MockVoiceEffectsService extends Mock implements VoiceEffectsService {}
 void main() {
   // Register fallback value for VoiceEffect
   setUpAll(() {
-    registerFallbackValue(VoiceEffect(pitch: 1.0, speedRate: 1.0));
+    registerFallbackValue(VoiceEffect.none);
   });
 
   group('TtsQueueService', () {
@@ -53,7 +53,7 @@ void main() {
       Future<void> enqueue(String text) => manager.enqueue(
         text: text,
         language: 'en',
-        voiceEffect: const VoiceEffect(pitch: 1.0, speedRate: 1.0),
+        voiceEffect: VoiceEffect.none,
       );
 
       test('a failed synthesis drains the queue', () async {
@@ -115,7 +115,7 @@ void main() {
         await manager.enqueue(
           text: '',
           language: 'en',
-          voiceEffect: const VoiceEffect(pitch: 1.0, speedRate: 1.0),
+          voiceEffect: VoiceEffect.none,
           cues: const <AvatarCue>[AvatarCue.gesture(AvatarGesture.wave)],
         );
         await Future<void>.delayed(Duration.zero);
@@ -160,7 +160,7 @@ void main() {
       await manager.enqueue(
         text: '',
         language: 'en',
-        voiceEffect: VoiceEffect(pitch: 1.0, speedRate: 1.0),
+        voiceEffect: VoiceEffect.none,
         cues: const <AvatarCue>[AvatarCue.gesture(AvatarGesture.wave)],
       );
       await Future<void>.delayed(Duration.zero);
@@ -196,7 +196,7 @@ void main() {
         manager.enqueue(
           text: 'Low priority',
           language: 'fr',
-          voiceEffect: VoiceEffect(pitch: 1.0, speedRate: 1.0),
+          voiceEffect: VoiceEffect.none,
           priority: TtsPriority.low,
         ),
       );
@@ -205,7 +205,7 @@ void main() {
         manager.enqueue(
           text: 'High priority',
           language: 'fr',
-          voiceEffect: VoiceEffect(pitch: 1.0, speedRate: 1.0),
+          voiceEffect: VoiceEffect.none,
           priority: TtsPriority.high,
         ),
       );
@@ -235,7 +235,7 @@ void main() {
         manager.enqueue(
           text: 'Test',
           language: 'fr',
-          voiceEffect: VoiceEffect(pitch: 1.0, speedRate: 1.0),
+          voiceEffect: VoiceEffect.none,
         ),
       );
 
@@ -270,7 +270,7 @@ void main() {
           manager.enqueue(
             text: 'Slow sentence',
             language: 'fr',
-            voiceEffect: VoiceEffect(pitch: 1.0, speedRate: 1.0),
+            voiceEffect: VoiceEffect.none,
           ),
         );
 
@@ -294,7 +294,7 @@ void main() {
         manager.enqueue(
           text: '   ',
           language: 'fr',
-          voiceEffect: VoiceEffect(pitch: 1.0, speedRate: 1.0),
+          voiceEffect: VoiceEffect.none,
         ),
       );
 
@@ -319,7 +319,7 @@ void main() {
         manager.enqueue(
           text: 'Test',
           language: 'fr',
-          voiceEffect: VoiceEffect(pitch: 1.0, speedRate: 1.0),
+          voiceEffect: VoiceEffect.none,
         ),
       );
 
@@ -356,7 +356,7 @@ void main() {
         manager.enqueue(
           text: 'Test',
           language: 'fr',
-          voiceEffect: VoiceEffect(pitch: 1.0, speedRate: 1.0),
+          voiceEffect: VoiceEffect.none,
         ),
       );
 
@@ -395,12 +395,12 @@ void main() {
       await manager.enqueue(
         text: 'First',
         language: 'fr',
-        voiceEffect: const VoiceEffect(pitch: 1.0, speedRate: 1.0),
+        voiceEffect: VoiceEffect.none,
       );
       await manager.enqueue(
         text: 'Second',
         language: 'fr',
-        voiceEffect: const VoiceEffect(pitch: 1.0, speedRate: 1.0),
+        voiceEffect: VoiceEffect.none,
       );
 
       await Future<void>.delayed(const Duration(milliseconds: 500));
@@ -428,7 +428,7 @@ void main() {
       await manager.enqueue(
         text: '  Hello there.  ',
         language: 'en',
-        voiceEffect: const VoiceEffect(pitch: 1.0, speedRate: 1.0),
+        voiceEffect: VoiceEffect.none,
       );
       final String path = await emitted.future;
 
@@ -460,7 +460,7 @@ void main() {
         await manager.enqueue(
           text: 'Bonjour.',
           language: 'fr',
-          voiceEffect: const VoiceEffect(pitch: 1.0, speedRate: 1.0),
+          voiceEffect: VoiceEffect.none,
         );
         final String path = await emitted.future;
 
@@ -491,7 +491,7 @@ void main() {
       await manager.enqueue(
         text: 'Hello.',
         language: 'en',
-        voiceEffect: const VoiceEffect(pitch: 1.0, speedRate: 1.0),
+        voiceEffect: VoiceEffect.none,
       );
       final String path = await emitted.future;
       expect(manager.peekLanguage(path), 'en');
@@ -517,7 +517,7 @@ void main() {
       await manager.enqueue(
         text: '  Hello there.  ',
         language: 'en',
-        voiceEffect: const VoiceEffect(pitch: 1.0, speedRate: 1.0),
+        voiceEffect: VoiceEffect.none,
       );
       final String path = await emitted.future;
 
@@ -543,7 +543,7 @@ void main() {
       await manager.enqueue(
         text: 'Hello there.',
         language: 'en',
-        voiceEffect: const VoiceEffect(pitch: 1.0, speedRate: 1.0),
+        voiceEffect: VoiceEffect.none,
       );
       final String path = await emitted.future;
       manager.clear();
@@ -551,6 +551,71 @@ void main() {
       expect(manager.consumeText(path), isNull);
 
       await subscription.cancel();
+    });
+
+    group('peekAnalysisPath', () {
+      setUp(() {
+        when(
+          () => mockDatasource.synthesize(
+            text: any(named: 'text'),
+            language: any(named: 'language'),
+            voiceEffect: any(named: 'voiceEffect'),
+          ),
+        ).thenAnswer((_) async => '/path/to/raw.wav');
+      });
+
+      /// Enqueues one robocop sentence; the path it is played from.
+      Future<String> speak() async {
+        final Future<String> played = manager.audioStream.first;
+        await manager.enqueue(
+          text: 'I am the law.',
+          language: 'en',
+          voiceEffect: VoiceEffect.robocop,
+        );
+        return played;
+      }
+
+      void effectWrites(String processedPath) => when(
+        () => mockVoiceEffectsService.applyVoiceEffects(any(), any()),
+      ).thenAnswer((_) async => processedPath);
+
+      test('is the dry WAV when the effect wrote a new file', () async {
+        effectWrites('/path/to/raw_fx.wav');
+
+        final String played = await speak();
+
+        expect(played, '/path/to/raw_fx.wav');
+        expect(manager.peekAnalysisPath(played), '/path/to/raw.wav');
+        // A peek: still there for the next read.
+        expect(manager.peekAnalysisPath(played), '/path/to/raw.wav');
+      });
+
+      test('is the played path when no new file was written', () async {
+        effectWrites('/path/to/raw.wav');
+
+        final String played = await speak();
+
+        expect(manager.peekAnalysisPath(played), '/path/to/raw.wav');
+        expect(manager.peekAnalysisPath('/unknown.wav'), '/unknown.wav');
+      });
+
+      test('goes with the parked text when playback consumes it', () async {
+        effectWrites('/path/to/raw_fx.wav');
+        final String played = await speak();
+
+        manager.consumeText(played);
+
+        expect(manager.peekAnalysisPath(played), played);
+      });
+
+      test('is cleared with the queue', () async {
+        effectWrites('/path/to/raw_fx.wav');
+        final String played = await speak();
+
+        manager.clear();
+
+        expect(manager.peekAnalysisPath(played), played);
+      });
     });
   });
 
@@ -599,12 +664,12 @@ void main() {
       await queueManager.enqueue(
         text: 'First',
         language: 'fr',
-        voiceEffect: const VoiceEffect(pitch: 1.0, speedRate: 1.0),
+        voiceEffect: VoiceEffect.none,
       );
       await queueManager.enqueue(
         text: 'Second',
         language: 'fr',
-        voiceEffect: const VoiceEffect(pitch: 1.0, speedRate: 1.0),
+        voiceEffect: VoiceEffect.none,
       );
 
       // Wait for enqueue to complete
@@ -633,7 +698,7 @@ void main() {
       await queueManager.enqueue(
         text: 'First',
         language: 'fr',
-        voiceEffect: const VoiceEffect(pitch: 1.0, speedRate: 1.0),
+        voiceEffect: VoiceEffect.none,
       );
       final String path = await emitted.future;
 

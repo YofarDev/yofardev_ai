@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:path_provider/path_provider.dart';
 
+import '../../../../core/services/audio/voice_effects_service.dart';
 import '../../../../core/utils/logger.dart';
 
 /// Scratch space for one-shot TTS audio, shared by every engine: the
@@ -34,11 +35,21 @@ abstract final class TtsScratchFiles {
   static Future<String> newWavPath() async =>
       '${await directoryPath()}/${DateTime.now().millisecondsSinceEpoch}.wav';
 
-  /// Best-effort delete of a played file.
+  /// Best-effort delete of a played file. A voice-effect copy takes the dry
+  /// WAV it was written from with it: playback only knows the copy, and the
+  /// dry file was kept for the speech analysis alone.
   static Future<void> delete(String path) async {
     if (kIsWeb) {
       return;
     }
+    await _deleteQuietly(path);
+    final String? dryPath = VoiceEffectsService.dryPathOf(path);
+    if (dryPath != null) {
+      await _deleteQuietly(dryPath);
+    }
+  }
+
+  static Future<void> _deleteQuietly(String path) async {
     try {
       final File file = File(path);
       if (await file.exists()) {

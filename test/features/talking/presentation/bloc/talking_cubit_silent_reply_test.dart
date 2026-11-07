@@ -78,11 +78,8 @@ void main() {
 
   Future<void> flush() => Future<void>.delayed(Duration.zero);
 
-  Future<void> enqueue(String text) => queue.enqueue(
-    text: text,
-    language: 'en',
-    voiceEffect: VoiceEffect(pitch: 1.0, speedRate: 1.0),
-  );
+  Future<void> enqueue(String text) =>
+      queue.enqueue(text: text, language: 'en', voiceEffect: VoiceEffect.none);
 
   Future<void> startReply() async {
     lifecycle.emitStreamingStateChanged(ChatStatus.typing);

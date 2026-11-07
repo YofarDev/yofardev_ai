@@ -181,6 +181,9 @@ class MockTtsQueueService implements TtsQueueService {
 
   @override
   String? peekLanguage(String audioPath) => null;
+
+  @override
+  String peekAnalysisPath(String audioPath) => audioPath;
 }
 
 void main() {

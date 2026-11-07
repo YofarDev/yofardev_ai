@@ -67,7 +67,7 @@ void main() {
         final String path = await datasource.synthesize(
           text: sentence.value,
           language: sentence.key,
-          voiceEffect: const VoiceEffect(pitch: 1, speedRate: 1),
+          voiceEffect: VoiceEffect.none,
         );
         final int elapsed = synth.elapsedMilliseconds;
 

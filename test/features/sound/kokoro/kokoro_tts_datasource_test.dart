@@ -21,7 +21,7 @@ void main() {
   Future<String> say(String language) => subject.synthesize(
     text: 'Bonjour',
     language: language,
-    voiceEffect: const VoiceEffect(pitch: 1, speedRate: 1),
+    voiceEffect: VoiceEffect.none,
   );
 
   test('is a TtsSynthesizer', () {
@@ -67,7 +67,7 @@ void main() {
       notReady.synthesize(
         text: 'Hi',
         language: 'en',
-        voiceEffect: const VoiceEffect(pitch: 1, speedRate: 1),
+        voiceEffect: VoiceEffect.none,
       ),
       throwsA(isA<TtsEngineNotReadyException>()),
     );
