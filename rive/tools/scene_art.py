@@ -35,6 +35,11 @@ def before(content: list[El], name: str, *elements: El) -> None:
     content[index:index] = elements
 
 
+def after(content: list[El], name: str, *elements: El) -> None:
+    index = next(i for i, e in enumerate(content) if e.attrs.get("name") == name)
+    content[index + 1:index + 1] = elements
+
+
 def recolor(elements: list[El], palette: dict[str, str]) -> None:
     for e in walk(elements):
         for attr in ("colorValue", "value"):
@@ -564,7 +569,9 @@ def beach(sc: Scene, content: list[El]) -> None:
         fronds.append(leaf)
         tracks.append(sc.T(leaf, rotation=[(0, 0.0), (150 + i * 23, 0.06 + i * 0.006), (330 + i * 17, -0.035 - i * 0.004),
                                            (480 + i * 9, 0.02), (600, 0.0)]))
-    before(content, "Umbrella", *fronds, *rings, trunk)
+    # behind the umbrella: the trunk crosses the canopy's rim tip on the left (content is
+    # front-most first, so the palm goes after it)
+    after(content, "Umbrella", *fronds, *rings, trunk)
     sc.ambient("PalmBreeze", sc.A("amb_palm", 600, tracks, loop=True))
 
 
