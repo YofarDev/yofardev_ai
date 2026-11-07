@@ -45,6 +45,7 @@ import 'dart:typed_data';
 import 'package:yofardev_ai/features/sound/sound.dart';
 import 'package:yofardev_ai/features/talking/talking.dart';
 
+import 'support/canned_news_tool.dart';
 import 'support/canned_weather_tool.dart';
 import 'support/frame_grabber.dart';
 import 'support/kokoro_capture_synthesizer.dart';
@@ -129,6 +130,19 @@ const String _showOut = String.fromEnvironment('SHOW_OUT');
 /// content size (macOS remembers the last frame). Nothing changes when empty.
 const String _winPos = String.fromEnvironment('WIN_POS');
 const String _winSize = String.fromEnvironment('WIN_SIZE');
+
+/// Film (2026-11-07): `GRAB_MS` overrides the script's grab interval (the
+/// film records the window with a 60 fps screen capture and keeps only
+/// sparse, small grabs to sync that recording to this timeline).
+const int _grabMs = int.fromEnvironment('GRAB_MS');
+
+/// Film: `FRONT=true` brings the parked window to the front (only when the
+/// display is free: a covered window stops rendering and the run stalls).
+const bool _front = bool.fromEnvironment('FRONT');
+
+/// Film: `FILM_OUTFIT=true` starts every run in the default outfit (the
+/// hoodie), so the character looks the same in every shot of the film.
+const bool _filmOutfit = bool.fromEnvironment('FILM_OUTFIT');
 
 /// M9 `scene`: what the run says and pokes in one scene.
 class _SceneRun {
@@ -680,10 +694,118 @@ final Map<String, _Script> _showcaseScripts = <String, _Script>{
   ),
 };
 
+/// Film (2026-11-07): the portfolio film's beats, recorded by a 60 fps
+/// screen capture of the window (`film/capture.sh`), the voice Kokoro's.
+/// Each one plays in one evening, in the default outfit.
+_Script _filmTurns({
+  required AvatarScene scene,
+  required ({int hour, int minute}) clock,
+  required List<_Turn> turns,
+  double rain = 0,
+  String? poke,
+}) => _Script(
+  scene: scene,
+  rain: rain,
+  clock: clock,
+  poke: poke,
+  user: turns.map((_Turn t) => t.user).join(' | '),
+  defaultOutfit: true,
+  frameInterval: const Duration(milliseconds: 250),
+  turns: turns,
+  responses: <FakeLlmResponse>[for (final _Turn t in turns) ...t.responses],
+);
+
+/// A lookup tool round (no arguments but [args]), then the spoken answer.
+List<FakeLlmResponse> _toolTurn(
+  String tool,
+  Map<String, dynamic> args,
+  String reply,
+) => <FakeLlmResponse>[
+  FakeLlmResponse(
+    jsonBody: '',
+    toolCalls: <FakeToolCall>[FakeToolCall(name: tool, arguments: args)],
+  ),
+  FakeLlmResponse(jsonBody: _answer(reply, 'happy')),
+];
+
+final Map<String, _Script> _filmScripts = <String, _Script>{
+  // The evening in the living room: hello, the weather, the news.
+  'film_hello': _filmTurns(
+    scene: AvatarScene.livingRoom,
+    clock: (hour: 19, minute: 30),
+    poke: 'cat',
+    turns: <_Turn>[
+      _Turn(
+        label: 'hello',
+        user: 'Hey, are you there?',
+        responses: _turnResponses(
+          '[g:wave] Oh, hi! Come on in, make yourself at home.',
+        ),
+      ),
+      _Turn(
+        label: 'weather',
+        user: "What's the weather like in Tokyo?",
+        responses: _toolTurn(
+          'getCurrentWeather',
+          <String, dynamic>{'location': 'Tokyo'},
+          "[g:nod] Eighteen degrees in Tokyo, with a light rain. "
+              'Bring an umbrella!',
+        ),
+      ),
+      _Turn(
+        label: 'news',
+        user: 'Anything good in the news?',
+        responses: _toolTurn(
+          'getMostPopularNewsOfTheDay',
+          <String, dynamic>{},
+          'Oh, this is nice. A bright comet is visible this week, '
+              'no telescope needed!',
+        ),
+      ),
+    ],
+  ),
+  // The wardrobe: the four costumes, each with its signature move.
+  'film_wardrobe': _filmTurns(
+    scene: AvatarScene.livingRoom,
+    clock: (hour: 19, minute: 30),
+    turns: <_Turn>[
+      for (final (String costume, String user, String reply)
+          in <(String, String, String)>[
+            ('batman', 'Can you be Batman?', 'I am the night.'),
+            ('robocop', 'Now RoboCop!', 'Scanning, all clear.'),
+            ('soubrette', 'Try the soubrette.', 'Enchantée!'),
+            ('singularity', 'And the singularity?', 'I contain multitudes.'),
+          ])
+        _Turn(
+          label: costume,
+          user: user,
+          signature: true,
+          responses: _turnResponses(
+            reply,
+            avatarArgs: <String, dynamic>{'costume': costume},
+          ),
+        ),
+    ],
+  ),
+  // The goodnight: the beach under the moon.
+  'film_goodnight': _filmTurns(
+    scene: AvatarScene.beach,
+    clock: (hour: 22, minute: 0),
+    turns: <_Turn>[
+      _Turn(
+        label: 'goodnight',
+        user: 'Goodnight!',
+        responses: _turnResponses('[g:wave] Goodnight! Come back soon, okay?'),
+      ),
+    ],
+  ),
+};
+
 /// Everything the WOW define can select (the showcase beats included).
 final Map<String, _Script> _allScripts = <String, _Script>{
   ..._scripts,
   ..._showcaseScripts,
+  ..._filmScripts,
 };
 
 /// A showcase script: the wows' defaults at a 33 ms grab interval (~30 fps).
@@ -993,6 +1115,8 @@ void main() {
           ),
           // M10 wardrobe: the real change_avatar
           _AvatarToolProxy(),
+          // film: the newspaper beat
+          CannedNewsTool(),
         ],
         foleyPlayer: () => _LoggingFoleyPlayer(foleyLog),
         haptics: _LoggingHaptics(hapticLog),
@@ -1025,6 +1149,13 @@ void main() {
                 '{${wh[0].trim()}, ${wh[1].trim()}}',
           ]);
         }
+        if (_front) {
+          await Process.run('osascript', <String>[
+            '-e',
+            'tell application "System Events" to set frontmost of '
+                '(first application process whose unix id is $pid) to true',
+          ]);
+        }
       }
       await _settle(tester, const Duration(seconds: 6));
 
@@ -1047,7 +1178,7 @@ void main() {
       }
       // A new chat starts on a random background: set the script's scene on
       // the chat too, so a reply's background change is seen as a change.
-      final AvatarConfig start = script.defaultOutfit
+      final AvatarConfig start = script.defaultOutfit || _filmOutfit
           ? AvatarConfig(
               background: script.scene,
               hat: AvatarHat.noHat,
@@ -1329,7 +1460,9 @@ void main() {
       final FrameGrabber grabber = FrameGrabber(
         view,
         frameDir,
-        interval: script.frameInterval,
+        interval: _grabMs > 0
+            ? Duration(milliseconds: _grabMs)
+            : script.frameInterval,
         pixelRatio: _pixelRatio,
       );
       final List<FrameTiming> timings = <FrameTiming>[];
@@ -1517,12 +1650,15 @@ void main() {
         await tester.pump();
         await Future<void>.delayed(const Duration(milliseconds: 100));
         final bool consumed = FakeLlmService().remainingResponses == 0;
+        // film: a sentence can take seconds to synthesise after a journey;
+        // wait longer for silence before calling the reply done
+        final int quiet = _filmOutfit ? 5000 : 1800;
         if (consumed &&
             spoke &&
             !speaking &&
             avatar.state.journey == null &&
-            clock.elapsedMilliseconds - lastStop > 1800 &&
-            clock.elapsedMilliseconds - lastSpeechActivity > 1800) {
+            clock.elapsedMilliseconds - lastStop > quiet &&
+            clock.elapsedMilliseconds - lastSpeechActivity > quiet) {
           break;
         }
       }
@@ -1597,6 +1733,7 @@ void main() {
               in (kokoro?.spoken ?? tts.spoken))
             <String, String>{'text': a.text, 'file': a.file},
         ],
+        'clockStartEpochMs': clockStart.millisecondsSinceEpoch,
         'network_attempts': network.attempts,
         'network_stacks': network.urls,
         'frame_timings': <Map<String, double>>[
@@ -1775,8 +1912,11 @@ Future<Map<String, Object?>> _performDrag(
     down,
     kind: PointerDeviceKind.touch,
   );
+  // film: the finger in window px, for the film's touch indicator
+  log('dragPoint', <String, Object?>{'x': down.dx, 'y': down.dy});
   await tester.pump();
   for (final Offset p in path) {
+    log('dragPoint', <String, Object?>{'x': p.dx, 'y': p.dy});
     await gesture.moveTo(p);
     await tester.pump();
     await Future<void>.delayed(const Duration(milliseconds: 16));
