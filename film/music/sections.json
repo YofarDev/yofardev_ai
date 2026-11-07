@@ -1,0 +1,65 @@
+[
+ {
+  "id": "cold",
+  "bars": 4,
+  "from": 0,
+  "dur": 600,
+  "startBar": 1
+ },
+ {
+  "id": "title",
+  "bars": 2,
+  "from": 600,
+  "dur": 300,
+  "startBar": 5
+ },
+ {
+  "id": "listen",
+  "bars": 5,
+  "from": 900,
+  "dur": 750,
+  "startBar": 7
+ },
+ {
+  "id": "tools",
+  "bars": 9,
+  "from": 1650,
+  "dur": 1350,
+  "startBar": 12
+ },
+ {
+  "id": "wardrobe",
+  "bars": 4,
+  "from": 3000,
+  "dur": 600,
+  "startBar": 21
+ },
+ {
+  "id": "journey",
+  "bars": 6,
+  "from": 3600,
+  "dur": 900,
+  "startBar": 25
+ },
+ {
+  "id": "world",
+  "bars": 8,
+  "from": 4500,
+  "dur": 1200,
+  "startBar": 31
+ },
+ {
+  "id": "hood",
+  "bars": 3,
+  "from": 5700,
+  "dur": 450,
+  "startBar": 39
+ },
+ {
+  "id": "finale",
+  "bars": 6,
+  "from": 6150,
+  "dur": 900,
+  "startBar": 42
+ }
+]

@@ -1,0 +1,4816 @@
+{
+ "film_goodnight": {
+  "events": [
+   {
+    "ms": 3545,
+    "type": "turn",
+    "i": 0,
+    "label": "goodnight"
+   },
+   {
+    "ms": 3545,
+    "type": "typing"
+   },
+   {
+    "ms": 5426,
+    "type": "send"
+   },
+   {
+    "ms": 7630,
+    "type": "preroll"
+   },
+   {
+    "ms": 8007,
+    "type": "start"
+   },
+   {
+    "ms": 8012,
+    "type": "caption",
+    "text": "Goodnight!"
+   },
+   {
+    "ms": 8013,
+    "type": "gesture",
+    "name": "wave"
+   },
+   {
+    "ms": 9143,
+    "type": "stop"
+   },
+   {
+    "ms": 10071,
+    "type": "gestureDone"
+   },
+   {
+    "ms": 10943,
+    "type": "preroll"
+   },
+   {
+    "ms": 11326,
+    "type": "start"
+   },
+   {
+    "ms": 11327,
+    "type": "caption",
+    "text": "Come back soon, okay?"
+   },
+   {
+    "ms": 11328,
+    "type": "gesture",
+    "name": "think"
+   },
+   {
+    "ms": 11483,
+    "type": "turnEnd",
+    "i": 0,
+    "label": "goodnight"
+   },
+   {
+    "ms": 13151,
+    "type": "stop"
+   },
+   {
+    "ms": 13565,
+    "type": "gestureDone"
+   }
+  ],
+  "duration": 16.017,
+  "audio": [
+   "Goodnight!",
+   "Come back soon, okay?"
+  ]
+ },
+ "film_hello": {
+  "events": [
+   {
+    "ms": 2013,
+    "type": "poke",
+    "prop": "cat"
+   },
+   {
+    "ms": 6562,
+    "type": "turn",
+    "i": 0,
+    "label": "hello"
+   },
+   {
+    "ms": 6562,
+    "type": "typing"
+   },
+   {
+    "ms": 9616,
+    "type": "send"
+   },
+   {
+    "ms": 11366,
+    "type": "preroll"
+   },
+   {
+    "ms": 12139,
+    "type": "start"
+   },
+   {
+    "ms": 12145,
+    "type": "caption",
+    "text": "Oh, hi!"
+   },
+   {
+    "ms": 12146,
+    "type": "gesture",
+    "name": "wave"
+   },
+   {
+    "ms": 13261,
+    "type": "stop"
+   },
+   {
+    "ms": 14224,
+    "type": "gestureDone"
+   },
+   {
+    "ms": 14397,
+    "type": "preroll"
+   },
+   {
+    "ms": 14775,
+    "type": "start"
+   },
+   {
+    "ms": 14776,
+    "type": "caption",
+    "text": "Come on in, make yourself at home."
+   },
+   {
+    "ms": 17102,
+    "type": "stop"
+   },
+   {
+    "ms": 19472,
+    "type": "turnEnd",
+    "i": 0,
+    "label": "hello"
+   },
+   {
+    "ms": 20993,
+    "type": "turn",
+    "i": 1,
+    "label": "weather"
+   },
+   {
+    "ms": 20993,
+    "type": "typing"
+   },
+   {
+    "ms": 24848,
+    "type": "send"
+   },
+   {
+    "ms": 25036,
+    "type": "foley",
+    "kind": "click"
+   },
+   {
+    "ms": 28954,
+    "type": "foley",
+    "kind": "click"
+   },
+   {
+    "ms": 31228,
+    "type": "preroll"
+   },
+   {
+    "ms": 31605,
+    "type": "start"
+   },
+   {
+    "ms": 31606,
+    "type": "caption",
+    "text": "Eighteen degrees in Tokyo, with a light rain."
+   },
+   {
+    "ms": 31606,
+    "type": "gesture",
+    "name": "nod"
+   },
+   {
+    "ms": 32838,
+    "type": "gestureDone"
+   },
+   {
+    "ms": 34716,
+    "type": "stop"
+   },
+   {
+    "ms": 34716,
+    "type": "preroll"
+   },
+   {
+    "ms": 35088,
+    "type": "start"
+   },
+   {
+    "ms": 35088,
+    "type": "caption",
+    "text": "Bring an umbrella!"
+   },
+   {
+    "ms": 36608,
+    "type": "stop"
+   },
+   {
+    "ms": 38933,
+    "type": "turnEnd",
+    "i": 1,
+    "label": "weather"
+   },
+   {
+    "ms": 40454,
+    "type": "turn",
+    "i": 2,
+    "label": "news"
+   },
+   {
+    "ms": 40454,
+    "type": "typing"
+   },
+   {
+    "ms": 43655,
+    "type": "send"
+   },
+   {
+    "ms": 43907,
+    "type": "foley",
+    "kind": "paper"
+   },
+   {
+    "ms": 46921,
+    "type": "foley",
+    "kind": "paper"
+   },
+   {
+    "ms": 48340,
+    "type": "preroll"
+   },
+   {
+    "ms": 48713,
+    "type": "start"
+   },
+   {
+    "ms": 48714,
+    "type": "caption",
+    "text": "Oh, this is nice."
+   },
+   {
+    "ms": 50233,
+    "type": "stop"
+   },
+   {
+    "ms": 52605,
+    "type": "turnEnd",
+    "i": 2,
+    "label": "news"
+   },
+   {
+    "ms": 52757,
+    "type": "preroll"
+   },
+   {
+    "ms": 53148,
+    "type": "start"
+   },
+   {
+    "ms": 53149,
+    "type": "caption",
+    "text": "A bright comet is visible this week, no telescope needed!"
+   },
+   {
+    "ms": 57002,
+    "type": "stop"
+   }
+  ],
+  "duration": 58.718,
+  "audio": [
+   "Oh, hi!",
+   "Come on in, make yourself at home.",
+   "Eighteen degrees in Tokyo, with a light rain.",
+   "Bring an umbrella!",
+   "Oh, this is nice.",
+   "A bright comet is visible this week, no telescope needed!"
+  ]
+ },
+ "film_wardrobe": {
+  "events": [
+   {
+    "ms": 3545,
+    "type": "turn",
+    "i": 0,
+    "label": "batman"
+   },
+   {
+    "ms": 3545,
+    "type": "typing"
+   },
+   {
+    "ms": 6268,
+    "type": "send"
+   },
+   {
+    "ms": 6537,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 6878,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 7052,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 7199,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 7359,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 7692,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 7989,
+    "type": "presenceDone"
+   },
+   {
+    "ms": 8146,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 8182,
+    "type": "preroll"
+   },
+   {
+    "ms": 8492,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 8600,
+    "type": "start"
+   },
+   {
+    "ms": 8604,
+    "type": "caption",
+    "text": "I am the night."
+   },
+   {
+    "ms": 8672,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 8813,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 8986,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 9319,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 9591,
+    "type": "gesture",
+    "name": "signature"
+   },
+   {
+    "ms": 9603,
+    "type": "presenceDone"
+   },
+   {
+    "ms": 9968,
+    "type": "stop"
+   },
+   {
+    "ms": 10727,
+    "type": "gestureDone"
+   },
+   {
+    "ms": 12349,
+    "type": "turnEnd",
+    "i": 0,
+    "label": "batman"
+   },
+   {
+    "ms": 13869,
+    "type": "typing"
+   },
+   {
+    "ms": 13869,
+    "type": "turn",
+    "i": 1,
+    "label": "robocop"
+   },
+   {
+    "ms": 15764,
+    "type": "send"
+   },
+   {
+    "ms": 15975,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 16322,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 16495,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 16642,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 16802,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 17135,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 17425,
+    "type": "presenceDone"
+   },
+   {
+    "ms": 17589,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 17929,
+    "type": "preroll"
+   },
+   {
+    "ms": 17936,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 18109,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 18256,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 18327,
+    "type": "start"
+   },
+   {
+    "ms": 18328,
+    "type": "caption",
+    "text": "Scanning, all clear."
+   },
+   {
+    "ms": 18429,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 18763,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 19034,
+    "type": "gesture",
+    "name": "signature"
+   },
+   {
+    "ms": 19042,
+    "type": "presenceDone"
+   },
+   {
+    "ms": 20021,
+    "type": "stop"
+   },
+   {
+    "ms": 20263,
+    "type": "gestureDone"
+   },
+   {
+    "ms": 22419,
+    "type": "turnEnd",
+    "i": 1,
+    "label": "robocop"
+   },
+   {
+    "ms": 23939,
+    "type": "turn",
+    "i": 2,
+    "label": "soubrette"
+   },
+   {
+    "ms": 23939,
+    "type": "typing"
+   },
+   {
+    "ms": 26394,
+    "type": "send"
+   },
+   {
+    "ms": 26606,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 26952,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 27126,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 27272,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 27433,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 27766,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 28051,
+    "type": "presenceDone"
+   },
+   {
+    "ms": 28175,
+    "type": "preroll"
+   },
+   {
+    "ms": 28220,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 28556,
+    "type": "start"
+   },
+   {
+    "ms": 28556,
+    "type": "caption",
+    "text": "Enchant\u00e9e!"
+   },
+   {
+    "ms": 28580,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 28740,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 28887,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 29060,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 29393,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 29663,
+    "type": "gesture",
+    "name": "signature"
+   },
+   {
+    "ms": 29668,
+    "type": "presenceDone"
+   },
+   {
+    "ms": 29913,
+    "type": "stop"
+   },
+   {
+    "ms": 30890,
+    "type": "gestureDone"
+   },
+   {
+    "ms": 32290,
+    "type": "turnEnd",
+    "i": 2,
+    "label": "soubrette"
+   },
+   {
+    "ms": 33810,
+    "type": "typing"
+   },
+   {
+    "ms": 33810,
+    "type": "turn",
+    "i": 3,
+    "label": "singularity"
+   },
+   {
+    "ms": 36451,
+    "type": "send"
+   },
+   {
+    "ms": 36663,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 37009,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 37183,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 37330,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 37490,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 37823,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 38116,
+    "type": "presenceDone"
+   },
+   {
+    "ms": 38277,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 38623,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 38797,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 38912,
+    "type": "preroll"
+   },
+   {
+    "ms": 38943,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 39117,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 39294,
+    "type": "start"
+   },
+   {
+    "ms": 39295,
+    "type": "caption",
+    "text": "I contain multitudes."
+   },
+   {
+    "ms": 39451,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 39720,
+    "type": "gesture",
+    "name": "signature"
+   },
+   {
+    "ms": 39734,
+    "type": "presenceDone"
+   },
+   {
+    "ms": 40955,
+    "type": "gestureDone"
+   },
+   {
+    "ms": 41291,
+    "type": "stop"
+   },
+   {
+    "ms": 43654,
+    "type": "turnEnd",
+    "i": 3,
+    "label": "singularity"
+   }
+  ],
+  "duration": 47.301,
+  "audio": [
+   "I am the night.",
+   "Scanning, all clear.",
+   "Enchant\u00e9e!",
+   "I contain multitudes."
+  ]
+ },
+ "tour": {
+  "events": [
+   {
+    "ms": 2025,
+    "type": "journey",
+    "from": "livingRoom",
+    "to": "campfire"
+   },
+   {
+    "ms": 2060,
+    "type": "phase",
+    "name": "pullBack"
+   },
+   {
+    "ms": 2644,
+    "type": "phase",
+    "name": "open"
+   },
+   {
+    "ms": 3484,
+    "type": "foley",
+    "kind": "paper"
+   },
+   {
+    "ms": 4033,
+    "type": "gesture",
+    "name": "grab"
+   },
+   {
+    "ms": 4060,
+    "type": "phase",
+    "name": "grab"
+   },
+   {
+    "ms": 4454,
+    "type": "foley",
+    "kind": "cloth"
+   },
+   {
+    "ms": 4951,
+    "type": "phase",
+    "name": "exit"
+   },
+   {
+    "ms": 4987,
+    "type": "gestureDone"
+   },
+   {
+    "ms": 5144,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 5491,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 5664,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 5811,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 5971,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 6305,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 6602,
+    "type": "presenceDone"
+   },
+   {
+    "ms": 6602,
+    "type": "phase",
+    "name": "close"
+   },
+   {
+    "ms": 7156,
+    "type": "foley",
+    "kind": "click"
+   },
+   {
+    "ms": 7244,
+    "type": "phase",
+    "name": "arriveOpen"
+   },
+   {
+    "ms": 7716,
+    "type": "foley",
+    "kind": "paper"
+   },
+   {
+    "ms": 8250,
+    "type": "phase",
+    "name": "enter"
+   },
+   {
+    "ms": 8452,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 8799,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 8972,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 9119,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 9279,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 9613,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 9881,
+    "type": "gesture",
+    "name": "grab"
+   },
+   {
+    "ms": 9900,
+    "type": "presenceDone"
+   },
+   {
+    "ms": 9900,
+    "type": "phase",
+    "name": "hang"
+   },
+   {
+    "ms": 10293,
+    "type": "foley",
+    "kind": "cloth"
+   },
+   {
+    "ms": 10791,
+    "type": "phase",
+    "name": "arriveClose"
+   },
+   {
+    "ms": 10825,
+    "type": "gestureDone"
+   },
+   {
+    "ms": 11452,
+    "type": "phase",
+    "name": "vanish"
+   },
+   {
+    "ms": 11749,
+    "type": "phase",
+    "name": "none"
+   },
+   {
+    "ms": 12948,
+    "type": "journey",
+    "from": "campfire",
+    "to": "beach"
+   },
+   {
+    "ms": 12979,
+    "type": "phase",
+    "name": "pullBack"
+   },
+   {
+    "ms": 13564,
+    "type": "phase",
+    "name": "open"
+   },
+   {
+    "ms": 14983,
+    "type": "phase",
+    "name": "exit"
+   },
+   {
+    "ms": 15161,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 15508,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 15681,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 15828,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 15988,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 16322,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 16600,
+    "type": "presenceDone"
+   },
+   {
+    "ms": 16600,
+    "type": "phase",
+    "name": "close"
+   },
+   {
+    "ms": 17263,
+    "type": "phase",
+    "name": "arriveOpen"
+   },
+   {
+    "ms": 17754,
+    "type": "phase",
+    "name": "enter"
+   },
+   {
+    "ms": 17936,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 18282,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 18456,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 18603,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 18763,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 19096,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 19371,
+    "type": "presenceDone"
+   },
+   {
+    "ms": 19371,
+    "type": "phase",
+    "name": "arriveClose"
+   },
+   {
+    "ms": 20032,
+    "type": "phase",
+    "name": "vanish"
+   },
+   {
+    "ms": 20328,
+    "type": "phase",
+    "name": "none"
+   },
+   {
+    "ms": 21578,
+    "type": "journey",
+    "from": "beach",
+    "to": "deepSpace"
+   },
+   {
+    "ms": 21582,
+    "type": "phase",
+    "name": "pullBack"
+   },
+   {
+    "ms": 22210,
+    "type": "phase",
+    "name": "open"
+   },
+   {
+    "ms": 23596,
+    "type": "phase",
+    "name": "exit"
+   },
+   {
+    "ms": 23791,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 24138,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 24311,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 24458,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 24618,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 24965,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 25246,
+    "type": "presenceDone"
+   },
+   {
+    "ms": 25246,
+    "type": "phase",
+    "name": "close"
+   },
+   {
+    "ms": 26863,
+    "type": "phase",
+    "name": "cut"
+   },
+   {
+    "ms": 26897,
+    "type": "phase",
+    "name": "arriveOpen"
+   },
+   {
+    "ms": 27957,
+    "type": "phase",
+    "name": "enter"
+   },
+   {
+    "ms": 28139,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 28486,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 28659,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 28806,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 28966,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 29300,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 29570,
+    "type": "presenceDone"
+   },
+   {
+    "ms": 29570,
+    "type": "phase",
+    "name": "arriveClose"
+   },
+   {
+    "ms": 30228,
+    "type": "phase",
+    "name": "vanish"
+   },
+   {
+    "ms": 31219,
+    "type": "phase",
+    "name": "none"
+   },
+   {
+    "ms": 32476,
+    "type": "journey",
+    "from": "deepSpace",
+    "to": "livingRoom"
+   },
+   {
+    "ms": 32506,
+    "type": "phase",
+    "name": "pullBack"
+   },
+   {
+    "ms": 33099,
+    "type": "phase",
+    "name": "open"
+   },
+   {
+    "ms": 34486,
+    "type": "phase",
+    "name": "exit"
+   },
+   {
+    "ms": 34688,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 35035,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 35209,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 35355,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 35515,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 35849,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 36136,
+    "type": "presenceDone"
+   },
+   {
+    "ms": 36136,
+    "type": "phase",
+    "name": "close"
+   },
+   {
+    "ms": 36762,
+    "type": "phase",
+    "name": "cut"
+   },
+   {
+    "ms": 36800,
+    "type": "phase",
+    "name": "arriveOpen"
+   },
+   {
+    "ms": 37257,
+    "type": "phase",
+    "name": "enter"
+   },
+   {
+    "ms": 37463,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 37810,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 37983,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 38130,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 38290,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 38624,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 38908,
+    "type": "presenceDone"
+   },
+   {
+    "ms": 38908,
+    "type": "phase",
+    "name": "arriveClose"
+   },
+   {
+    "ms": 39534,
+    "type": "phase",
+    "name": "vanish"
+   },
+   {
+    "ms": 39866,
+    "type": "phase",
+    "name": "none"
+   },
+   {
+    "ms": 41679,
+    "type": "send"
+   }
+  ],
+  "duration": 42.779,
+  "audio": []
+ },
+ "wow1": {
+  "events": [
+   {
+    "ms": 2025,
+    "type": "typing"
+   },
+   {
+    "ms": 6933,
+    "type": "send"
+   },
+   {
+    "ms": 11962,
+    "type": "preroll"
+   },
+   {
+    "ms": 12340,
+    "type": "start"
+   },
+   {
+    "ms": 12345,
+    "type": "caption",
+    "text": "Picture a big bright moon above the pines."
+   },
+   {
+    "ms": 15241,
+    "type": "stop"
+   },
+   {
+    "ms": 16422,
+    "type": "preroll"
+   },
+   {
+    "ms": 16808,
+    "type": "start"
+   },
+   {
+    "ms": 16809,
+    "type": "caption",
+    "text": "Maybe the rain will pass by morning."
+   },
+   {
+    "ms": 19235,
+    "type": "stop"
+   },
+   {
+    "ms": 19788,
+    "type": "preroll"
+   },
+   {
+    "ms": 20190,
+    "type": "start"
+   },
+   {
+    "ms": 20192,
+    "type": "caption",
+    "text": "Do you hear the logs hissing?"
+   },
+   {
+    "ms": 20194,
+    "type": "gesture",
+    "name": "think"
+   },
+   {
+    "ms": 22148,
+    "type": "stop"
+   },
+   {
+    "ms": 22413,
+    "type": "gestureDone"
+   }
+  ],
+  "duration": 24.959,
+  "audio": [
+   "Picture a big bright moon above the pines.",
+   "Maybe the rain will pass by morning.",
+   "Do you hear the logs hissing?"
+  ]
+ },
+ "scene_beach": {
+  "events": [
+   {
+    "ms": 12161,
+    "type": "gullPoke",
+    "prop": "seagull"
+   },
+   {
+    "ms": 15188,
+    "type": "poke",
+    "prop": "crab"
+   },
+   {
+    "ms": 17720,
+    "type": "dragStart",
+    "id": "sand",
+    "kind": "trail",
+    "x": 860.0,
+    "y": 1324.0
+   },
+   {
+    "ms": 17737,
+    "type": "dragPoint",
+    "x": 458.6666666666667,
+    "y": 703.1333333333333
+   },
+   {
+    "ms": 17741,
+    "type": "dragPoint",
+    "x": 464.0,
+    "y": 703.1333333333333
+   },
+   {
+    "ms": 17783,
+    "type": "dragPoint",
+    "x": 469.3333333333333,
+    "y": 703.1333333333333
+   },
+   {
+    "ms": 17810,
+    "type": "dragPoint",
+    "x": 474.6666666666667,
+    "y": 703.1333333333333
+   },
+   {
+    "ms": 17836,
+    "type": "dragPoint",
+    "x": 480.0,
+    "y": 703.1333333333333
+   },
+   {
+    "ms": 17861,
+    "type": "dragPoint",
+    "x": 485.3333333333333,
+    "y": 703.1333333333333
+   },
+   {
+    "ms": 17889,
+    "type": "dragPoint",
+    "x": 490.6666666666667,
+    "y": 703.1333333333333
+   },
+   {
+    "ms": 17916,
+    "type": "dragPoint",
+    "x": 496.0,
+    "y": 703.1333333333333
+   },
+   {
+    "ms": 17941,
+    "type": "dragPoint",
+    "x": 501.3333333333333,
+    "y": 703.1333333333333
+   },
+   {
+    "ms": 17968,
+    "type": "dragPoint",
+    "x": 506.6666666666667,
+    "y": 703.1333333333333
+   },
+   {
+    "ms": 17995,
+    "type": "dragPoint",
+    "x": 503.46666666666664,
+    "y": 707.311111111111
+   },
+   {
+    "ms": 18020,
+    "type": "dragPoint",
+    "x": 500.26666666666665,
+    "y": 711.4888888888889
+   },
+   {
+    "ms": 18049,
+    "type": "dragPoint",
+    "x": 497.06666666666666,
+    "y": 715.6666666666666
+   },
+   {
+    "ms": 18075,
+    "type": "dragPoint",
+    "x": 493.8666666666667,
+    "y": 719.8444444444444
+   },
+   {
+    "ms": 18100,
+    "type": "dragPoint",
+    "x": 490.6666666666667,
+    "y": 724.0222222222222
+   },
+   {
+    "ms": 18128,
+    "type": "dragPoint",
+    "x": 487.46666666666664,
+    "y": 728.2
+   },
+   {
+    "ms": 18154,
+    "type": "dragPoint",
+    "x": 484.26666666666665,
+    "y": 732.3777777777777
+   },
+   {
+    "ms": 18183,
+    "type": "dragPoint",
+    "x": 481.06666666666666,
+    "y": 736.5555555555555
+   },
+   {
+    "ms": 18210,
+    "type": "dragPoint",
+    "x": 477.8666666666667,
+    "y": 740.7333333333333
+   },
+   {
+    "ms": 18235,
+    "type": "dragPoint",
+    "x": 474.6666666666667,
+    "y": 744.911111111111
+   },
+   {
+    "ms": 18262,
+    "type": "dragPoint",
+    "x": 471.46666666666664,
+    "y": 749.088888888889
+   },
+   {
+    "ms": 18287,
+    "type": "dragPoint",
+    "x": 468.26666666666665,
+    "y": 753.2666666666667
+   },
+   {
+    "ms": 18315,
+    "type": "dragPoint",
+    "x": 465.06666666666666,
+    "y": 757.4444444444443
+   },
+   {
+    "ms": 18341,
+    "type": "dragPoint",
+    "x": 461.8666666666667,
+    "y": 761.6222222222223
+   },
+   {
+    "ms": 18369,
+    "type": "dragPoint",
+    "x": 458.6666666666667,
+    "y": 765.8
+   },
+   {
+    "ms": 18395,
+    "type": "dragPoint",
+    "x": 461.8666666666667,
+    "y": 769.9777777777778
+   },
+   {
+    "ms": 18422,
+    "type": "dragPoint",
+    "x": 465.06666666666666,
+    "y": 774.1555555555556
+   },
+   {
+    "ms": 18448,
+    "type": "dragPoint",
+    "x": 468.26666666666665,
+    "y": 778.3333333333334
+   },
+   {
+    "ms": 18476,
+    "type": "dragPoint",
+    "x": 471.46666666666664,
+    "y": 782.5111111111111
+   },
+   {
+    "ms": 18500,
+    "type": "dragPoint",
+    "x": 474.6666666666667,
+    "y": 786.6888888888889
+   },
+   {
+    "ms": 18529,
+    "type": "dragPoint",
+    "x": 477.8666666666667,
+    "y": 790.8666666666667
+   },
+   {
+    "ms": 18554,
+    "type": "dragPoint",
+    "x": 481.06666666666666,
+    "y": 795.0444444444444
+   },
+   {
+    "ms": 18582,
+    "type": "dragPoint",
+    "x": 484.26666666666665,
+    "y": 799.2222222222223
+   },
+   {
+    "ms": 18608,
+    "type": "dragPoint",
+    "x": 487.46666666666664,
+    "y": 803.4
+   },
+   {
+    "ms": 18636,
+    "type": "dragPoint",
+    "x": 490.6666666666667,
+    "y": 807.5777777777778
+   },
+   {
+    "ms": 18661,
+    "type": "dragPoint",
+    "x": 493.8666666666667,
+    "y": 811.7555555555556
+   },
+   {
+    "ms": 18689,
+    "type": "dragPoint",
+    "x": 497.06666666666666,
+    "y": 815.9333333333333
+   },
+   {
+    "ms": 18714,
+    "type": "dragPoint",
+    "x": 500.26666666666665,
+    "y": 820.1111111111111
+   },
+   {
+    "ms": 18741,
+    "type": "dragPoint",
+    "x": 503.46666666666664,
+    "y": 824.2888888888889
+   },
+   {
+    "ms": 18769,
+    "type": "dragPoint",
+    "x": 506.6666666666667,
+    "y": 828.4666666666667
+   },
+   {
+    "ms": 19230,
+    "type": "dragEnd",
+    "id": "sand"
+   },
+   {
+    "ms": 22258,
+    "type": "typing"
+   },
+   {
+    "ms": 25513,
+    "type": "send"
+   },
+   {
+    "ms": 27126,
+    "type": "preroll"
+   },
+   {
+    "ms": 27511,
+    "type": "start"
+   },
+   {
+    "ms": 27515,
+    "type": "caption",
+    "text": "They are!"
+   },
+   {
+    "ms": 28624,
+    "type": "stop"
+   },
+   {
+    "ms": 29992,
+    "type": "preroll"
+   },
+   {
+    "ms": 30377,
+    "type": "start"
+   },
+   {
+    "ms": 30378,
+    "type": "caption",
+    "text": "Look at the little crab dancing."
+   },
+   {
+    "ms": 32385,
+    "type": "stop"
+   }
+  ],
+  "duration": 35.224,
+  "audio": [
+   "They are!",
+   "Look at the little crab dancing."
+  ]
+ },
+ "scene_cafe": {
+  "events": [
+   {
+    "ms": 2024,
+    "type": "poke",
+    "prop": "fish"
+   },
+   {
+    "ms": 4558,
+    "type": "dragStart",
+    "id": "wipe",
+    "kind": "trail",
+    "x": 414.0,
+    "y": 360.0
+   },
+   {
+    "ms": 4576,
+    "type": "dragPoint",
+    "x": 220.79999999999998,
+    "y": 189.0
+   },
+   {
+    "ms": 4580,
+    "type": "dragPoint",
+    "x": 225.96923076923076,
+    "y": 189.0
+   },
+   {
+    "ms": 4619,
+    "type": "dragPoint",
+    "x": 231.1384615384615,
+    "y": 189.0
+   },
+   {
+    "ms": 4644,
+    "type": "dragPoint",
+    "x": 236.30769230769232,
+    "y": 189.0
+   },
+   {
+    "ms": 4671,
+    "type": "dragPoint",
+    "x": 241.47692307692307,
+    "y": 189.0
+   },
+   {
+    "ms": 4696,
+    "type": "dragPoint",
+    "x": 246.64615384615385,
+    "y": 189.0
+   },
+   {
+    "ms": 4724,
+    "type": "dragPoint",
+    "x": 251.81538461538463,
+    "y": 189.0
+   },
+   {
+    "ms": 4750,
+    "type": "dragPoint",
+    "x": 256.9846153846154,
+    "y": 189.0
+   },
+   {
+    "ms": 4778,
+    "type": "dragPoint",
+    "x": 262.15384615384613,
+    "y": 189.0
+   },
+   {
+    "ms": 4803,
+    "type": "dragPoint",
+    "x": 267.32307692307694,
+    "y": 189.0
+   },
+   {
+    "ms": 4831,
+    "type": "dragPoint",
+    "x": 272.4923076923077,
+    "y": 189.0
+   },
+   {
+    "ms": 4856,
+    "type": "dragPoint",
+    "x": 277.6615384615385,
+    "y": 189.0
+   },
+   {
+    "ms": 4885,
+    "type": "dragPoint",
+    "x": 282.83076923076925,
+    "y": 189.0
+   },
+   {
+    "ms": 4911,
+    "type": "dragPoint",
+    "x": 288.0,
+    "y": 189.0
+   },
+   {
+    "ms": 4938,
+    "type": "dragPoint",
+    "x": 293.16923076923075,
+    "y": 189.0
+   },
+   {
+    "ms": 4964,
+    "type": "dragPoint",
+    "x": 298.3384615384615,
+    "y": 189.0
+   },
+   {
+    "ms": 4990,
+    "type": "dragPoint",
+    "x": 303.5076923076923,
+    "y": 189.0
+   },
+   {
+    "ms": 5017,
+    "type": "dragPoint",
+    "x": 308.67692307692306,
+    "y": 189.0
+   },
+   {
+    "ms": 5044,
+    "type": "dragPoint",
+    "x": 313.8461538461538,
+    "y": 189.0
+   },
+   {
+    "ms": 5071,
+    "type": "dragPoint",
+    "x": 319.0153846153846,
+    "y": 189.0
+   },
+   {
+    "ms": 5097,
+    "type": "dragPoint",
+    "x": 324.18461538461537,
+    "y": 189.0
+   },
+   {
+    "ms": 5124,
+    "type": "dragPoint",
+    "x": 329.3538461538462,
+    "y": 189.0
+   },
+   {
+    "ms": 5151,
+    "type": "dragPoint",
+    "x": 334.5230769230769,
+    "y": 189.0
+   },
+   {
+    "ms": 5178,
+    "type": "dragPoint",
+    "x": 339.6923076923077,
+    "y": 189.0
+   },
+   {
+    "ms": 5204,
+    "type": "dragPoint",
+    "x": 344.8615384615385,
+    "y": 189.0
+   },
+   {
+    "ms": 5231,
+    "type": "dragPoint",
+    "x": 350.03076923076924,
+    "y": 189.0
+   },
+   {
+    "ms": 5256,
+    "type": "dragPoint",
+    "x": 355.2,
+    "y": 189.0
+   },
+   {
+    "ms": 5282,
+    "type": "dragPoint",
+    "x": 350.5655172413793,
+    "y": 191.29885057471265
+   },
+   {
+    "ms": 5311,
+    "type": "dragPoint",
+    "x": 345.9310344827586,
+    "y": 193.5977011494253
+   },
+   {
+    "ms": 5338,
+    "type": "dragPoint",
+    "x": 341.29655172413794,
+    "y": 195.8965517241379
+   },
+   {
+    "ms": 5364,
+    "type": "dragPoint",
+    "x": 336.6620689655173,
+    "y": 198.19540229885058
+   },
+   {
+    "ms": 5391,
+    "type": "dragPoint",
+    "x": 332.02758620689656,
+    "y": 200.49425287356323
+   },
+   {
+    "ms": 5415,
+    "type": "dragPoint",
+    "x": 327.39310344827584,
+    "y": 202.79310344827587
+   },
+   {
+    "ms": 5444,
+    "type": "dragPoint",
+    "x": 322.7586206896552,
+    "y": 205.0919540229885
+   },
+   {
+    "ms": 5471,
+    "type": "dragPoint",
+    "x": 318.12413793103445,
+    "y": 207.39080459770113
+   },
+   {
+    "ms": 5497,
+    "type": "dragPoint",
+    "x": 313.4896551724138,
+    "y": 209.6896551724138
+   },
+   {
+    "ms": 5524,
+    "type": "dragPoint",
+    "x": 308.8551724137931,
+    "y": 211.98850574712645
+   },
+   {
+    "ms": 5550,
+    "type": "dragPoint",
+    "x": 304.2206896551724,
+    "y": 214.28735632183907
+   },
+   {
+    "ms": 5578,
+    "type": "dragPoint",
+    "x": 299.58620689655174,
+    "y": 216.58620689655172
+   },
+   {
+    "ms": 5603,
+    "type": "dragPoint",
+    "x": 294.951724137931,
+    "y": 218.88505747126436
+   },
+   {
+    "ms": 5632,
+    "type": "dragPoint",
+    "x": 290.3172413793103,
+    "y": 221.183908045977
+   },
+   {
+    "ms": 5658,
+    "type": "dragPoint",
+    "x": 285.6827586206897,
+    "y": 223.48275862068968
+   },
+   {
+    "ms": 5684,
+    "type": "dragPoint",
+    "x": 281.048275862069,
+    "y": 225.7816091954023
+   },
+   {
+    "ms": 5712,
+    "type": "dragPoint",
+    "x": 276.4137931034483,
+    "y": 228.08045977011494
+   },
+   {
+    "ms": 5738,
+    "type": "dragPoint",
+    "x": 271.7793103448276,
+    "y": 230.3793103448276
+   },
+   {
+    "ms": 5764,
+    "type": "dragPoint",
+    "x": 267.1448275862069,
+    "y": 232.6781609195402
+   },
+   {
+    "ms": 5791,
+    "type": "dragPoint",
+    "x": 262.5103448275862,
+    "y": 234.97701149425288
+   },
+   {
+    "ms": 5818,
+    "type": "dragPoint",
+    "x": 257.8758620689655,
+    "y": 237.27586206896552
+   },
+   {
+    "ms": 5843,
+    "type": "dragPoint",
+    "x": 253.24137931034483,
+    "y": 239.57471264367814
+   },
+   {
+    "ms": 5872,
+    "type": "dragPoint",
+    "x": 248.60689655172413,
+    "y": 241.8735632183908
+   },
+   {
+    "ms": 5897,
+    "type": "dragPoint",
+    "x": 243.97241379310344,
+    "y": 244.17241379310343
+   },
+   {
+    "ms": 5925,
+    "type": "dragPoint",
+    "x": 239.33793103448275,
+    "y": 246.47126436781608
+   },
+   {
+    "ms": 5952,
+    "type": "dragPoint",
+    "x": 234.7034482758621,
+    "y": 248.77011494252875
+   },
+   {
+    "ms": 5977,
+    "type": "dragPoint",
+    "x": 230.0689655172414,
+    "y": 251.06896551724137
+   },
+   {
+    "ms": 6003,
+    "type": "dragPoint",
+    "x": 225.43448275862067,
+    "y": 253.367816091954
+   },
+   {
+    "ms": 6032,
+    "type": "dragPoint",
+    "x": 220.79999999999998,
+    "y": 255.66666666666669
+   },
+   {
+    "ms": 6058,
+    "type": "dragPoint",
+    "x": 225.43448275862067,
+    "y": 257.9655172413793
+   },
+   {
+    "ms": 6084,
+    "type": "dragPoint",
+    "x": 230.06896551724137,
+    "y": 260.264367816092
+   },
+   {
+    "ms": 6110,
+    "type": "dragPoint",
+    "x": 234.7034482758621,
+    "y": 262.5632183908046
+   },
+   {
+    "ms": 6138,
+    "type": "dragPoint",
+    "x": 239.33793103448275,
+    "y": 264.8620689655172
+   },
+   {
+    "ms": 6165,
+    "type": "dragPoint",
+    "x": 243.97241379310344,
+    "y": 267.1609195402299
+   },
+   {
+    "ms": 6190,
+    "type": "dragPoint",
+    "x": 248.60689655172413,
+    "y": 269.4597701149425
+   },
+   {
+    "ms": 6218,
+    "type": "dragPoint",
+    "x": 253.24137931034483,
+    "y": 271.7586206896552
+   },
+   {
+    "ms": 6245,
+    "type": "dragPoint",
+    "x": 257.8758620689655,
+    "y": 274.0574712643678
+   },
+   {
+    "ms": 6270,
+    "type": "dragPoint",
+    "x": 262.5103448275862,
+    "y": 276.3563218390804
+   },
+   {
+    "ms": 6296,
+    "type": "dragPoint",
+    "x": 267.1448275862069,
+    "y": 278.65517241379314
+   },
+   {
+    "ms": 6325,
+    "type": "dragPoint",
+    "x": 271.7793103448276,
+    "y": 280.95402298850576
+   },
+   {
+    "ms": 6351,
+    "type": "dragPoint",
+    "x": 276.41379310344826,
+    "y": 283.2528735632184
+   },
+   {
+    "ms": 6378,
+    "type": "dragPoint",
+    "x": 281.048275862069,
+    "y": 285.55172413793105
+   },
+   {
+    "ms": 6404,
+    "type": "dragPoint",
+    "x": 285.6827586206897,
+    "y": 287.85057471264366
+   },
+   {
+    "ms": 6430,
+    "type": "dragPoint",
+    "x": 290.31724137931036,
+    "y": 290.14942528735634
+   },
+   {
+    "ms": 6458,
+    "type": "dragPoint",
+    "x": 294.951724137931,
+    "y": 292.44827586206895
+   },
+   {
+    "ms": 6483,
+    "type": "dragPoint",
+    "x": 299.5862068965517,
+    "y": 294.7471264367816
+   },
+   {
+    "ms": 6512,
+    "type": "dragPoint",
+    "x": 304.2206896551724,
+    "y": 297.04597701149424
+   },
+   {
+    "ms": 6536,
+    "type": "dragPoint",
+    "x": 308.8551724137931,
+    "y": 299.34482758620686
+   },
+   {
+    "ms": 6564,
+    "type": "dragPoint",
+    "x": 313.4896551724138,
+    "y": 301.64367816091954
+   },
+   {
+    "ms": 6592,
+    "type": "dragPoint",
+    "x": 318.12413793103445,
+    "y": 303.9425287356322
+   },
+   {
+    "ms": 6619,
+    "type": "dragPoint",
+    "x": 322.7586206896552,
+    "y": 306.2413793103448
+   },
+   {
+    "ms": 6645,
+    "type": "dragPoint",
+    "x": 327.39310344827584,
+    "y": 308.5402298850575
+   },
+   {
+    "ms": 6670,
+    "type": "dragPoint",
+    "x": 332.02758620689656,
+    "y": 310.8390804597701
+   },
+   {
+    "ms": 6698,
+    "type": "dragPoint",
+    "x": 336.6620689655173,
+    "y": 313.13793103448273
+   },
+   {
+    "ms": 6725,
+    "type": "dragPoint",
+    "x": 341.29655172413794,
+    "y": 315.4367816091954
+   },
+   {
+    "ms": 6752,
+    "type": "dragPoint",
+    "x": 345.9310344827586,
+    "y": 317.735632183908
+   },
+   {
+    "ms": 6779,
+    "type": "dragPoint",
+    "x": 350.5655172413793,
+    "y": 320.03448275862064
+   },
+   {
+    "ms": 6804,
+    "type": "dragPoint",
+    "x": 355.2,
+    "y": 322.3333333333333
+   },
+   {
+    "ms": 7267,
+    "type": "dragEnd",
+    "id": "wipe"
+   },
+   {
+    "ms": 10294,
+    "type": "typing"
+   },
+   {
+    "ms": 12962,
+    "type": "send"
+   },
+   {
+    "ms": 17685,
+    "type": "preroll"
+   },
+   {
+    "ms": 18513,
+    "type": "start"
+   },
+   {
+    "ms": 18518,
+    "type": "caption",
+    "text": "I love the rain on the window."
+   },
+   {
+    "ms": 20650,
+    "type": "stop"
+   },
+   {
+    "ms": 20650,
+    "type": "preroll"
+   },
+   {
+    "ms": 21018,
+    "type": "start"
+   },
+   {
+    "ms": 21019,
+    "type": "caption",
+    "text": "And the goldfish!"
+   },
+   {
+    "ms": 22515,
+    "type": "stop"
+   }
+  ],
+  "duration": 28.261,
+  "audio": [
+   "I love the rain on the window.",
+   "And the goldfish!"
+  ]
+ },
+ "scene_campfire": {
+  "events": [
+   {
+    "ms": 2025,
+    "type": "poke",
+    "prop": "owl"
+   },
+   {
+    "ms": 4558,
+    "type": "dragStart",
+    "id": "poke",
+    "kind": "poke",
+    "x": 196.0,
+    "y": 1130.0
+   },
+   {
+    "ms": 4578,
+    "type": "dragPoint",
+    "x": 104.53333333333333,
+    "y": 599.6666666666666
+   },
+   {
+    "ms": 4582,
+    "type": "dragPoint",
+    "x": 104.53333333333333,
+    "y": 600.7333333333333
+   },
+   {
+    "ms": 4618,
+    "type": "dragPoint",
+    "x": 104.53333333333333,
+    "y": 601.8
+   },
+   {
+    "ms": 4646,
+    "type": "dragPoint",
+    "x": 104.53333333333333,
+    "y": 602.8666666666667
+   },
+   {
+    "ms": 4679,
+    "type": "dragPoint",
+    "x": 104.66480784449477,
+    "y": 604.5391220789492
+   },
+   {
+    "ms": 4710,
+    "type": "dragPoint",
+    "x": 105.05779091572201,
+    "y": 606.1932537197507
+   },
+   {
+    "ms": 4736,
+    "type": "dragPoint",
+    "x": 105.70797694224964,
+    "y": 607.8109385766658
+   },
+   {
+    "ms": 4764,
+    "type": "dragPoint",
+    "x": 106.60824234991091,
+    "y": 609.3744529558794
+   },
+   {
+    "ms": 4789,
+    "type": "dragPoint",
+    "x": 107.7487236425068,
+    "y": 610.8666666666667
+   },
+   {
+    "ms": 4818,
+    "type": "dragPoint",
+    "x": 109.11692546833459,
+    "y": 612.2712307033462
+   },
+   {
+    "ms": 4844,
+    "type": "dragPoint",
+    "x": 110.69785752187587,
+    "y": 613.5727563684084
+   },
+   {
+    "ms": 4872,
+    "type": "dragPoint",
+    "x": 112.47419878072073,
+    "y": 614.756983874305
+   },
+   {
+    "ms": 4897,
+    "type": "dragPoint",
+    "x": 114.42648727831399,
+    "y": 615.8109385766658
+   },
+   {
+    "ms": 4924,
+    "type": "dragPoint",
+    "x": 116.53333333333333,
+    "y": 616.7230731272176
+   },
+   {
+    "ms": 4950,
+    "type": "dragPoint",
+    "x": 118.77165389951412,
+    "y": 617.4833939889483
+   },
+   {
+    "ms": 4979,
+    "type": "dragPoint",
+    "x": 121.11692546833459,
+    "y": 618.0835709273891
+   },
+   {
+    "ms": 5003,
+    "type": "dragPoint",
+    "x": 123.54345275370711,
+    "y": 618.5170282784076
+   },
+   {
+    "ms": 5031,
+    "type": "dragPoint",
+    "x": 126.02465021490964,
+    "y": 618.779016992559
+   },
+   {
+    "ms": 5057,
+    "type": "dragPoint",
+    "x": 128.53333333333333,
+    "y": 618.8666666666667
+   },
+   {
+    "ms": 5085,
+    "type": "dragPoint",
+    "x": 131.042016451757,
+    "y": 618.779016992559
+   },
+   {
+    "ms": 5112,
+    "type": "dragPoint",
+    "x": 133.52321391295953,
+    "y": 618.5170282784076
+   },
+   {
+    "ms": 5137,
+    "type": "dragPoint",
+    "x": 135.94974119833208,
+    "y": 618.0835709273891
+   },
+   {
+    "ms": 5164,
+    "type": "dragPoint",
+    "x": 138.29501276715254,
+    "y": 617.4833939889483
+   },
+   {
+    "ms": 5191,
+    "type": "dragPoint",
+    "x": 140.53333333333333,
+    "y": 616.7230731272177
+   },
+   {
+    "ms": 5218,
+    "type": "dragPoint",
+    "x": 142.6401793883527,
+    "y": 615.8109385766658
+   },
+   {
+    "ms": 5245,
+    "type": "dragPoint",
+    "x": 144.59246788594592,
+    "y": 614.756983874305
+   },
+   {
+    "ms": 5271,
+    "type": "dragPoint",
+    "x": 146.3688091447908,
+    "y": 613.5727563684084
+   },
+   {
+    "ms": 5299,
+    "type": "dragPoint",
+    "x": 147.94974119833208,
+    "y": 612.2712307033462
+   },
+   {
+    "ms": 5325,
+    "type": "dragPoint",
+    "x": 149.31794302415986,
+    "y": 610.8666666666667
+   },
+   {
+    "ms": 5351,
+    "type": "dragPoint",
+    "x": 150.45842431675575,
+    "y": 609.3744529558794
+   },
+   {
+    "ms": 5379,
+    "type": "dragPoint",
+    "x": 151.358689724417,
+    "y": 607.8109385766658
+   },
+   {
+    "ms": 5405,
+    "type": "dragPoint",
+    "x": 152.00887575094467,
+    "y": 606.1932537197507
+   },
+   {
+    "ms": 5431,
+    "type": "dragPoint",
+    "x": 152.4018588221719,
+    "y": 604.5391220789492
+   },
+   {
+    "ms": 5458,
+    "type": "dragPoint",
+    "x": 152.53333333333333,
+    "y": 602.8666666666667
+   },
+   {
+    "ms": 5484,
+    "type": "dragPoint",
+    "x": 152.4018588221719,
+    "y": 601.1942112543842
+   },
+   {
+    "ms": 5511,
+    "type": "dragPoint",
+    "x": 152.00887575094467,
+    "y": 599.5400796135825
+   },
+   {
+    "ms": 5536,
+    "type": "dragPoint",
+    "x": 151.358689724417,
+    "y": 597.9223947566675
+   },
+   {
+    "ms": 5565,
+    "type": "dragPoint",
+    "x": 150.45842431675575,
+    "y": 596.3588803774539
+   },
+   {
+    "ms": 5592,
+    "type": "dragPoint",
+    "x": 149.31794302415986,
+    "y": 594.8666666666667
+   },
+   {
+    "ms": 5616,
+    "type": "dragPoint",
+    "x": 147.94974119833208,
+    "y": 593.462102629987
+   },
+   {
+    "ms": 5645,
+    "type": "dragPoint",
+    "x": 146.3688091447908,
+    "y": 592.160576964925
+   },
+   {
+    "ms": 5672,
+    "type": "dragPoint",
+    "x": 144.59246788594595,
+    "y": 590.9763494590284
+   },
+   {
+    "ms": 5698,
+    "type": "dragPoint",
+    "x": 142.64017938835272,
+    "y": 589.9223947566676
+   },
+   {
+    "ms": 5725,
+    "type": "dragPoint",
+    "x": 140.53333333333333,
+    "y": 589.0102602061157
+   },
+   {
+    "ms": 5751,
+    "type": "dragPoint",
+    "x": 138.29501276715254,
+    "y": 588.2499393443851
+   },
+   {
+    "ms": 5777,
+    "type": "dragPoint",
+    "x": 135.94974119833208,
+    "y": 587.6497624059442
+   },
+   {
+    "ms": 5805,
+    "type": "dragPoint",
+    "x": 133.52321391295956,
+    "y": 587.2163050549258
+   },
+   {
+    "ms": 5831,
+    "type": "dragPoint",
+    "x": 131.04201645175704,
+    "y": 586.9543163407743
+   },
+   {
+    "ms": 5858,
+    "type": "dragPoint",
+    "x": 128.53333333333333,
+    "y": 586.8666666666667
+   },
+   {
+    "ms": 5884,
+    "type": "dragPoint",
+    "x": 126.02465021490964,
+    "y": 586.9543163407743
+   },
+   {
+    "ms": 5910,
+    "type": "dragPoint",
+    "x": 123.5434527537071,
+    "y": 587.2163050549258
+   },
+   {
+    "ms": 5936,
+    "type": "dragPoint",
+    "x": 121.1169254683346,
+    "y": 587.6497624059442
+   },
+   {
+    "ms": 5965,
+    "type": "dragPoint",
+    "x": 118.77165389951413,
+    "y": 588.2499393443851
+   },
+   {
+    "ms": 5990,
+    "type": "dragPoint",
+    "x": 116.53333333333333,
+    "y": 589.0102602061157
+   },
+   {
+    "ms": 6018,
+    "type": "dragPoint",
+    "x": 114.42648727831399,
+    "y": 589.9223947566676
+   },
+   {
+    "ms": 6044,
+    "type": "dragPoint",
+    "x": 112.47419878072073,
+    "y": 590.9763494590284
+   },
+   {
+    "ms": 6072,
+    "type": "dragPoint",
+    "x": 110.69785752187589,
+    "y": 592.160576964925
+   },
+   {
+    "ms": 6099,
+    "type": "dragPoint",
+    "x": 109.1169254683346,
+    "y": 593.462102629987
+   },
+   {
+    "ms": 6124,
+    "type": "dragPoint",
+    "x": 107.7487236425068,
+    "y": 594.8666666666667
+   },
+   {
+    "ms": 6152,
+    "type": "dragPoint",
+    "x": 106.60824234991091,
+    "y": 596.3588803774539
+   },
+   {
+    "ms": 6177,
+    "type": "dragPoint",
+    "x": 105.70797694224964,
+    "y": 597.9223947566676
+   },
+   {
+    "ms": 6205,
+    "type": "dragPoint",
+    "x": 105.05779091572201,
+    "y": 599.5400796135825
+   },
+   {
+    "ms": 6232,
+    "type": "dragPoint",
+    "x": 104.66480784449477,
+    "y": 601.1942112543842
+   },
+   {
+    "ms": 6258,
+    "type": "dragPoint",
+    "x": 104.53333333333333,
+    "y": 602.8666666666667
+   },
+   {
+    "ms": 6286,
+    "type": "dragPoint",
+    "x": 122.66666666666667,
+    "y": 602.8666666666667
+   },
+   {
+    "ms": 6311,
+    "type": "dragPoint",
+    "x": 104.53333333333333,
+    "y": 602.8666666666667
+   },
+   {
+    "ms": 6338,
+    "type": "dragPoint",
+    "x": 122.66666666666667,
+    "y": 602.8666666666667
+   },
+   {
+    "ms": 6342,
+    "type": "sceneEvent",
+    "name": "flare"
+   },
+   {
+    "ms": 6368,
+    "type": "dragPoint",
+    "x": 104.53333333333333,
+    "y": 602.8666666666667
+   },
+   {
+    "ms": 6391,
+    "type": "dragPoint",
+    "x": 122.66666666666667,
+    "y": 602.8666666666667
+   },
+   {
+    "ms": 6419,
+    "type": "dragPoint",
+    "x": 104.53333333333333,
+    "y": 602.8666666666667
+   },
+   {
+    "ms": 6445,
+    "type": "dragPoint",
+    "x": 122.66666666666667,
+    "y": 602.8666666666667
+   },
+   {
+    "ms": 6470,
+    "type": "dragPoint",
+    "x": 104.53333333333333,
+    "y": 602.8666666666667
+   },
+   {
+    "ms": 6496,
+    "type": "dragPoint",
+    "x": 122.66666666666667,
+    "y": 602.8666666666667
+   },
+   {
+    "ms": 6526,
+    "type": "dragPoint",
+    "x": 104.53333333333333,
+    "y": 602.8666666666667
+   },
+   {
+    "ms": 6986,
+    "type": "dragEnd",
+    "id": "poke"
+   },
+   {
+    "ms": 10014,
+    "type": "typing"
+   },
+   {
+    "ms": 13162,
+    "type": "send"
+   },
+   {
+    "ms": 15411,
+    "type": "preroll"
+   },
+   {
+    "ms": 15797,
+    "type": "start"
+   },
+   {
+    "ms": 15801,
+    "type": "caption",
+    "text": "Listen to it crackle."
+   },
+   {
+    "ms": 17488,
+    "type": "stop"
+   },
+   {
+    "ms": 17906,
+    "type": "preroll"
+   },
+   {
+    "ms": 18289,
+    "type": "start"
+   },
+   {
+    "ms": 18289,
+    "type": "caption",
+    "text": "The owl likes it too."
+   },
+   {
+    "ms": 20114,
+    "type": "stop"
+   }
+  ],
+  "duration": 22.981,
+  "audio": [
+   "Listen to it crackle.",
+   "The owl likes it too."
+  ]
+ },
+ "scene_deepSpace": {
+  "events": [
+   {
+    "ms": 2024,
+    "type": "poke",
+    "prop": "ufo"
+   },
+   {
+    "ms": 4559,
+    "type": "dragStart",
+    "id": "spin",
+    "kind": "spin",
+    "x": 300.0,
+    "y": 590.0
+   },
+   {
+    "ms": 4578,
+    "type": "dragPoint",
+    "x": 160.0,
+    "y": 311.6666666666667
+   },
+   {
+    "ms": 4582,
+    "type": "dragPoint",
+    "x": 166.4,
+    "y": 311.6666666666667
+   },
+   {
+    "ms": 4618,
+    "type": "dragPoint",
+    "x": 172.8,
+    "y": 311.6666666666667
+   },
+   {
+    "ms": 4646,
+    "type": "dragPoint",
+    "x": 179.2,
+    "y": 311.6666666666667
+   },
+   {
+    "ms": 4672,
+    "type": "dragPoint",
+    "x": 185.6,
+    "y": 311.6666666666667
+   },
+   {
+    "ms": 4698,
+    "type": "dragPoint",
+    "x": 192.0,
+    "y": 311.6666666666667
+   },
+   {
+    "ms": 4724,
+    "type": "dragPoint",
+    "x": 198.4,
+    "y": 311.6666666666667
+   },
+   {
+    "ms": 4751,
+    "type": "dragPoint",
+    "x": 204.8,
+    "y": 311.6666666666667
+   },
+   {
+    "ms": 4778,
+    "type": "dragPoint",
+    "x": 211.2,
+    "y": 311.6666666666667
+   },
+   {
+    "ms": 4806,
+    "type": "dragPoint",
+    "x": 217.6,
+    "y": 311.6666666666667
+   },
+   {
+    "ms": 4831,
+    "type": "dragPoint",
+    "x": 224.0,
+    "y": 311.6666666666667
+   },
+   {
+    "ms": 4857,
+    "type": "dragPoint",
+    "x": 230.4,
+    "y": 311.6666666666667
+   },
+   {
+    "ms": 4884,
+    "type": "dragPoint",
+    "x": 236.79999999999998,
+    "y": 311.6666666666667
+   },
+   {
+    "ms": 4911,
+    "type": "dragPoint",
+    "x": 243.2,
+    "y": 311.6666666666667
+   },
+   {
+    "ms": 4938,
+    "type": "dragPoint",
+    "x": 249.6,
+    "y": 311.6666666666667
+   },
+   {
+    "ms": 4965,
+    "type": "dragPoint",
+    "x": 256.0,
+    "y": 311.6666666666667
+   },
+   {
+    "ms": 4990,
+    "type": "dragPoint",
+    "x": 262.4,
+    "y": 311.6666666666667
+   },
+   {
+    "ms": 5018,
+    "type": "dragPoint",
+    "x": 268.8,
+    "y": 311.6666666666667
+   },
+   {
+    "ms": 5045,
+    "type": "dragPoint",
+    "x": 275.2,
+    "y": 311.6666666666667
+   },
+   {
+    "ms": 5071,
+    "type": "dragPoint",
+    "x": 281.6,
+    "y": 311.6666666666667
+   },
+   {
+    "ms": 5099,
+    "type": "dragPoint",
+    "x": 288.0,
+    "y": 311.6666666666667
+   },
+   {
+    "ms": 5123,
+    "type": "dragPoint",
+    "x": 294.4,
+    "y": 311.6666666666667
+   },
+   {
+    "ms": 5151,
+    "type": "dragPoint",
+    "x": 300.8,
+    "y": 311.6666666666667
+   },
+   {
+    "ms": 5178,
+    "type": "dragPoint",
+    "x": 307.2,
+    "y": 311.6666666666667
+   },
+   {
+    "ms": 5205,
+    "type": "dragPoint",
+    "x": 313.6,
+    "y": 311.6666666666667
+   },
+   {
+    "ms": 5232,
+    "type": "dragPoint",
+    "x": 320.0,
+    "y": 311.6666666666667
+   },
+   {
+    "ms": 5266,
+    "type": "dragEnd",
+    "id": "spin"
+   },
+   {
+    "ms": 8293,
+    "type": "typing"
+   },
+   {
+    "ms": 11388,
+    "type": "send"
+   },
+   {
+    "ms": 14951,
+    "type": "preroll"
+   },
+   {
+    "ms": 15495,
+    "type": "start"
+   },
+   {
+    "ms": 15500,
+    "type": "caption",
+    "text": "Just one friendly ship."
+   },
+   {
+    "ms": 17373,
+    "type": "stop"
+   },
+   {
+    "ms": 18109,
+    "type": "preroll"
+   },
+   {
+    "ms": 18510,
+    "type": "start"
+   },
+   {
+    "ms": 18511,
+    "type": "caption",
+    "text": "Wave hello!"
+   },
+   {
+    "ms": 19857,
+    "type": "stop"
+   }
+  ],
+  "duration": 22.718,
+  "audio": [
+   "Just one friendly ship.",
+   "Wave hello!"
+  ]
+ },
+ "scene_livingRoom": {
+  "events": [
+   {
+    "ms": 2024,
+    "type": "poke",
+    "prop": "cat"
+   },
+   {
+    "ms": 4560,
+    "type": "dragStart",
+    "id": "cord",
+    "kind": "pull",
+    "x": 320.0,
+    "y": 855.0
+   },
+   {
+    "ms": 4581,
+    "type": "dragPoint",
+    "x": 170.66666666666666,
+    "y": 453.0
+   },
+   {
+    "ms": 4585,
+    "type": "dragPoint",
+    "x": 170.66666666666666,
+    "y": 455.6666666666667
+   },
+   {
+    "ms": 4618,
+    "type": "dragPoint",
+    "x": 170.66666666666666,
+    "y": 458.3333333333333
+   },
+   {
+    "ms": 4650,
+    "type": "dragPoint",
+    "x": 170.66666666666666,
+    "y": 461.0
+   },
+   {
+    "ms": 4672,
+    "type": "dragPoint",
+    "x": 170.66666666666666,
+    "y": 463.6666666666667
+   },
+   {
+    "ms": 4698,
+    "type": "dragPoint",
+    "x": 170.66666666666666,
+    "y": 466.3333333333333
+   },
+   {
+    "ms": 4722,
+    "type": "dragPoint",
+    "x": 170.66666666666666,
+    "y": 469.0
+   },
+   {
+    "ms": 4751,
+    "type": "dragPoint",
+    "x": 170.66666666666666,
+    "y": 471.6666666666667
+   },
+   {
+    "ms": 4777,
+    "type": "dragPoint",
+    "x": 170.66666666666666,
+    "y": 474.3333333333333
+   },
+   {
+    "ms": 4804,
+    "type": "dragPoint",
+    "x": 170.66666666666666,
+    "y": 477.0
+   },
+   {
+    "ms": 4834,
+    "type": "dragPoint",
+    "x": 170.66666666666666,
+    "y": 479.6666666666667
+   },
+   {
+    "ms": 4857,
+    "type": "dragPoint",
+    "x": 170.66666666666666,
+    "y": 482.3333333333333
+   },
+   {
+    "ms": 4885,
+    "type": "dragPoint",
+    "x": 170.66666666666666,
+    "y": 485.0
+   },
+   {
+    "ms": 4886,
+    "type": "foley",
+    "kind": "click"
+   },
+   {
+    "ms": 4890,
+    "type": "sceneEvent",
+    "name": "lightsOff"
+   },
+   {
+    "ms": 5032,
+    "type": "dragPoint",
+    "x": 170.66666666666666,
+    "y": 487.6666666666667
+   },
+   {
+    "ms": 5052,
+    "type": "dragPoint",
+    "x": 170.66666666666666,
+    "y": 490.3333333333333
+   },
+   {
+    "ms": 5084,
+    "type": "dragPoint",
+    "x": 170.66666666666666,
+    "y": 493.0
+   },
+   {
+    "ms": 5112,
+    "type": "dragPoint",
+    "x": 170.66666666666666,
+    "y": 495.6666666666667
+   },
+   {
+    "ms": 5138,
+    "type": "dragPoint",
+    "x": 170.66666666666666,
+    "y": 498.3333333333333
+   },
+   {
+    "ms": 5164,
+    "type": "dragPoint",
+    "x": 170.66666666666666,
+    "y": 501.0
+   },
+   {
+    "ms": 5190,
+    "type": "dragPoint",
+    "x": 170.66666666666666,
+    "y": 503.6666666666667
+   },
+   {
+    "ms": 5218,
+    "type": "dragPoint",
+    "x": 170.66666666666666,
+    "y": 506.3333333333333
+   },
+   {
+    "ms": 5244,
+    "type": "dragPoint",
+    "x": 170.66666666666666,
+    "y": 509.0
+   },
+   {
+    "ms": 5272,
+    "type": "dragPoint",
+    "x": 170.66666666666666,
+    "y": 511.66666666666663
+   },
+   {
+    "ms": 5298,
+    "type": "dragPoint",
+    "x": 170.66666666666666,
+    "y": 514.3333333333334
+   },
+   {
+    "ms": 5326,
+    "type": "dragPoint",
+    "x": 170.66666666666666,
+    "y": 517.0
+   },
+   {
+    "ms": 5351,
+    "type": "dragPoint",
+    "x": 170.66666666666666,
+    "y": 519.6666666666666
+   },
+   {
+    "ms": 5379,
+    "type": "dragPoint",
+    "x": 170.66666666666666,
+    "y": 522.3333333333334
+   },
+   {
+    "ms": 5404,
+    "type": "dragPoint",
+    "x": 170.66666666666666,
+    "y": 525.0
+   },
+   {
+    "ms": 5431,
+    "type": "dragPoint",
+    "x": 170.66666666666666,
+    "y": 527.6666666666666
+   },
+   {
+    "ms": 5459,
+    "type": "dragPoint",
+    "x": 170.66666666666666,
+    "y": 530.3333333333334
+   },
+   {
+    "ms": 5484,
+    "type": "dragPoint",
+    "x": 170.66666666666666,
+    "y": 533.0
+   },
+   {
+    "ms": 5949,
+    "type": "dragEnd",
+    "id": "cord"
+   },
+   {
+    "ms": 8973,
+    "type": "typing"
+   },
+   {
+    "ms": 12028,
+    "type": "send"
+   },
+   {
+    "ms": 16243,
+    "type": "preroll"
+   },
+   {
+    "ms": 16751,
+    "type": "start"
+   },
+   {
+    "ms": 16756,
+    "type": "caption",
+    "text": "So cosy!"
+   },
+   {
+    "ms": 18076,
+    "type": "stop"
+   }
+  ],
+  "duration": 20.935,
+  "audio": [
+   "So cosy!"
+  ]
+ },
+ "wow3": {
+  "events": [
+   {
+    "ms": 2025,
+    "type": "typing"
+   },
+   {
+    "ms": 8494,
+    "type": "send"
+   },
+   {
+    "ms": 8541,
+    "type": "phase",
+    "name": "pullBack"
+   },
+   {
+    "ms": 9143,
+    "type": "phase",
+    "name": "open"
+   },
+   {
+    "ms": 9991,
+    "type": "foley",
+    "kind": "paper"
+   },
+   {
+    "ms": 10471,
+    "type": "preroll"
+   },
+   {
+    "ms": 10546,
+    "type": "gesture",
+    "name": "grab"
+   },
+   {
+    "ms": 10564,
+    "type": "phase",
+    "name": "grab"
+   },
+   {
+    "ms": 10853,
+    "type": "start"
+   },
+   {
+    "ms": 10857,
+    "type": "caption",
+    "text": "Let's go!"
+   },
+   {
+    "ms": 10963,
+    "type": "foley",
+    "kind": "cloth"
+   },
+   {
+    "ms": 11486,
+    "type": "gestureDone"
+   },
+   {
+    "ms": 11486,
+    "type": "phase",
+    "name": "exit"
+   },
+   {
+    "ms": 11667,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 12014,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 12152,
+    "type": "stop"
+   },
+   {
+    "ms": 12187,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 12334,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 12494,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 12828,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 12896,
+    "type": "preroll"
+   },
+   {
+    "ms": 13103,
+    "type": "presenceDone"
+   },
+   {
+    "ms": 13103,
+    "type": "phase",
+    "name": "close"
+   },
+   {
+    "ms": 13313,
+    "type": "start"
+   },
+   {
+    "ms": 13314,
+    "type": "caption",
+    "text": "Let me grab my jacket."
+   },
+   {
+    "ms": 13679,
+    "type": "foley",
+    "kind": "click"
+   },
+   {
+    "ms": 13766,
+    "type": "phase",
+    "name": "arriveOpen"
+   },
+   {
+    "ms": 14237,
+    "type": "foley",
+    "kind": "paper"
+   },
+   {
+    "ms": 14786,
+    "type": "phase",
+    "name": "enter"
+   },
+   {
+    "ms": 14975,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 15205,
+    "type": "stop"
+   },
+   {
+    "ms": 15322,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 15495,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 15642,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 15802,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 16135,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 16221,
+    "type": "preroll"
+   },
+   {
+    "ms": 16404,
+    "type": "gesture",
+    "name": "grab"
+   },
+   {
+    "ms": 16406,
+    "type": "presenceDone"
+   },
+   {
+    "ms": 16406,
+    "type": "phase",
+    "name": "hang"
+   },
+   {
+    "ms": 16622,
+    "type": "start"
+   },
+   {
+    "ms": 16622,
+    "type": "caption",
+    "text": "Here we are, just in time for the sunset."
+   },
+   {
+    "ms": 16816,
+    "type": "foley",
+    "kind": "cloth"
+   },
+   {
+    "ms": 17326,
+    "type": "phase",
+    "name": "arriveClose"
+   },
+   {
+    "ms": 17361,
+    "type": "gestureDone"
+   },
+   {
+    "ms": 17953,
+    "type": "phase",
+    "name": "vanish"
+   },
+   {
+    "ms": 18286,
+    "type": "phase",
+    "name": "none"
+   },
+   {
+    "ms": 19396,
+    "type": "stop"
+   }
+  ],
+  "duration": 25.456,
+  "audio": [
+   "Let's go!",
+   "Let me grab my jacket.",
+   "Here we are, just in time for the sunset."
+  ]
+ },
+ "scene_forestCabin": {
+  "events": [
+   {
+    "ms": 2024,
+    "type": "poke",
+    "prop": "squirrel"
+   },
+   {
+    "ms": 4559,
+    "type": "dragStart",
+    "id": "pinwheel",
+    "kind": "spin",
+    "x": 935.0,
+    "y": 988.0
+   },
+   {
+    "ms": 4578,
+    "type": "dragPoint",
+    "x": 498.6666666666667,
+    "y": 523.9333333333333
+   },
+   {
+    "ms": 4583,
+    "type": "dragPoint",
+    "x": 492.26666666666665,
+    "y": 523.9333333333333
+   },
+   {
+    "ms": 4616,
+    "type": "dragPoint",
+    "x": 485.8666666666667,
+    "y": 523.9333333333333
+   },
+   {
+    "ms": 4644,
+    "type": "dragPoint",
+    "x": 479.46666666666664,
+    "y": 523.9333333333333
+   },
+   {
+    "ms": 4670,
+    "type": "dragPoint",
+    "x": 473.06666666666666,
+    "y": 523.9333333333333
+   },
+   {
+    "ms": 4697,
+    "type": "dragPoint",
+    "x": 466.6666666666667,
+    "y": 523.9333333333333
+   },
+   {
+    "ms": 4722,
+    "type": "dragPoint",
+    "x": 460.26666666666665,
+    "y": 523.9333333333333
+   },
+   {
+    "ms": 4751,
+    "type": "dragPoint",
+    "x": 453.8666666666667,
+    "y": 523.9333333333333
+   },
+   {
+    "ms": 4777,
+    "type": "dragPoint",
+    "x": 447.46666666666664,
+    "y": 523.9333333333333
+   },
+   {
+    "ms": 4804,
+    "type": "dragPoint",
+    "x": 441.06666666666666,
+    "y": 523.9333333333333
+   },
+   {
+    "ms": 4829,
+    "type": "dragPoint",
+    "x": 434.6666666666667,
+    "y": 523.9333333333333
+   },
+   {
+    "ms": 4857,
+    "type": "dragPoint",
+    "x": 428.26666666666665,
+    "y": 523.9333333333333
+   },
+   {
+    "ms": 4884,
+    "type": "dragPoint",
+    "x": 421.8666666666667,
+    "y": 523.9333333333333
+   },
+   {
+    "ms": 4911,
+    "type": "dragPoint",
+    "x": 415.46666666666664,
+    "y": 523.9333333333333
+   },
+   {
+    "ms": 4936,
+    "type": "dragPoint",
+    "x": 409.06666666666666,
+    "y": 523.9333333333333
+   },
+   {
+    "ms": 4963,
+    "type": "dragPoint",
+    "x": 402.6666666666667,
+    "y": 523.9333333333333
+   },
+   {
+    "ms": 4989,
+    "type": "dragPoint",
+    "x": 396.26666666666665,
+    "y": 523.9333333333333
+   },
+   {
+    "ms": 5017,
+    "type": "dragPoint",
+    "x": 389.8666666666667,
+    "y": 523.9333333333333
+   },
+   {
+    "ms": 5044,
+    "type": "dragPoint",
+    "x": 383.46666666666664,
+    "y": 523.9333333333333
+   },
+   {
+    "ms": 5071,
+    "type": "dragPoint",
+    "x": 377.06666666666666,
+    "y": 523.9333333333333
+   },
+   {
+    "ms": 5096,
+    "type": "dragPoint",
+    "x": 370.6666666666667,
+    "y": 523.9333333333333
+   },
+   {
+    "ms": 5123,
+    "type": "dragPoint",
+    "x": 364.26666666666665,
+    "y": 523.9333333333333
+   },
+   {
+    "ms": 5150,
+    "type": "dragPoint",
+    "x": 357.8666666666667,
+    "y": 523.9333333333333
+   },
+   {
+    "ms": 5177,
+    "type": "dragPoint",
+    "x": 351.46666666666664,
+    "y": 523.9333333333333
+   },
+   {
+    "ms": 5204,
+    "type": "dragPoint",
+    "x": 345.06666666666666,
+    "y": 523.9333333333333
+   },
+   {
+    "ms": 5230,
+    "type": "dragPoint",
+    "x": 338.6666666666667,
+    "y": 523.9333333333333
+   },
+   {
+    "ms": 5266,
+    "type": "dragEnd",
+    "id": "pinwheel"
+   },
+   {
+    "ms": 8293,
+    "type": "typing"
+   },
+   {
+    "ms": 11708,
+    "type": "send"
+   },
+   {
+    "ms": 15190,
+    "type": "preroll"
+   },
+   {
+    "ms": 15569,
+    "type": "start"
+   },
+   {
+    "ms": 15574,
+    "type": "caption",
+    "text": "The squirrel thinks so too."
+   },
+   {
+    "ms": 17487,
+    "type": "stop"
+   },
+   {
+    "ms": 18161,
+    "type": "preroll"
+   },
+   {
+    "ms": 18551,
+    "type": "start"
+   },
+   {
+    "ms": 18552,
+    "type": "caption",
+    "text": "It runs this whole yard."
+   },
+   {
+    "ms": 20526,
+    "type": "stop"
+   }
+  ],
+  "duration": 26.611,
+  "audio": [
+   "The squirrel thinks so too.",
+   "It runs this whole yard."
+  ]
+ },
+ "scene_library": {
+  "events": [
+   {
+    "ms": 2024,
+    "type": "poke",
+    "prop": "mouse"
+   },
+   {
+    "ms": 4557,
+    "type": "dragStart",
+    "id": "ladder",
+    "kind": "aim",
+    "x": 957.3,
+    "y": 749.5
+   },
+   {
+    "ms": 4575,
+    "type": "dragPoint",
+    "x": 510.55999999999995,
+    "y": 396.73333333333335
+   },
+   {
+    "ms": 4579,
+    "type": "dragPoint",
+    "x": 507.8933333333333,
+    "y": 396.73333333333335
+   },
+   {
+    "ms": 4602,
+    "type": "dragPoint",
+    "x": 505.22666666666663,
+    "y": 396.73333333333335
+   },
+   {
+    "ms": 4640,
+    "type": "dragPoint",
+    "x": 502.55999999999995,
+    "y": 396.73333333333335
+   },
+   {
+    "ms": 4671,
+    "type": "dragPoint",
+    "x": 499.8933333333333,
+    "y": 396.73333333333335
+   },
+   {
+    "ms": 4698,
+    "type": "dragPoint",
+    "x": 497.22666666666663,
+    "y": 396.73333333333335
+   },
+   {
+    "ms": 4722,
+    "type": "dragPoint",
+    "x": 494.55999999999995,
+    "y": 396.73333333333335
+   },
+   {
+    "ms": 4751,
+    "type": "dragPoint",
+    "x": 491.8933333333333,
+    "y": 396.73333333333335
+   },
+   {
+    "ms": 4778,
+    "type": "dragPoint",
+    "x": 489.22666666666663,
+    "y": 396.73333333333335
+   },
+   {
+    "ms": 4803,
+    "type": "dragPoint",
+    "x": 486.55999999999995,
+    "y": 396.73333333333335
+   },
+   {
+    "ms": 4830,
+    "type": "dragPoint",
+    "x": 483.8933333333333,
+    "y": 396.73333333333335
+   },
+   {
+    "ms": 4857,
+    "type": "dragPoint",
+    "x": 481.22666666666663,
+    "y": 396.73333333333335
+   },
+   {
+    "ms": 4884,
+    "type": "dragPoint",
+    "x": 478.55999999999995,
+    "y": 396.73333333333335
+   },
+   {
+    "ms": 4910,
+    "type": "dragPoint",
+    "x": 475.8933333333333,
+    "y": 396.73333333333335
+   },
+   {
+    "ms": 4939,
+    "type": "dragPoint",
+    "x": 473.22666666666663,
+    "y": 396.73333333333335
+   },
+   {
+    "ms": 4966,
+    "type": "dragPoint",
+    "x": 470.55999999999995,
+    "y": 396.73333333333335
+   },
+   {
+    "ms": 4989,
+    "type": "dragPoint",
+    "x": 467.8933333333333,
+    "y": 396.73333333333335
+   },
+   {
+    "ms": 5018,
+    "type": "dragPoint",
+    "x": 465.22666666666663,
+    "y": 396.73333333333335
+   },
+   {
+    "ms": 5044,
+    "type": "dragPoint",
+    "x": 462.55999999999995,
+    "y": 396.73333333333335
+   },
+   {
+    "ms": 5071,
+    "type": "dragPoint",
+    "x": 459.8933333333333,
+    "y": 396.73333333333335
+   },
+   {
+    "ms": 5096,
+    "type": "dragPoint",
+    "x": 457.22666666666663,
+    "y": 396.73333333333335
+   },
+   {
+    "ms": 5123,
+    "type": "dragPoint",
+    "x": 454.55999999999995,
+    "y": 396.73333333333335
+   },
+   {
+    "ms": 5151,
+    "type": "dragPoint",
+    "x": 451.8933333333333,
+    "y": 396.73333333333335
+   },
+   {
+    "ms": 5178,
+    "type": "dragPoint",
+    "x": 449.22666666666663,
+    "y": 396.73333333333335
+   },
+   {
+    "ms": 5205,
+    "type": "dragPoint",
+    "x": 446.55999999999995,
+    "y": 396.73333333333335
+   },
+   {
+    "ms": 5231,
+    "type": "dragPoint",
+    "x": 443.8933333333333,
+    "y": 396.73333333333335
+   },
+   {
+    "ms": 5257,
+    "type": "dragPoint",
+    "x": 441.22666666666663,
+    "y": 396.73333333333335
+   },
+   {
+    "ms": 5284,
+    "type": "dragPoint",
+    "x": 438.55999999999995,
+    "y": 396.73333333333335
+   },
+   {
+    "ms": 5311,
+    "type": "dragPoint",
+    "x": 435.8933333333333,
+    "y": 396.73333333333335
+   },
+   {
+    "ms": 5338,
+    "type": "dragPoint",
+    "x": 433.22666666666663,
+    "y": 396.73333333333335
+   },
+   {
+    "ms": 5364,
+    "type": "dragPoint",
+    "x": 430.55999999999995,
+    "y": 396.73333333333335
+   },
+   {
+    "ms": 5391,
+    "type": "dragPoint",
+    "x": 427.8933333333333,
+    "y": 396.73333333333335
+   },
+   {
+    "ms": 5416,
+    "type": "dragPoint",
+    "x": 425.22666666666663,
+    "y": 396.73333333333335
+   },
+   {
+    "ms": 5879,
+    "type": "dragEnd",
+    "id": "ladder"
+   },
+   {
+    "ms": 8907,
+    "type": "typing"
+   },
+   {
+    "ms": 13068,
+    "type": "send"
+   },
+   {
+    "ms": 16122,
+    "type": "preroll"
+   },
+   {
+    "ms": 16907,
+    "type": "start"
+   },
+   {
+    "ms": 16912,
+    "type": "caption",
+    "text": "Shh, the mouse is reading."
+   },
+   {
+    "ms": 19343,
+    "type": "stop"
+   },
+   {
+    "ms": 19343,
+    "type": "preroll"
+   },
+   {
+    "ms": 19737,
+    "type": "start"
+   },
+   {
+    "ms": 19738,
+    "type": "caption",
+    "text": "Or sleeping."
+   },
+   {
+    "ms": 21073,
+    "type": "stop"
+   },
+   {
+    "ms": 21074,
+    "type": "preroll"
+   },
+   {
+    "ms": 21444,
+    "type": "start"
+   },
+   {
+    "ms": 21445,
+    "type": "caption",
+    "text": "Hard to tell."
+   },
+   {
+    "ms": 22837,
+    "type": "stop"
+   }
+  ],
+  "duration": 28.855,
+  "audio": [
+   "Shh, the mouse is reading.",
+   "Or sleeping.",
+   "Hard to tell."
+  ]
+ },
+ "scene_mountainHut": {
+  "events": [
+   {
+    "ms": 2025,
+    "type": "poke",
+    "prop": "dog"
+   },
+   {
+    "ms": 4560,
+    "type": "dragStart",
+    "id": "rope",
+    "kind": "pull",
+    "x": 212.0,
+    "y": 725.0
+   },
+   {
+    "ms": 4579,
+    "type": "dragPoint",
+    "x": 113.06666666666666,
+    "y": 383.6666666666667
+   },
+   {
+    "ms": 4584,
+    "type": "dragPoint",
+    "x": 113.06666666666666,
+    "y": 386.3333333333333
+   },
+   {
+    "ms": 4618,
+    "type": "dragPoint",
+    "x": 113.06666666666666,
+    "y": 389.0
+   },
+   {
+    "ms": 4649,
+    "type": "dragPoint",
+    "x": 113.06666666666666,
+    "y": 391.6666666666667
+   },
+   {
+    "ms": 4672,
+    "type": "dragPoint",
+    "x": 113.06666666666666,
+    "y": 394.3333333333333
+   },
+   {
+    "ms": 4702,
+    "type": "dragPoint",
+    "x": 113.06666666666666,
+    "y": 397.0
+   },
+   {
+    "ms": 4725,
+    "type": "dragPoint",
+    "x": 113.06666666666666,
+    "y": 399.6666666666667
+   },
+   {
+    "ms": 4752,
+    "type": "dragPoint",
+    "x": 113.06666666666666,
+    "y": 402.3333333333333
+   },
+   {
+    "ms": 4777,
+    "type": "dragPoint",
+    "x": 113.06666666666666,
+    "y": 405.0
+   },
+   {
+    "ms": 4805,
+    "type": "dragPoint",
+    "x": 113.06666666666666,
+    "y": 407.6666666666667
+   },
+   {
+    "ms": 4831,
+    "type": "dragPoint",
+    "x": 113.06666666666666,
+    "y": 410.3333333333333
+   },
+   {
+    "ms": 4857,
+    "type": "dragPoint",
+    "x": 113.06666666666666,
+    "y": 413.0
+   },
+   {
+    "ms": 4883,
+    "type": "dragPoint",
+    "x": 113.06666666666666,
+    "y": 415.6666666666667
+   },
+   {
+    "ms": 4884,
+    "type": "foley",
+    "kind": "click"
+   },
+   {
+    "ms": 4885,
+    "type": "foley",
+    "kind": "bell"
+   },
+   {
+    "ms": 4889,
+    "type": "sceneEvent",
+    "name": "bell"
+   },
+   {
+    "ms": 4917,
+    "type": "dragPoint",
+    "x": 113.06666666666666,
+    "y": 418.3333333333333
+   },
+   {
+    "ms": 4938,
+    "type": "dragPoint",
+    "x": 113.06666666666666,
+    "y": 421.0
+   },
+   {
+    "ms": 4966,
+    "type": "dragPoint",
+    "x": 113.06666666666666,
+    "y": 423.6666666666667
+   },
+   {
+    "ms": 4991,
+    "type": "dragPoint",
+    "x": 113.06666666666666,
+    "y": 426.3333333333333
+   },
+   {
+    "ms": 5017,
+    "type": "dragPoint",
+    "x": 113.06666666666666,
+    "y": 429.0
+   },
+   {
+    "ms": 5044,
+    "type": "dragPoint",
+    "x": 113.06666666666666,
+    "y": 431.6666666666667
+   },
+   {
+    "ms": 5072,
+    "type": "dragPoint",
+    "x": 113.06666666666666,
+    "y": 434.3333333333333
+   },
+   {
+    "ms": 5098,
+    "type": "dragPoint",
+    "x": 113.06666666666666,
+    "y": 437.0
+   },
+   {
+    "ms": 5124,
+    "type": "dragPoint",
+    "x": 113.06666666666666,
+    "y": 439.6666666666667
+   },
+   {
+    "ms": 5151,
+    "type": "dragPoint",
+    "x": 113.06666666666666,
+    "y": 442.3333333333333
+   },
+   {
+    "ms": 5176,
+    "type": "dragPoint",
+    "x": 113.06666666666666,
+    "y": 445.0
+   },
+   {
+    "ms": 5203,
+    "type": "dragPoint",
+    "x": 113.06666666666666,
+    "y": 447.6666666666667
+   },
+   {
+    "ms": 5231,
+    "type": "dragPoint",
+    "x": 113.06666666666666,
+    "y": 450.3333333333333
+   },
+   {
+    "ms": 5258,
+    "type": "dragPoint",
+    "x": 113.06666666666666,
+    "y": 453.0
+   },
+   {
+    "ms": 5282,
+    "type": "dragPoint",
+    "x": 113.06666666666666,
+    "y": 455.6666666666667
+   },
+   {
+    "ms": 5310,
+    "type": "dragPoint",
+    "x": 113.06666666666666,
+    "y": 458.3333333333333
+   },
+   {
+    "ms": 5338,
+    "type": "dragPoint",
+    "x": 113.06666666666666,
+    "y": 461.0
+   },
+   {
+    "ms": 5365,
+    "type": "dragPoint",
+    "x": 113.06666666666666,
+    "y": 463.6666666666667
+   },
+   {
+    "ms": 5826,
+    "type": "dragEnd",
+    "id": "rope"
+   },
+   {
+    "ms": 8853,
+    "type": "typing"
+   },
+   {
+    "ms": 12042,
+    "type": "send"
+   },
+   {
+    "ms": 17607,
+    "type": "preroll"
+   },
+   {
+    "ms": 17983,
+    "type": "start"
+   },
+   {
+    "ms": 17987,
+    "type": "caption",
+    "text": "Perfect night to stay by the stove with the dog."
+   },
+   {
+    "ms": 21054,
+    "type": "stop"
+   }
+  ],
+  "duration": 23.905,
+  "audio": [
+   "Perfect night to stay by the stove with the dog."
+  ]
+ },
+ "scene_rooftop": {
+  "events": [
+   {
+    "ms": 2024,
+    "type": "poke",
+    "prop": "pigeon"
+   },
+   {
+    "ms": 4560,
+    "type": "dragStart",
+    "id": "aim",
+    "kind": "aim",
+    "x": 897.6,
+    "y": 1164.0
+   },
+   {
+    "ms": 4580,
+    "type": "dragPoint",
+    "x": 478.72,
+    "y": 617.8
+   },
+   {
+    "ms": 4584,
+    "type": "dragPoint",
+    "x": 476.05333333333334,
+    "y": 617.8
+   },
+   {
+    "ms": 4617,
+    "type": "dragPoint",
+    "x": 473.38666666666666,
+    "y": 617.8
+   },
+   {
+    "ms": 4648,
+    "type": "dragPoint",
+    "x": 470.72,
+    "y": 617.8
+   },
+   {
+    "ms": 4671,
+    "type": "dragPoint",
+    "x": 468.05333333333334,
+    "y": 617.8
+   },
+   {
+    "ms": 4698,
+    "type": "dragPoint",
+    "x": 465.38666666666666,
+    "y": 617.8
+   },
+   {
+    "ms": 4723,
+    "type": "dragPoint",
+    "x": 462.72,
+    "y": 617.8
+   },
+   {
+    "ms": 4752,
+    "type": "dragPoint",
+    "x": 460.05333333333334,
+    "y": 617.8
+   },
+   {
+    "ms": 4777,
+    "type": "dragPoint",
+    "x": 457.38666666666666,
+    "y": 617.8
+   },
+   {
+    "ms": 4803,
+    "type": "dragPoint",
+    "x": 454.72,
+    "y": 617.8
+   },
+   {
+    "ms": 4831,
+    "type": "dragPoint",
+    "x": 452.05333333333334,
+    "y": 617.8
+   },
+   {
+    "ms": 4857,
+    "type": "dragPoint",
+    "x": 449.38666666666666,
+    "y": 617.8
+   },
+   {
+    "ms": 4883,
+    "type": "dragPoint",
+    "x": 446.72,
+    "y": 617.8
+   },
+   {
+    "ms": 4911,
+    "type": "dragPoint",
+    "x": 444.05333333333334,
+    "y": 617.8
+   },
+   {
+    "ms": 4937,
+    "type": "dragPoint",
+    "x": 441.38666666666666,
+    "y": 617.8
+   },
+   {
+    "ms": 4964,
+    "type": "dragPoint",
+    "x": 438.72,
+    "y": 617.8
+   },
+   {
+    "ms": 4989,
+    "type": "dragPoint",
+    "x": 436.05333333333334,
+    "y": 617.8
+   },
+   {
+    "ms": 5017,
+    "type": "dragPoint",
+    "x": 433.38666666666666,
+    "y": 617.8
+   },
+   {
+    "ms": 5044,
+    "type": "dragPoint",
+    "x": 430.72,
+    "y": 617.8
+   },
+   {
+    "ms": 5071,
+    "type": "dragPoint",
+    "x": 428.05333333333334,
+    "y": 617.8
+   },
+   {
+    "ms": 5098,
+    "type": "dragPoint",
+    "x": 425.38666666666666,
+    "y": 617.8
+   },
+   {
+    "ms": 5124,
+    "type": "dragPoint",
+    "x": 422.72,
+    "y": 617.8
+   },
+   {
+    "ms": 5151,
+    "type": "dragPoint",
+    "x": 420.05333333333334,
+    "y": 617.8
+   },
+   {
+    "ms": 5177,
+    "type": "dragPoint",
+    "x": 417.38666666666666,
+    "y": 617.8
+   },
+   {
+    "ms": 5205,
+    "type": "dragPoint",
+    "x": 414.72,
+    "y": 617.8
+   },
+   {
+    "ms": 5231,
+    "type": "dragPoint",
+    "x": 412.05333333333334,
+    "y": 617.8
+   },
+   {
+    "ms": 5257,
+    "type": "dragPoint",
+    "x": 409.38666666666666,
+    "y": 617.8
+   },
+   {
+    "ms": 5283,
+    "type": "dragPoint",
+    "x": 406.72,
+    "y": 617.8
+   },
+   {
+    "ms": 5311,
+    "type": "dragPoint",
+    "x": 404.05333333333334,
+    "y": 617.8
+   },
+   {
+    "ms": 5337,
+    "type": "dragPoint",
+    "x": 401.38666666666666,
+    "y": 617.8
+   },
+   {
+    "ms": 5364,
+    "type": "dragPoint",
+    "x": 398.72,
+    "y": 617.8
+   },
+   {
+    "ms": 5391,
+    "type": "dragPoint",
+    "x": 396.05333333333334,
+    "y": 617.8
+   },
+   {
+    "ms": 5417,
+    "type": "dragPoint",
+    "x": 393.38666666666666,
+    "y": 617.8
+   },
+   {
+    "ms": 5879,
+    "type": "dragEnd",
+    "id": "aim"
+   },
+   {
+    "ms": 8907,
+    "type": "typing"
+   },
+   {
+    "ms": 12001,
+    "type": "send"
+   },
+   {
+    "ms": 15482,
+    "type": "preroll"
+   },
+   {
+    "ms": 15860,
+    "type": "start"
+   },
+   {
+    "ms": 15864,
+    "type": "caption",
+    "text": "The whole city is lit up."
+   },
+   {
+    "ms": 17750,
+    "type": "stop"
+   },
+   {
+    "ms": 19342,
+    "type": "preroll"
+   },
+   {
+    "ms": 19723,
+    "type": "start"
+   },
+   {
+    "ms": 19725,
+    "type": "caption",
+    "text": "Want to look through the telescope?"
+   },
+   {
+    "ms": 19726,
+    "type": "gesture",
+    "name": "think"
+   },
+   {
+    "ms": 21825,
+    "type": "stop"
+   },
+   {
+    "ms": 21981,
+    "type": "gestureDone"
+   }
+  ],
+  "duration": 24.696,
+  "audio": [
+   "The whole city is lit up.",
+   "Want to look through the telescope?"
+  ]
+ },
+ "scene_trainCompartment": {
+  "events": [
+   {
+    "ms": 2025,
+    "type": "poke",
+    "prop": "ladybug"
+   },
+   {
+    "ms": 4560,
+    "type": "dragStart",
+    "id": "chain",
+    "kind": "pull",
+    "x": 933.5,
+    "y": 549.5
+   },
+   {
+    "ms": 4580,
+    "type": "dragPoint",
+    "x": 497.8666666666667,
+    "y": 290.06666666666666
+   },
+   {
+    "ms": 4584,
+    "type": "dragPoint",
+    "x": 497.8666666666667,
+    "y": 292.73333333333335
+   },
+   {
+    "ms": 4618,
+    "type": "dragPoint",
+    "x": 497.8666666666667,
+    "y": 295.4
+   },
+   {
+    "ms": 4649,
+    "type": "dragPoint",
+    "x": 497.8666666666667,
+    "y": 298.06666666666666
+   },
+   {
+    "ms": 4671,
+    "type": "dragPoint",
+    "x": 497.8666666666667,
+    "y": 300.73333333333335
+   },
+   {
+    "ms": 4697,
+    "type": "dragPoint",
+    "x": 497.8666666666667,
+    "y": 303.4
+   },
+   {
+    "ms": 4723,
+    "type": "dragPoint",
+    "x": 497.8666666666667,
+    "y": 306.06666666666666
+   },
+   {
+    "ms": 4750,
+    "type": "dragPoint",
+    "x": 497.8666666666667,
+    "y": 308.73333333333335
+   },
+   {
+    "ms": 4778,
+    "type": "dragPoint",
+    "x": 497.8666666666667,
+    "y": 311.4
+   },
+   {
+    "ms": 4805,
+    "type": "dragPoint",
+    "x": 497.8666666666667,
+    "y": 314.06666666666666
+   },
+   {
+    "ms": 4830,
+    "type": "dragPoint",
+    "x": 497.8666666666667,
+    "y": 316.73333333333335
+   },
+   {
+    "ms": 4856,
+    "type": "dragPoint",
+    "x": 497.8666666666667,
+    "y": 319.4
+   },
+   {
+    "ms": 4884,
+    "type": "dragPoint",
+    "x": 497.8666666666667,
+    "y": 322.06666666666666
+   },
+   {
+    "ms": 4885,
+    "type": "foley",
+    "kind": "click"
+   },
+   {
+    "ms": 4890,
+    "type": "sceneEvent",
+    "name": "whistle"
+   },
+   {
+    "ms": 4917,
+    "type": "dragPoint",
+    "x": 497.8666666666667,
+    "y": 324.73333333333335
+   },
+   {
+    "ms": 4938,
+    "type": "dragPoint",
+    "x": 497.8666666666667,
+    "y": 327.4
+   },
+   {
+    "ms": 4966,
+    "type": "dragPoint",
+    "x": 497.8666666666667,
+    "y": 330.06666666666666
+   },
+   {
+    "ms": 5366,
+    "type": "dragPoint",
+    "x": 497.8666666666667,
+    "y": 332.73333333333335
+   },
+   {
+    "ms": 5390,
+    "type": "dragPoint",
+    "x": 497.8666666666667,
+    "y": 335.4
+   },
+   {
+    "ms": 5416,
+    "type": "dragPoint",
+    "x": 497.8666666666667,
+    "y": 338.06666666666666
+   },
+   {
+    "ms": 5445,
+    "type": "dragPoint",
+    "x": 497.8666666666667,
+    "y": 340.73333333333335
+   },
+   {
+    "ms": 5472,
+    "type": "dragPoint",
+    "x": 497.8666666666667,
+    "y": 343.4
+   },
+   {
+    "ms": 5499,
+    "type": "dragPoint",
+    "x": 497.8666666666667,
+    "y": 346.06666666666666
+   },
+   {
+    "ms": 5525,
+    "type": "dragPoint",
+    "x": 497.8666666666667,
+    "y": 348.73333333333335
+   },
+   {
+    "ms": 5551,
+    "type": "dragPoint",
+    "x": 497.8666666666667,
+    "y": 351.4
+   },
+   {
+    "ms": 5579,
+    "type": "dragPoint",
+    "x": 497.8666666666667,
+    "y": 354.06666666666666
+   },
+   {
+    "ms": 5603,
+    "type": "dragPoint",
+    "x": 497.8666666666667,
+    "y": 356.73333333333335
+   },
+   {
+    "ms": 5632,
+    "type": "dragPoint",
+    "x": 497.8666666666667,
+    "y": 359.4
+   },
+   {
+    "ms": 5658,
+    "type": "dragPoint",
+    "x": 497.8666666666667,
+    "y": 362.06666666666666
+   },
+   {
+    "ms": 5683,
+    "type": "dragPoint",
+    "x": 497.8666666666667,
+    "y": 364.73333333333335
+   },
+   {
+    "ms": 5712,
+    "type": "dragPoint",
+    "x": 497.8666666666667,
+    "y": 367.4
+   },
+   {
+    "ms": 5739,
+    "type": "dragPoint",
+    "x": 497.8666666666667,
+    "y": 370.06666666666666
+   },
+   {
+    "ms": 6200,
+    "type": "dragEnd",
+    "id": "chain"
+   },
+   {
+    "ms": 9227,
+    "type": "typing"
+   },
+   {
+    "ms": 13029,
+    "type": "send"
+   },
+   {
+    "ms": 15064,
+    "type": "preroll"
+   },
+   {
+    "ms": 15557,
+    "type": "start"
+   },
+   {
+    "ms": 15561,
+    "type": "caption",
+    "text": "Somewhere green."
+   },
+   {
+    "ms": 17027,
+    "type": "stop"
+   },
+   {
+    "ms": 18532,
+    "type": "preroll"
+   },
+   {
+    "ms": 18920,
+    "type": "start"
+   },
+   {
+    "ms": 18920,
+    "type": "caption",
+    "text": "A ladybug is riding with us on the sill."
+   },
+   {
+    "ms": 21763,
+    "type": "stop"
+   }
+  ],
+  "duration": 27.832,
+  "audio": [
+   "Somewhere green.",
+   "A ladybug is riding with us on the sill."
+  ]
+ }
+}

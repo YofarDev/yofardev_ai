@@ -1,0 +1,8 @@
+work/
+node_modules/
+out/
+music/stems/
+music/*.wav
+music/*.png
+music/*.mid
+music/probe.py
