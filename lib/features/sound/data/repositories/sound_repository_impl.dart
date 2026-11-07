@@ -6,7 +6,10 @@ import '../../../../core/models/sound_effects.dart';
 import '../../domain/repositories/sound_repository.dart';
 
 class SoundRepositoryImpl implements SoundRepository {
-  final AudioPlayer _player = AudioPlayer();
+  SoundRepositoryImpl({AudioPlayer? player})
+    : _player = player ?? AudioPlayer();
+
+  final AudioPlayer _player;
 
   @override
   Future<Result<void>> play(String soundPath) async {
