@@ -141,8 +141,16 @@ abstract final class JourneyTiming {
   static const Duration open = Duration(milliseconds: 1400);
   static const Duration close = Duration(milliseconds: 640);
 
-  /// The rocket's lift-off after its hatch closes, and its landing.
+  /// The rocket's landing: on arrival, and (v16) before boarding, inside
+  /// the open beat.
   static const Duration lift = Duration(milliseconds: 700);
+
+  /// The rocket's lift-off (v16): the engine lights and the hull rumbles on
+  /// the pad for the first [ignition], then it climbs out of frame. It
+  /// follows the hatch closing, and (v16) it takes off empty after the
+  /// arrival instead of fading.
+  static const Duration liftOff = Duration(milliseconds: 1000);
+  static const Duration ignition = Duration(milliseconds: 350);
 
   /// The hold before the arrival's threshold opens; the book's arrival swing
   /// starts at its end.
@@ -165,7 +173,12 @@ abstract final class JourneyTiming {
 
   /// The `close` beat of [family] (the rocket also lifts off in it).
   static Duration closeOf(JourneyFamily family) =>
-      family == JourneyFamily.rocket ? close + lift : close;
+      family == JourneyFamily.rocket ? close + liftOff : close;
+
+  /// The `vanish` beat of [family]: the rocket lifts off empty (v16); the
+  /// others fade.
+  static Duration vanishOf(JourneyFamily family) =>
+      family == JourneyFamily.rocket ? liftOff : vanish;
 
   /// The `arriveOpen` beat of [family]: the rocket lands first; the book
   /// stages its swing (hold 120 + 880); the rest open after the hold.

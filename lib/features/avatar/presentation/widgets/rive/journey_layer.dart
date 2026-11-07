@@ -28,9 +28,10 @@ import '../stage_camera.dart';
 /// ends. A ticker turns the journey's beat and the time spent in it into the
 /// `JourneyVM` numbers ([JourneyChoreography]) and idles once the beat's
 /// moves are done. The light colours follow the scene the avatar is in at
-/// [daylight]; the book also writes its vignette number (`dest<Scene>`, the
-/// scene NOT on screen) and the vignette's own light (`vignetteKey` /
-/// `vignetteAmbient`) in that other scene's rig.
+/// [daylight]; the vignette's own light (`vignetteKey` / `vignetteAmbient`)
+/// follows the scene NOT on screen, in its rig, for every threshold (v16: the
+/// portal's core, the path's far end, the rocket's porthole); the book also
+/// writes its vignette number (`dest<Scene>`).
 ///
 /// [jacket] (v11 `JourneyVM.jacket`, book only) comes from the cubit's
 /// state, and is written as soon as the widget updates, not on the next
@@ -286,14 +287,14 @@ class _JourneyLayerState extends State<JourneyLayer>
       );
     }
     // The vignette's light is the OTHER scene's rig (v15): the destination
-    // before the cut, the origin from it. Off the book the vignette stays at
-    // its file default, so nothing is written.
-    final AvatarScene? vignetteScene = frame.destination;
-    if (vignetteScene == null) {
-      return;
-    }
+    // before the cut, the origin from it. v16: every threshold looks onto it
+    // (the portal's core, the path's far end, the rocket's porthole), so it
+    // is written for every family; only the book has a vignette number.
+    final AvatarScene other = journey.phase.index >= JourneyPhase.cut.index
+        ? journey.from
+        : journey.to;
     final LightRig vignette = SceneLights.at(
-      vignetteScene,
+      other,
       widget.daylight?.value ?? 0,
     );
     if (force || vignette != _writtenVignetteLight) {

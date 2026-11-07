@@ -376,6 +376,17 @@ imports and the design-layer rules, so `flutter test` fails on violation.
   watermarks local builds until a `rive push` bind; pre-1.9 binaries self-block on a newer
   manifest). The wow harness gates assert family `book`. Evidence (strips, beats, gates, wow3 +
   the four-family tour): `rive/review/book-threshold/`
+- Thresholds polish (contract v15 names, v16 notes, 2026-11-07): path, portal and rocket redrawn in
+  `gen_journeys.py` from `V16_ID_START = 30000` (the book's page face and cover details too, via
+  `book_polish`, so the book's v15 ids stay). The portal tears open (`portal` bump), its vortex irises
+  with `open`, comets are `TrimPath` offsets on the loop (the seam test allows whole laps). The path is
+  a scalloped thicket (`scalloped`, `fern`) with a lantern and a lit tunnel. `vignetteKey` /
+  `vignetteAmbient` are now written for EVERY family (`JourneyLayer`: the scene not on screen), lighting
+  the portal core, the path's far end and the rocket's porthole. Rocket staging is app-side: it lands
+  with `lift` in the open beat before boarding (hatch from 750 ms), lifts off with `_LiftOffCurve`
+  (`JourneyTiming.liftOff` 1000 ms, the first `ignition` 350 ms crawling through the file's 0–0.02
+  rumble/smoke band), and takes off empty in `vanish` (`JourneyTiming.vanishOf`). Evidence:
+  `rive/review/thresholds-v16/`
 - TTS (Kokoro, 2026-11-01): the default voice is Kokoro-82M v1.0 int8 through `sherpa_onnx`
   **pinned 1.13.3** (all eight `sherpa_onnx_*` platform packages pinned in `dependency_overrides`):
   2.x dropped espeak-ng, and 1.13.3 is the last release whose bundled ONNX Runtime (1.24.3 on

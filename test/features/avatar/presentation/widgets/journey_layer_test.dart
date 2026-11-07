@@ -175,9 +175,8 @@ void main() {
     );
   });
 
-  testWidgets('a rocket journey writes no book, no jacket and no vignette', (
-    WidgetTester tester,
-  ) async {
+  testWidgets('a rocket journey writes no book, no jacket and no vignette '
+      'number, but the far scene\'s light (v16)', (WidgetTester tester) async {
     final _RecordingSink sink = await _pumpJourney(
       tester,
       const JourneyState(
@@ -198,9 +197,10 @@ void main() {
         reason: scene.name,
       );
     }
+    // its porthole shows the far scene's light (v16)
     expect(
-      sink.colors.keys.where((String name) => name.startsWith('vignette')),
-      isEmpty,
+      sink.colors[AvatarRiveContract.journeyPropVignetteKey],
+      SceneLights.at(AvatarScene.beach, 0).keyColor,
     );
   });
 

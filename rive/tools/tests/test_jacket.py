@@ -189,18 +189,18 @@ def _shot(proj: Path, png: Path, *args: str) -> np.ndarray:
 
 
 @needs_rive
-def test_path_portal_rocket_draw_as_in_m7() -> None:
-    """v15 replaced the door (and its peg) with the book; the other thresholds draw exactly as M7's."""
+def test_path_portal_rocket_never_draw_the_jacket() -> None:
+    """v15 replaced the door (and its peg) with the book; v16 redrew the other thresholds, and none of them shows the
+    jacket: with each of them shown, `jacket` 1 draws exactly what `jacket` 0 does."""
     proj = ROOT / "rive" / "journeys"
     with tempfile.TemporaryDirectory() as t:
         tmp = Path(t)
-        ref = _base(tmp / "ref", "rive/journeys/journeys.rml", proj / "rive.yaml")
         # the file as the generator builds it now, never a stale journeys.rml on disk
         now = tmp / "now"
         now.mkdir()
         shutil.copy(proj / "rive.yaml", now / "rive.yaml")
         write(str(now / "journeys.rml"), gen_journeys.build())
         for fam in ("path", "portal", "rocket"):
-            a = _shot(ref, tmp / "a.png", f"--data={fam}=1", "--advance=2")
-            b = _shot(now, tmp / "b.png", f"--data={fam}=1", "--advance=2")
+            a = _shot(now, tmp / "a.png", f"--data={fam}=1", "--data=open=1", "--advance=2")
+            b = _shot(now, tmp / "b.png", f"--data={fam}=1", "--data=open=1", "--data=jacket=1", "--advance=2")
             assert not (np.abs(a - b) > 0).any(), fam

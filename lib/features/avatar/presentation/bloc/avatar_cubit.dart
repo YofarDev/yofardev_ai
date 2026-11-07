@@ -641,7 +641,7 @@ class AvatarCubit extends Cubit<AvatarState> {
 
     journey = _beat(journey, JourneyPhase.vanish);
     _emitIfOpen(state.copyWith(journey: journey));
-    await Future<void>.delayed(JourneyTiming.vanish);
+    await Future<void>.delayed(JourneyTiming.vanishOf(family));
     if (gone()) return;
     _emitIfOpen(
       state.copyWith(

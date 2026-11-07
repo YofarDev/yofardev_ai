@@ -148,32 +148,51 @@ void main() {
   });
 
   test(
-    'the rocket lifts off after its hatch closes and lands before it opens',
+    'the rocket lands before boarding, rumbles on the pad, lifts off after its '
+    'hatch closes and lands before it opens (v16)',
     () {
+      JourneyFrame rocket(JourneyPhase phase, int ms) =>
+          _at(phase, ms, family: JourneyFamily.rocket);
+      // boarding: it comes down from out of frame, then the hatch opens
+      expect(rocket(JourneyPhase.open, 0).lift, 1);
+      expect(rocket(JourneyPhase.open, 350).lift, inExclusiveRange(0, 1));
+      expect((rocket(JourneyPhase.open, 700).lift), 0);
+      expect(rocket(JourneyPhase.open, 700).open, 0);
+      expect(rocket(JourneyPhase.open, 1100).open, 1);
+      // the lift-off: held on the pad through the ignition (the file's
+      // rumble band, lift <= 0.02), then the climb
+      expect(rocket(JourneyPhase.close, 640).lift, 0);
+      expect(rocket(JourneyPhase.close, 640 + 175).lift, closeTo(0.01, 1e-9));
+      expect(rocket(JourneyPhase.close, 640 + 350).lift, closeTo(0.02, 1e-9));
       expect(
-        _at(JourneyPhase.close, 350, family: JourneyFamily.rocket).lift,
-        0,
+        rocket(JourneyPhase.close, 640 + 700).lift,
+        inExclusiveRange(0.02, 1),
       );
-      expect(
-        _at(JourneyPhase.close, 1340, family: JourneyFamily.rocket).lift,
-        1,
-      );
-      expect(_at(JourneyPhase.cut, 0, family: JourneyFamily.rocket).lift, 1);
-      final JourneyFrame landing = _at(
-        JourneyPhase.arriveOpen,
-        350,
-        family: JourneyFamily.rocket,
-      );
+      expect(rocket(JourneyPhase.close, 1640).lift, 1);
+      expect(rocket(JourneyPhase.cut, 0).lift, 1);
+      final JourneyFrame landing = rocket(JourneyPhase.arriveOpen, 350);
       expect(landing.lift, inExclusiveRange(0, 1));
       expect(landing.open, 0);
-      final JourneyFrame landed = _at(
-        JourneyPhase.arriveOpen,
-        1050,
-        family: JourneyFamily.rocket,
-      );
+      final JourneyFrame landed = rocket(JourneyPhase.arriveOpen, 1050);
       expect((landed.lift, landed.open), (0.0, 1.0));
+      // after the arrival it takes off empty instead of fading
+      expect(
+        (
+          rocket(JourneyPhase.vanish, 0).show,
+          rocket(JourneyPhase.vanish, 0).lift,
+        ),
+        (1.0, 0.0),
+      );
+      expect(rocket(JourneyPhase.vanish, 1000).lift, 1);
+      expect(
+        JourneyChoreography.settleOf(
+          _j(JourneyPhase.vanish, JourneyFamily.rocket),
+        ),
+        JourneyTiming.liftOff,
+      );
       // the other thresholds never lift
       expect(_at(JourneyPhase.close, 1340).lift, 0);
+      expect(_at(JourneyPhase.open, 0).lift, 0);
     },
   );
 

@@ -6,10 +6,15 @@ avatar's fit. Four thresholds stand on the right of the frame, their occluding e
 app clips the avatar right of it while it walks through):
 
 - **book** (v15, replaces the v10 door): a standing pop-up storybook; the cover swings open, pages
-  riffle and the destination rises as a paper-cut vignette;
-- **path**: a leafy bush with ferns in front; the ferns part onto a dark gap in the bush;
-- **portal**: a glowing violet ring that grows from a point; its swirling core opens;
-- **rocket**: a small round rocket; its hatch opens, and `lift` raises it out of frame on a flame.
+  riffle and the destination rises as a paper-cut vignette (v16: a gilt corner and title plate on the
+  cover, a page face with the story's lines inside);
+- **path** (v16): a leafy thicket with a lantern and a tunnel through it, ferns in front; the ferns
+  part and the far end of the tunnel lights up in the scene beyond, fireflies drifting in it;
+- **portal** (v16): a rift that tears open as a blade of light and widens into a violet ring; behind it
+  a vortex turns and irises into a tunnel of rings flying towards the far scene's light;
+- **rocket** (v16): a riveted steel rocket with a brass porthole; its hatch opens onto a lit cabin, and
+  `lift` flies it: an ignition rumble on the pad with rolling smoke, then the climb on a three-layer
+  flame, its shadow shrinking.
 
 Everything is history-free: `JourneyVM` numbers bind opacity, scale, rotation and position through
 `c + k x` formula converters (and clamped `min` / `max` ones for the book's cover swing and fades,
@@ -272,6 +277,10 @@ RIBBON_PIVOT = (8.0, -700.0)    # the ribbon's knob on the block's top edge: art
 RIBBON_SWING = math.radians(18.0)   # the tail's turn from open (open 1, its tip on the hook) to closed
 # ids kept from the files before v15 (see build() and ribbon())
 V10_APPEAR_CONV_ID, V10_DOOR_END = 146, 155
+# v16 (the thresholds' polish): the path, the portal and the rocket are redrawn from V16_ID_START; their v10 ids
+# (V10_DOOR_END up to V10_FAMILIES_END) stay unused, so the ambient animation and the state machine keep theirs
+V10_FAMILIES_END = 1150
+V16_ID_START = 30000
 V11_JACKET_ID = 5015
 
 
@@ -1143,97 +1152,437 @@ def book() -> El:
     return root
 
 
+# ---------------------------------------------------------------- book polish (v16; minted after the book, so its ids stay)
+
+PAGE_X0, PAGE_X1, PAGE_TOP = 6.0, BLOCK_W - 14.0, BLOCK_TOP + 12.0   # the page face on the block (local)
+# the story's lines on the right page, under the hero's floor and right of the hook zone (local x, y, length)
+TEXT_ROWS = tuple((86.0 if i == 0 else 50.0, -404.0 + 36.0 * i, (300.0, 360.0, 352.0, 330.0, 364.0, 210.0, 0.0,
+                                                                  340.0, 356.0, 280.0)[i]) for i in range(10))
+
+
+def book_polish(root: El) -> None:
+    """v16: the open book reads as a book. The block's face is a page (paper, the gutter's shadow, a drop cap and the
+    story's lines, the fore-edge of the page stack showing past the closed cover), lit by the scene's key; the cover
+    gets a gilt corner and a foil title plate."""
+    kids = root.children
+    slab = named(root, "BookBlock")
+    page = S("BookPage", [(PAGE_X0, BLOCK_BOTTOM, "c"), (PAGE_X0, PAGE_TOP, "c"), (PAGE_X1, PAGE_TOP, "c46"),
+                          (PAGE_X1, BLOCK_BOTTOM, "c")],
+             hfill(PAGE_X0, PAGE_X1, [("FFCDBFA6", 0), (PAPER_SHADE, 0.07), (PAPER, 0.2), ("FFEFE6D6", 0.88),
+                                      ("FFE0D3BE", 1)]), line(INK, 3))
+    fore = [S(f"BookForeEdge{i}", [(PAGE_X1 - 4 - 5 * i, PAGE_TOP + 30 + 4 * i), (PAGE_X1 - 4 - 5 * i, 30)],
+              line("FFC9B79A", 1.5), closed=False) for i in range(4)]
+    cap = N("BookDropCap",
+            S("BookDropCapLeaf", [(8, 30), (18, 12), (28, 30), (18, 22)], fill(FOIL_INK)),
+            R("BookDropCapPlate", 18, 20, 44, 44, 6, fill(FOIL), line(FOIL_INK, 2.5)),
+            x=40.0, y=-432.0)
+    rows = [S(f"BookTextRow{i}", [(x, y), (x + ln, y)], line("FFB5A286", 6), closed=False)
+            for i, (x, y, ln) in enumerate(TEXT_ROWS) if ln]
+    tint = S("BookPageKeyTint", [(PAGE_X0, BLOCK_BOTTOM, "c"), (PAGE_X0, PAGE_TOP, "c"), (PAGE_X1, PAGE_TOP, "c46"),
+                                 (PAGE_X1, BLOCK_BOTTOM, "c")],
+             bound_fill("lightKey", SCENES["livingRoom"].key), blendModeValue=MULTIPLY, opacity=0.22)
+    at = kids.index(slab)
+    kids[at:at] = [tint, *rows, cap, *fore, page]
+    # the cover: gilt corners on its free edge, raised bands on the spine, a title plate
+    outer = named(root, "CoverOuter")
+    leather = named(root, "CoverLeather")
+    corner = S("CoverCorner", [(COVER_LEN - 74, COVER_TOP - 2, "c"), (COVER_LEN - COVER_CORNER, COVER_TOP - 2),
+                               (COVER_LEN + 2, COVER_TOP + COVER_CORNER), (COVER_LEN + 2, COVER_TOP + 74, "c"),
+                               (COVER_LEN - 30, COVER_TOP + 30, "c")],
+               vfill(COVER_TOP, COVER_TOP + 74, [("FFF0D088", 0), (FOIL, 0.5), (FOIL_SHADE, 1)]), line(INK, 3))
+    stud = E("CoverCornerStud", COVER_LEN - 22, COVER_TOP + 22, 12, 12, fill(FOIL_SHADE), line(INK, 2))
+    tx = (MEDALLION_X + MEDALLION_R - BLOCK_X0 + 15 + COVER_LEN - 40) / 2   # the tooled frame's middle
+    plate = N("CoverTitle",
+              *[S(f"CoverTitleRow{i}", [(-w / 2, y), (w / 2, y)], line(FOIL, 5), closed=False)
+                for i, (w, y) in enumerate(((120.0, -10.0), (80.0, 10.0)))],
+              R("CoverTitleInner", 0, 0, 168, 58, 10, line(FOIL, 2)),
+              R("CoverTitlePlate", 0, 0, 184, 74, 14, fill("FF4A2C20"), line(FOIL, 3)),
+              S("CoverFleuron", [(-30, 70), (0, 58), (30, 70), (0, 82)], fill(FOIL), line(FOIL_INK, 1.5)),
+              x=tx, y=COVER_TOP + 130)
+    at = outer.children.index(leather)
+    outer.children[at:at] = [stud, corner, plate]
+
+
 # ---------------------------------------------------------------- path (anchor: bottom centre)
 
 PATH_X = THRESHOLD_X + 220.0   # the bush's left edge sits on the threshold
 
 
-def frond(name: str, base_x: float, length: float, lean: float, part: float, shade: str) -> El:
-    """One fern frond growing up from its base, leaning `lean` rad, parting by `part` x open."""
-    hw = length * 0.11
-    pts = [(0, 0), (-hw * 0.6, -length * 0.25), (-hw, -length * 0.55), (-hw * 0.5, -length * 0.85), (0, -length),
-           (hw * 0.5, -length * 0.85), (hw, -length * 0.55), (hw * 0.6, -length * 0.25)]
-    leaflets = [S(f"{name}Leaflet{i}", [(0, -length * f), (s * hw * 1.9, -length * (f + 0.07)),
-                                        (s * hw * 0.4, -length * (f + 0.05))],
-                  fill(shade), closed=True)
-                for i, (f, s) in enumerate([(0.2, -1), (0.3, 1), (0.42, -1), (0.52, 1), (0.64, -1), (0.74, 1)])]
-    rib = S(f"{name}Rib", [(0, -6), (0, -length * 0.95)], line("FF2C4A34", 2.2), closed=False)
-    blade = S(f"{name}Blade", pts, vfill(-length, 0, [("FF5E8E5E", 0), ("FF345E40", 1)]), line(INK, 3))
-    return N(name, rib, *leaflets, blade, bind("open", 15, conv(part, lean)), x=base_x, y=0.0, rotation=lean)
+LEAF_DARK, LEAF_MID, LEAF, LEAF_LIGHT, LEAF_TIP = "FF16302A", "FF24483A", "FF356848", "FF4E8A5A", "FF7AB26E"
+# the thicket's silhouette (local; the ground is y 0) and the tunnel through it
+THICKET = [(-232, 30), (-240, -260), (-214, -470), (-228, -640), (-160, -820), (-40, -905), (90, -880), (196, -780),
+           (238, -600), (256, -360), (248, 30)]
+TUNNEL = [(-150, 30), (-142, -400), (-96, -620), (-12, -690), (68, -632), (112, -420), (124, 30)]
+CLUSTERS = ((-176, -770, 118), (-40, -860, 96), (80, -810, 124), (190, -620, 112), (-200, -560, 104),
+            (206, -380, 104), (-210, -330, 96), (214, -150, 96))
+FRONDS = (   # base x, length, lean, part, curl (the left ones part only a little: they must not sweep over the avatar)
+    (-176, 440, -0.14, -0.06, -0.3), (-112, 540, -0.05, -0.1, -0.25), (-30, 520, 0.06, 0.42, 0.35),
+    (60, 560, 0.16, 0.56, 0.45), (150, 500, 0.3, 0.52, 0.55), (226, 420, 0.48, 0.38, 0.6))
+LANTERN_AT = (-150.0, -560.0)  # hung from the arch's left bough: artboard (710, 440), inside the portrait band
+FIREFLIES = ((-60, -300), (20, -420), (-30, -520), (60, -250), (-90, -180), (40, -560))
+
+
+def catmull(pts: list, closed: bool, per: int = 8) -> list[tuple[float, float]]:
+    """A dense Catmull-Rom curve through `pts`."""
+    p = [(float(a), float(b)) for a, b, *_ in pts]
+    n = len(p)
+    out = []
+    segs = n if closed else n - 1
+    for i in range(segs):
+        p0 = p[(i - 1) % n] if closed else p[max(i - 1, 0)]
+        p1, p2 = p[i], p[(i + 1) % n]
+        p3 = p[(i + 2) % n] if closed else p[min(i + 2, n - 1)]
+        for k in range(per):
+            t = k / per
+            out.append(tuple(0.5 * (2 * p1[j] + (-p0[j] + p2[j]) * t + (2 * p0[j] - 5 * p1[j] + 4 * p2[j] - p3[j]) * t * t
+                                    + (-p0[j] + 3 * p1[j] - 3 * p2[j] + p3[j]) * t ** 3) for j in (0, 1)))
+    if not closed:
+        out.append(p[-1])
+    return out
+
+
+def scalloped(pts: list, step: float, height: float, closed: bool = True, seed: float = 0.0,
+              ends: bool = False) -> list:
+    """A leafy edge along the curve through `pts`: corner notches every `step` px with a rounded lobe pushed
+    `height` px outwards (negative: inwards) between them. `ends`: the open curve's ends are kept as corners."""
+    dense = catmull(pts, closed)
+    seg = list(zip(dense, dense[1:] + ([dense[0]] if closed else [])))
+    total = sum(math.dist(a, b) for a, b in seg)
+    n = max(2, round(total / step))
+    area = sum(a[0] * b[1] - b[0] * a[1] for a, b in seg)
+    sign = 1.0 if area > 0 else -1.0
+
+    def at(s: float) -> tuple[float, float, float, float]:
+        for a, b in seg:
+            ln = math.dist(a, b)
+            if s <= ln or (a, b) == seg[-1]:
+                u = min(1.0, s / ln) if ln else 0.0
+                return a[0] + (b[0] - a[0]) * u, a[1] + (b[1] - a[1]) * u, (b[0] - a[0]) / ln, (b[1] - a[1]) / ln
+            s -= ln
+        raise AssertionError
+
+    out = []
+    for i in range(n if closed else n + 1):
+        x, y, _, _ = at(total * i / n)
+        out.append((x, y, "c"))
+        if i < n:
+            mx, my, tx, ty = at(total * (i + 0.5) / n)
+            h = height * (1 + 0.25 * math.sin(i * 2.7 + seed))
+            out.append((mx + sign * ty * h, my - sign * tx * h))
+    return out
+
+
+def leaf_cluster(name: str, cx: float, cy: float, r: float, i: int) -> El:
+    """A rounded clump of leaves, lit from the top left: a scalloped disc, its rim in the scene's key light."""
+    ring = [(cx + r * math.cos(a), cy + r * 0.86 * math.sin(a)) for a in (k * math.tau / 7 + i for k in range(7))]
+    rim = S(f"{name}Rim", [(cx - r * math.cos(a) * 0.98, cy - r * 0.86 * math.sin(a) * 0.98)
+                          for a in (math.radians(v) for v in (-10, 20, 45, 70, 100))],
+            bound_line("lightKey", 4, SCENES["campfire"].key), closed=False, opacity=0.5)
+    clump = S(f"{name}Clump", scalloped(ring, 54, 16, seed=i),
+              vfill(cy - r, cy + r, [(LEAF_LIGHT, 0), (LEAF, 0.5), (LEAF_MID, 1)]), line(INK, 3))
+    return N(name, rim, clump, x=0.0, y=0.0)
+
+
+def leaf(name: str, cx: float, cy: float, length: float, width: float, angle: float, tone: str) -> El:
+    ca, sa = math.cos(angle), math.sin(angle)
+
+    def p(u: float, v: float, *c: str) -> tuple:
+        return (cx + u * ca - v * sa, cy + u * sa + v * ca, *c)
+
+    return S(name, [p(0, 0, "c"), p(length * 0.45, width / 2), p(length, 0, "c"), p(length * 0.45, -width / 2)],
+             fill(tone), line(INK, 2))
+
+
+def fern(name: str, length: float, curl: float, pinnae: int = 11) -> list[El]:
+    """A fern frond (its base at the origin, growing up): a curving rachis with pinnae on both sides, as one
+    serrated outline, and the rachis drawn over it."""
+    def c(t: float) -> tuple[float, float, float, float]:
+        x, y = curl * length * 0.35 * t * t, -length * t
+        dx, dy = curl * length * 0.7 * t, -length
+        ln = math.hypot(dx, dy)
+        return x, y, dx / ln, dy / ln
+
+    left, right = [], []
+    for k in range(pinnae):
+        t = 0.1 + 0.84 * k / pinnae
+        x, y, tx, ty = c(t)
+        nx, ny = -ty, tx
+        size = length * 0.19 * math.sin(math.pi * (0.3 + 0.7 * t)) ** 0.7 * (1.08 - 0.7 * t)
+        for side, out in ((1, left), (-1, right)):
+            ux, uy = side * nx * 0.85 + tx * 0.5, side * ny * 0.85 + ty * 0.5   # out and up along the frond
+            out.append((x + side * nx * 2, y + side * ny * 2, "c"))
+            # the leaflet's rounded tip, a little up the frond from its notch
+            out.append((x + ux * size + tx * size * 0.12, y + uy * size + ty * size * 0.12))
+    tip = c(1.0)
+    base = [(-6, 0, "c"), (6, 0, "c")]
+    outline = [base[1], *[(p[0], p[1], *p[2:]) for p in right], (tip[0], tip[1], "c"), *reversed(left), base[0]]
+    rach = [c(t)[:2] for t in (0.0, 0.3, 0.6, 0.9, 1.0)]
+    return [S(f"{name}Rachis", rach, line("FF6E9A5A", 3), closed=False),
+            S(f"{name}Blade", outline, vfill(-length, 0, [(LEAF_TIP, 0), (LEAF_LIGHT, 0.4), (LEAF_MID, 1)]),
+              line(INK, 2.5))]
+
+
+def sway(node: El, amp: float, phase: int, period: int = AMB_FRAMES) -> None:
+    """A gentle rotation sway about the node's rest angle on the ambient loop (whole cycles: seamless)."""
+    rest = float(node.attrs.get("rotation") or 0.0)
+    cycles = AMB_FRAMES // period
+    keys = [(f, round(rest + amp * math.sin(math.tau * cycles * f / AMB_FRAMES + phase), 4))
+            for f in range(0, AMB_FRAMES, 20)]
+    amb_tracks.append(track(d, node, {"rotation": keys + [(AMB_FRAMES, keys[0][1])]}, ease=EASE))
+
+
+def lantern() -> El:
+    """A paper-and-tin lantern hung from the bough: warm whatever the hour, flickering a little."""
+    glow = E("emitPathLanternGlow", 0, 10, 380, 380, rfill(190, [("A0FFD08A", 0), ("40FFB060", 0.4), ("00FF9A50", 1)],
+                                                         emit=True), blendModeValue=SCREEN)
+    amb_tracks.append(track(d, glow, {"opacity": [(0, 0.9), (30, 1.0), (52, 0.82), (90, 1.0), (130, 0.88), (170, 1.0),
+                                                  (205, 0.85), (AMB_FRAMES, 0.9)]}, ease=EASE))
+    body = N("PathLanternBody",
+             S("PathLanternRibs", [(-14, -8), (-14, 30)], line("FF6A4A36", 2), closed=False),
+             S("PathLanternRibs2", [(14, -8), (14, 30)], line("FF6A4A36", 2), closed=False),
+             R("emitPathLanternPaper", 0, 11, 44, 48, 14,
+               rfill(30, [("FFFFF6D8", 0), ("FFFFD48A", 0.6), ("FFF0A060", 1)], emit=True), line(INK, 2.5)),
+             S("PathLanternCap", [(-18, -12, "c"), (18, -12, "c"), (10, -24, "c"), (-10, -24, "c")],
+               fill("FF5A4636"), line(INK, 2.5)),
+             R("PathLanternBase", 0, 38, 30, 8, 3, fill("FF5A4636"), line(INK, 2)),
+             S("PathLanternHook", [(0, -24), (0, -70)], line("FF3A2E28", 3), closed=False),
+             x=0.0, y=0.0)
+    sway(body, 0.05, 1)
+    return N("PathLantern", body, glow, x=LANTERN_AT[0], y=LANTERN_AT[1])
 
 
 def path() -> El:
-    # the left fronds part only a little: they must not sweep over the avatar standing left of them
-    fronds = [frond("FernA", -150, 520, -0.08, -0.14, "FF3E6A48"),
-              frond("FernB", -90, 640, -0.03, -0.12, "FF467454"),
-              frond("FernC", -40, 600, 0.04, 0.3, "FF3E6A48"),
-              frond("FernD", 50, 680, 0.14, 0.42, "FF467454"),
-              frond("FernE", 140, 520, 0.3, 0.5, "FF3E6A48"),
-              frond("FernF", 220, 460, 0.42, 0.5, "FF467454")]
-    gap = S("PathGap", [(-150, 20, "c"), (-136, -560), (-20, -700), (110, -560), (126, 20, "c")],
-            vfill(-700, 20, [("FF141C1C", 0), ("FF1E2A26", 1)]), bind("open", 18), opacity=0.0)
-    bush_pts = [(-228, 30, "c"), (-236, -260), (-206, -470), (-226, -640), (-150, -820), (-40, -900), (80, -880),
-                (190, -780), (230, -600), (250, -360), (244, 30, "c")]
-    bush = S("PathBush", bush_pts, vfill(-900, 30, [("FF2E5640", 0), ("FF1E3A2E", 1)]), line(INK, 5))
-    bush_lit = S("PathBushRim", [(-222, -160), (-232, -300), (-202, -470), (-222, -620), (-150, -800)],
-                 bound_line("lightKey", 4, SCENES["campfire"].key), closed=False, opacity=0.55)
-    clumps = [E(f"PathLeafClump{i}", cx, cy, w, h, fill(c), line(INK, 2.5))
-              for i, (cx, cy, w, h, c) in enumerate([(-120, -760, 210, 130, "FF386A4C"),
-                                                     (90, -680, 230, 140, "FF325E44"),
-                                                     (-150, -470, 220, 140, "FF386A4C"),
-                                                     (150, -420, 200, 130, "FF2E5640"),
-                                                     (10, -840, 180, 110, "FF325E44")])]
-    post = N("PathSign",
-             S("PathSignBoardA", [(-8, -520, "c4"), (-150, -520, "c4"), (-176, -490, "c"), (-150, -460, "c4"),
-                                  (-8, -460, "c4")], fill("FF8A6044"), line(INK, 3)),
-             S("PathSignBoardB", [(8, -436, "c4"), (130, -436, "c4"), (156, -406, "c"), (130, -376, "c4"),
-                                  (8, -376, "c4")], fill("FF7A543C"), line(INK, 3)),
-             R("PathSignPost", 0, -260, 20, 560, 8, fill("FF6A4A36"), line(INK, 3)),
-             x=300.0, y=0.0)
-    stones = [E(f"PathStone{i}", cx, cy, w, h, fill("FF5A5664"), line(INK, 2.5))
-              for i, (cx, cy, w, h) in enumerate([(-200, 20, 90, 30), (-90, 30, 60, 20)])]
-    return N("Path", *fronds, *stones, gap, *clumps, bush_lit, bush, post,
-             bind("path", 18), bind("path", 16, conv(0.1, 0.9)), bind("path", 17, conv(0.1, 0.9)),
+    """The thicket (v16): a leafy mass with a tunnel through it, clumps lit by the scene's key, a lantern on the
+    left bough and ferns in front. `open` parts the ferns (with a little follow-through) and lights the far end
+    of the tunnel in the vignette's key (the scene beyond); fireflies drift in the tunnel, the ferns, vines and
+    lantern sway on the loop. `path` grows it in: the ferns spring up one after the other."""
+    fronds = []
+    for i, (bx, length, lean, part, curl) in enumerate(FRONDS):
+        inner = N(f"PathFernSway{i}", *fern(f"PathFern{i}", length, curl), x=0.0, y=0.0)
+        sway(inner, 0.025 + 0.01 * (i % 3), i * 2)
+        a, b = 0.12 * i / len(FRONDS), 0.5 + 0.5 * i / len(FRONDS)
+        part_tokens = [F.val(lean), F.op("+"), F.val(part), F.op("*"), *F.inp(), F.op("+"), F.val(0.16 * part),
+                       F.op("*"), *bump_tokens(0.0, 1.0)]
+        fronds.append(N(f"PathFern{i}Node", N(f"PathFernGrow{i}", inner, bind("path", 17, windowed(a, b, 0.75, 0.25)),
+                                               x=0.0, y=0.0, scaleY=0.25),
+                        bind("open", 15, conv_tokens(*part_tokens)), x=float(bx), y=6.0, rotation=lean))
+    # the leaves the parting ferns knock loose: they flick out and settle back as the ferns pass
+    loose = []
+    for i, (lx, ly, dx, dy, ang) in enumerate(((-40, -420, -60, -40, -0.8), (60, -500, 90, -30, 0.6),
+                                               (20, -300, 70, 50, 1.4), (-10, -560, -30, -70, -1.6))):
+        lf = leaf(f"PathLoose{i}", 0, 0, 34, 16, ang, LEAF_LIGHT)
+        loose.append(N(f"PathLooseNode{i}", lf, bind("open", 18, bump(0.05, 0.95)),
+                       bind("open", 13, conv_tokens(F.val(lx), F.op("+"), F.val(dx), F.op("*"), *bump_tokens(0.05, 0.95))),
+                       bind("open", 14, conv_tokens(F.val(ly), F.op("+"), F.val(dy), F.op("*"), *bump_tokens(0.05, 0.95))),
+                       bind("open", 15, conv(3.0, ang)), x=float(lx), y=float(ly), opacity=0.0))
+    # the far end: the scene beyond glows through the tunnel, its light running along the ground towards us
+    far = N("emitPathFar",
+            E("emitPathFarLight", -10, -230, 300, 520, light_glow(260, light_stop(0.0), stop("C0FFF4E4", 0.15),
+                                                                   stop("50FFF4E4", 0.6), cy=60)),
+            S("emitPathTrail", [(-60, -120), (40, -120), (150, 30), (-180, 30)],
+              d("Fill", d("LinearGradient", light_stop(0.0), stop("00FFF4E4", 1.0), startX=0.0, startY=-120.0,
+                          endX=0.0, endY=30.0), name="Fill"), opacity=0.55),
+            *[S(f"emitPathRay{i}", [(x0, -330), (x0 + 30, -330), (x1 + w, 20), (x1, 20)],
+                d("Fill", d("LinearGradient", light_stop(0.0), stop("00FFF4E4", 1.0), startX=0.0, startY=-330.0,
+                            endX=0.0, endY=20.0), name="Fill"), opacity=0.25)
+              for i, (x0, x1, w) in enumerate(((-60, -170, 50), (-10, -40, 60), (30, 90, 50)))],
+            bind("open", 18, conv(0.8, 0.2)), x=0.0, y=0.0, opacity=0.2)
+    flies = []
+    for i, (fx, fy) in enumerate(FIREFLIES):
+        fly = E(f"emitPathFirefly{i}", fx, fy, 22, 22, rfill(11, [("FFFFFFD0", 0), ("A0E8FF8A", 0.35), ("00C8F07A", 1)],
+                                                             emit=True), opacity=0.0)
+        ph = i * 41
+        amb_tracks.append(track(d, fly, {
+            "x": [(f, round(fx + 18 * math.sin(math.tau * f / AMB_FRAMES + i), 2)) for f in range(0, AMB_FRAMES, 20)]
+            + [(AMB_FRAMES, round(fx + 18 * math.sin(i), 2))],
+            "y": [(f, round(fy + 14 * math.sin(2 * math.tau * f / AMB_FRAMES + i * 1.7), 2))
+                  for f in range(0, AMB_FRAMES, 15)] + [(AMB_FRAMES, round(fy + 14 * math.sin(i * 1.7), 2))],
+            "opacity": cyclic([(0, 0.0), (40, 1.0), (80, 0.3), (120, 0.9), (170, 0.0), (AMB_FRAMES - 1, 0.0)], ph)}))
+        flies.append(fly)
+    tunnel = S("PathTunnel", scalloped(TUNNEL, 52, -16, closed=False),
+               vfill(-690, 30, [("FF0A1412", 0), ("FF12201C", 0.6), ("FF1A2C24", 1)]), line(INK, 4))
+    vines = []
+    for i, (vx, vy, ln) in enumerate(((-100, -610, 150), (-30, -680, 210), (50, -640, 170), (100, -470, 120))):
+        lv = [leaf(f"PathVine{i}Leaf{k}", (-1) ** k * 3, ln * (k + 1) / 5, 26, 13, math.pi / 2 + (-1) ** k * 0.9,
+                   LEAF if k % 2 else LEAF_LIGHT) for k in range(4)]
+        vine = N(f"PathVine{i}", *lv, S(f"PathVine{i}Stem", [(0, 0), (6, ln * 0.5), (0, ln)], line("FF2E5040", 3),
+                                        closed=False), x=float(vx), y=float(vy))
+        sway(vine, 0.06, i * 3)
+        vines.append(vine)
+    clumps = [leaf_cluster(f"PathClump{i}", cx, cy, r, i) for i, (cx, cy, r) in enumerate(CLUSTERS)]
+    flowers = []
+    for i, (fx, fy, tone) in enumerate(((-190, -700, "FFF2B8C6"), (150, -720, "FFF6E2A8"), (-206, -450, "FFF6E2A8"),
+                                        (196, -500, "FFF2B8C6"), (-150, -860, "FFF6F0E2"), (220, -260, "FFF6F0E2"))):
+        petals = [E(f"PathFlower{i}Petal{k}", fx + 9 * math.cos(k * math.tau / 5), fy + 9 * math.sin(k * math.tau / 5),
+                    14, 14, fill(tone), line(INK, 1.5)) for k in range(5)]
+        flowers.append(N(f"PathFlower{i}", E(f"PathFlower{i}Heart", fx, fy, 8, 8, fill("FFE0A040")), *petals,
+                         x=0.0, y=0.0))
+    mass = S("PathThicket", scalloped(THICKET, 70, 22, closed=False),
+             vfill(-905, 30, [("FF2A5040", 0), ("FF1E3C30", 0.5), (LEAF_DARK, 1)]), line(INK, 5))
+    key_tint = S("PathKeyTint", THICKET, bound_fill("lightKey", SCENES["campfire"].key), blendModeValue=MULTIPLY,
+                 opacity=0.18)
+    stones = [E(f"PathStone{i}", cx, cy, w, h, vfill(-h / 2, h / 2, [("FF7A7684", 0), ("FF4E4A58", 1)]), line(INK, 2.5))
+              for i, (cx, cy, w, h) in enumerate([(-200, 18, 96, 34), (-120, 26, 60, 22), (150, 22, 80, 28)])]
+    shadow = E("PathShadow", 0, 18, 560, 60, rfill(280, [("60100C14", 0), ("00100C14", 1)]))
+    return N("Path", *fronds, *loose, *stones, lantern(), *flowers, *clumps, key_tint, *vines, *flies, far, tunnel,
+             mass, shadow,
+             bind("path", 18, window(0.0, 0.5)), bind("path", 16, conv(0.06, 0.94)), bind("path", 17, conv(0.06, 0.94)),
              x=PATH_X, y=GROUND_Y, opacity=0.0)
 
 
 # ---------------------------------------------------------------- portal (anchor: ring centre)
 
-RING_W, RING_H = 420.0, 900.0
+RING_W, RING_H = 330.0, 900.0
 PORTAL_X, PORTAL_Y = THRESHOLD_X - 10.0 + RING_W / 2, GROUND_Y - RING_H / 2 - 30.0
 
 
+MULTIPLY = 24                # Rive's multiply blend: a wash that only darkens (and tints)
+SCREEN = 14                  # Rive's screen blend (native 0.1.11 rejects additive): light that only brightens
+PORTAL_R = RING_H / 2 - 9.0  # the mouth's radius in the unsquashed (circle) space of the vortex
+SQUASH = RING_W / RING_H     # circle space -> the ring's ellipse
+PORTAL_ARMS = 7              # the vortex's broad arms (one turn per loop); the fine ones turn twice as fast
+TUNNEL_RINGS = 5             # rings flying into the tunnel, one every AMB_FRAMES / TUNNEL_RINGS
+PORTAL_MOTES = 9             # sparks drawn in along the spiral
+VIOLET_DEEP, VIOLET, LAVENDER, PALE, HOT = "FF140E2E", "FF3A2A7A", "FFB79CFF", "FFE6DCFF", "FFFFF8FF"
+
+
+def bump_tokens(a: float, b: float) -> list[El]:
+    """`sin(pi window(a, b))`: 0 up to `a` and from `b`, 1 halfway (a flash, a rustle, a puff)."""
+    return F.fn("sin", [F.val(math.pi), F.op("*"), *window_tokens(a, b)])
+
+
+def bump(a: float, b: float, k: float = 1.0) -> El:
+    key = ("bump", round(a, 3), round(b, 3), round(k, 3))
+    if key not in _windows:
+        _windows[key] = conv_tokens(F.val(k), F.op("*"), *bump_tokens(a, b))
+    return _windows[key]
+
+
+def spiral_arm(name: str, a0: float, turn: float, r0: float, r1: float, wmax: float, paint: El, n: int = 12) -> El:
+    """A tapered arm of the vortex (circle space): from the rim at angle a0 curling `turn` rad inwards to r0."""
+    left, right = [], []
+    for i in range(n + 1):
+        t = i / n
+        r = r1 + (r0 - r1) * t
+        th = a0 + turn * t
+        w = wmax * math.sin(math.pi * (0.08 + 0.92 * t)) ** 0.75 * (1 - 0.55 * t)
+        dx = (r0 - r1) * math.cos(th) - r * turn * math.sin(th)
+        dy = (r0 - r1) * math.sin(th) + r * turn * math.cos(th)
+        ln = math.hypot(dx, dy)
+        nx, ny = -dy / ln, dx / ln
+        cx, cy = r * math.cos(th), r * math.sin(th)
+        left.append((cx + nx * w / 2, cy + ny * w / 2))
+        right.append((cx - nx * w / 2, cy - ny * w / 2))
+    pts = [left[0] + ("c",), *left[1:-1], (r0 * math.cos(a0 + turn), r0 * math.sin(a0 + turn), "c"), *right[-2:0:-1]]
+    return S(name, pts, paint)
+
+
+def spin(node: El, turns: float) -> None:
+    """`turns` whole turns of `node` per ambient loop (negative: anticlockwise), linear, seamless."""
+    amb_tracks.append(track(d, node, {"rotation": [(0, float(node.attrs.get("rotation") or 0.0), "linear"),
+                                                   (AMB_FRAMES, float(node.attrs.get("rotation") or 0.0)
+                                                    + turns * math.tau, "linear")]}))
+
+
 def portal() -> El:
-    swirl_arcs = []
-    for i in range(3):
-        a0 = i * math.tau / 3
-        pts = [(math.cos(a0 + t * 2.2) * (60 + 380 * t), math.sin(a0 + t * 2.2) * (60 + 380 * t))
-               for t in [k / 6 for k in range(7)]]
-        swirl_arcs.append(S(f"emitPortalSwirl{i}", pts, line("C0D9CCFF", 10, emit=True), closed=False))
-    swirl = N("emitPortalSwirl", *swirl_arcs, x=0.0, y=0.0)
-    amb_tracks.append(track(d, swirl, {"rotation": [(0, 0.0, "linear"), (AMB_FRAMES, math.tau, "linear")]}))
-    squash = N("emitPortalSwirlSquash", swirl, x=0.0, y=0.0, scaleX=RING_W / RING_H, scaleY=1.0)
-    core = E("emitPortalCore", 0, 0, RING_W - 16, RING_H - 16,
-             rfill(RING_H / 2, [("FF2A1E48", 0), ("FF4A3486", 0.7), ("FF8C74D8", 1)], emit=True))
-    core_node = N("emitPortalAperture", squash, core, bind("open", 16, conv(0.95, 0.05)),
-                  bind("open", 17, conv(0.95, 0.05)), x=0.0, y=0.0, scaleX=0.05, scaleY=0.05)
-    ring = E("emitPortalRing", 0, 0, RING_W, RING_H, line("FFB79CFF", 18, emit=True))
-    ring_hi = E("emitPortalRingHi", 0, 0, RING_W - 16, RING_H - 16, line("FFF3EBDD", 3, emit=True))
-    glow = E("emitPortalGlow", 0, 0, RING_W + 170, RING_H + 170,
-             rfill((RING_H + 170) / 2, [("00B79CFF", 0.55), ("70B79CFF", 0.8), ("00B79CFF", 1)], emit=True))
+    """The rift (v16): it tears open as a vertical blade of light and widens into a violet ring (`portal`); behind
+    the ring a vortex turns and, with `open`, irises into a tunnel of rings flying away towards the far scene's
+    light (the vignette's key, written for every family since v16). Comets run round the rim, sparks are drawn in
+    along the spiral, and the ring lights the ground and washes the avatar's side (screen)."""
+    sq = dict(scaleX=SQUASH, scaleY=1.0)
+    # the vortex, in circle space: broad arms (one turn a loop), fine bright ones (two), anticlockwise inwards
+    broad = N("emitPortalArms", *[spiral_arm(f"emitPortalArm{i}", i * math.tau / PORTAL_ARMS, 2.9, 20, PORTAL_R + 40,
+                                             150, rfill(PORTAL_R, [("00B79CFF", 0.0), ("489A80F0", 0.35),
+                                                                   ("607A5CE0", 0.7), ("205A44C0", 1.0)], emit=True))
+                                  for i in range(PORTAL_ARMS)], x=0.0, y=0.0)
+    fine = N("emitPortalStreaks", *[spiral_arm(f"emitPortalStreak{i}", 0.6 + i * math.tau / 3, 3.4, 24, PORTAL_R + 20,
+                                               26, rfill(PORTAL_R, [("00FFF8FF", 0.0), ("D0E6DCFF", 0.4),
+                                                                    ("70D9CCFF", 0.8), ("10B79CFF", 1.0)], emit=True))
+                                    for i in range(3)], x=0.0, y=0.0)
+    spin(broad, -1)
+    spin(fine, -2)
+    # open twists the arms a quarter turn further in and swells them: the iris
+    vortex = N("emitPortalVortex", fine, broad, bind("open", 15, conv(-1.2)), bind("open", 16, conv(0.18, 1.0)),
+               bind("open", 17, conv(0.18, 1.0)), x=0.0, y=0.0)
+    # the tunnel: rings that shrink away into the light, one after the other
+    rings = []
+    for i in range(TUNNEL_RINGS):
+        ring_i = E(f"emitPortalTunnel{i}", 0, 0, 2 * PORTAL_R, 2 * PORTAL_R, line("FFD9CCFF", 9, emit=True),
+                   scaleX=1.0, scaleY=1.0, opacity=0.0)
+        ph = i * AMB_FRAMES // TUNNEL_RINGS
+        sizes = [(f, round(0.06 + 0.94 * (1 - f / AMB_FRAMES) ** 2.2, 4)) for f in range(0, AMB_FRAMES, 24)]
+        sizes.append((AMB_FRAMES - 1, 0.06))
+        alpha = [(0, 0.0), (36, 0.75), (150, 0.55), (220, 0.0), (AMB_FRAMES - 1, 0.0)]
+        amb_tracks.append(track(d, ring_i, {"scaleX": cyclic(sizes, ph), "scaleY": cyclic(sizes, ph),
+                                            "opacity": cyclic(alpha, ph)}))
+        rings.append(ring_i)
+    # sparks drawn in along the spiral: each rides a turning arm from the rim to the core
+    motes = []
+    for i in range(PORTAL_MOTES):
+        ph = (i * 97) % AMB_FRAMES
+        mote = star4(f"emitPortalMote{i}", 0, 0, 9 + 4 * (i % 3), HOT)
+        mote.attrs.update(x=PORTAL_R, scaleX=1 / SQUASH * 0.6, opacity=0.0)
+        radius = [(0, PORTAL_R - 20), (120, PORTAL_R * 0.45), (200, PORTAL_R * 0.16), (AMB_FRAMES - 1, 20.0)]
+        alpha = [(0, 0.0), (30, 1.0), (170, 0.8), (225, 0.0), (AMB_FRAMES - 1, 0.0)]
+        amb_tracks.append(track(d, mote, {"x": cyclic(radius, ph), "opacity": cyclic(alpha, ph)}))
+        arm = N(f"emitPortalMoteArm{i}", mote, x=0.0, y=0.0, rotation=i * 2.39996)
+        spin(arm, -1)
+        motes.append(arm)
+    core = E("emitPortalCore", 0, 0, 2 * PORTAL_R, 2 * PORTAL_R,
+             light_glow(PORTAL_R, light_stop(0.0), stop("FFF3ECFF", 0.12), stop("C0B79CFF", 0.42), stop("40B79CFF", 0.75)))
+    # the light at the end of the tunnel and the rings fly in only as the mouth opens
+    tunnel = N("emitPortalTunnel", *motes, *rings, core, bind("open", 18, window(0.1, 0.8)),
+               bind("open", 16, conv(0.85, 0.15)), bind("open", 17, conv(0.85, 0.15)),
+               x=0.0, y=0.0, opacity=0.0, scaleX=0.15, scaleY=0.15)
+    mouth = E("emitPortalMouth", 0, 0, 2 * PORTAL_R * SQUASH, 2 * PORTAL_R,
+              rfill(PORTAL_R, [("FF3A2A7A", 0), ("FF241A58", 0.55), (VIOLET_DEEP, 1)], emit=True))
+    inside = N("PortalInside", d("ClippingShape", sourceId=mouth.ref(), name="Clip"),
+               N("emitPortalSquash", tunnel, vortex, x=0.0, y=0.0, **sq), x=0.0, y=0.0)
+    # the rim: an ink edge, a lavender band lit from above, a white-hot inner lip, comets running round it
+    ring = E("emitPortalRing", 0, 0, RING_W, RING_H,
+             d("Stroke", lin(d, 0, -RING_H / 2, 0, RING_H / 2, [(PALE, 0), (LAVENDER, 0.45), ("FF8E6AF0", 1)]),
+               thickness=20.0, cap="round", join="round", name="Line"))
+    ink = E("PortalInk", 0, 0, RING_W + 24, RING_H + 24, line(INK, 3), opacity=0.55)
+    lip = E("emitPortalRingHi", 0, 0, RING_W - 14, RING_H - 14, line(HOT, 3, emit=True))
+    comets = []
+    for i, (length, width, start, laps) in enumerate(((0.11, 9, 0.0, 1), (0.06, 6, 0.42, 1), (0.16, 5, 0.7, 2))):
+        trim = d("TrimPath", start=0.0, end=length, offset=start, modeValue=1)
+        comets.append(E(f"emitPortalComet{i}", 0, 0, RING_W + 2, RING_H + 2,
+                        d("Stroke", d("SolidColor", colorValue=HOT), trim, thickness=float(width), cap="round",
+                          join="round", name="Line")))
+        amb_tracks.append(track(d, trim, {"offset": [(0, start, "linear"), (AMB_FRAMES, start - laps, "linear")]}))
     sparks = []
-    for i, (sx, sy) in enumerate([(-236, -330), (234, -200), (-246, 70), (240, 270), (-200, 370), (190, -410)]):
-        sp = star4(f"emitPortalSpark{i}", sx, sy, 14 + 5 * (i % 2), "FFF3EBDD")
+    for i, ang in enumerate((-2.2, -1.25, -0.4, 0.55, 1.5, 2.45, 3.1)):
+        sx, sy = (RING_W / 2 + 18) * math.cos(ang), (RING_H / 2 + 18) * math.sin(ang)
+        sp = star4(f"emitPortalSpark{i}", sx, sy, 13 + 6 * (i % 2), HOT)
+        ph = (i * 53) % AMB_FRAMES
+        amb_tracks.append(track(d, sp, {"opacity": cyclic([(0, 0.0), (18, 1.0), (50, 0.0), (AMB_FRAMES - 1, 0.0)], ph),
+                                        "rotation": [(0, 0.0, "linear"), (AMB_FRAMES, math.tau, "linear")]}))
         sparks.append(sp)
-        ph = i * 37
-        keys = sorted({(0, 0.2), ((ph) % AMB_FRAMES, 0.2), ((ph + 30) % AMB_FRAMES, 1.0),
-                       ((ph + 60) % AMB_FRAMES, 0.2), (AMB_FRAMES, 0.2)})
-        amb_tracks.append(track(d, sp, {"opacity": [(f, v) for f, v in keys]}, ease=EASE))
-    ground = E("emitPortalGround", 0, GROUND_Y - PORTAL_Y - 6, RING_W + 160, 50,
-               rfill(140, [("80B79CFF", 0), ("00B79CFF", 1)], emit=True))
-    grow = N("PortalGrow", *sparks, ring_hi, ring, core_node, glow, bind("portal", 16), bind("portal", 17),
+    halo = E("emitPortalGlow", 0, 0, RING_W + 220, RING_H + 220,
+             rfill((RING_H + 220) / 2, [("00B79CFF", 0.62), ("90B79CFF", 0.82), ("00B79CFF", 1)], emit=True))
+    amb_tracks.append(track(d, halo, {"opacity": BREATH}, ease=EASE))
+    grow = N("PortalGrow", *sparks, *comets, lip, ring, ink, inside, mouth, halo,
+             bind("portal", 16, conv_tokens(*F.inp(), F.op("*"), *F.inp(), F.op("+"), F.val(0.22), F.op("*"),
+                                            *bump_tokens(0.35, 1.0))),
+             bind("portal", 17, conv_tokens(*clamp01(F.val(1.6), F.op("*"), *F.inp()))),
              x=0.0, y=0.0, scaleX=0.0, scaleY=0.0)
-    return N("Portal", grow, ground, bind("portal", 18), x=PORTAL_X, y=PORTAL_Y, opacity=0.0)
+    # the tear: a blade of white light down the middle while the rift opens (and as it collapses)
+    blade = E("emitPortalTearBlade", 0, 0, 34, RING_H + 60,
+              vfill(-(RING_H + 60) / 2, (RING_H + 60) / 2, [("00FFF8FF", 0), (HOT, 0.2), (HOT, 0.8), ("00FFF8FF", 1)],
+                    emit=True))
+    bloom = E("emitPortalTearBloom", 0, 0, 260, 260,
+              rfill(130, [("E0E6DCFF", 0), ("60B79CFF", 0.55), ("00B79CFF", 1)], emit=True), scaleY=(RING_H + 200) / 260)
+    tear = N("emitPortalTear", blade, bloom, bind("portal", 18, bump(0.0, 0.8)),
+             bind("portal", 17, conv_tokens(*clamp01(F.val(2.2), F.op("*"), *F.inp()))), x=0.0, y=0.0,
+             opacity=0.0, scaleY=0.0)
+    # the light it throws: a wash over everything near it (the avatar's right side, the floor) and a pool at its foot
+    spill = E("emitPortalSpill", -60, 40, 1500, 1500,
+              rfill(750, [("70A88CFF", 0), ("28A88CFF", 0.45), ("00A88CFF", 1)], emit=True),
+              bind("open", 18, conv(0.5, 0.5)), blendModeValue=SCREEN, opacity=0.5)
+    ground = E("emitPortalGround", 0, GROUND_Y - PORTAL_Y - 6, RING_W + 360, 90,
+               rfill(230, [("A0C8B4FF", 0), ("40B79CFF", 0.5), ("00B79CFF", 1)], emit=True), blendModeValue=SCREEN)
+    return N("Portal", tear, grow, ground, spill, bind("portal", 18), x=PORTAL_X, y=PORTAL_Y, opacity=0.0)
 
 
 # ---------------------------------------------------------------- rocket (anchor: bottom centre)
@@ -1247,58 +1596,165 @@ def rp(pts: list) -> list:
     return [(p[0] * RX, p[1] * RY) + tuple(p[2:]) for p in pts]
 
 
+# the lift-off (v16): the app holds `lift` in 0..IGNITION over the first share of its lift-off (the engine lights,
+# the hull rumbles, the smoke billows on the pad) before it climbs; the landing passes the band at the end
+IGNITION = 0.02
+RUMBLE_PX, RUMBLE_CYCLES = 3.0, 6.0     # the shake's amplitude (artboard px) and its cycles over the ignition band
+SMOKE_TOP = 0.32                        # every puff has billowed and gone by this lift
+# (unit x, unit y above the ground, size, drift in unit px, window): low puffs first, rolling out along the pad
+# (unit x, artboard y above the ground, size px, drift in unit px, rise px, window): low puffs first, rolling out along
+# the pad, the later ones bigger and higher
+PUFFS = ((-50, -30, 230, -150, -20, (0.000, 0.12)), (50, -30, 230, 150, -20, (0.000, 0.12)),
+         (-120, -50, 260, -280, -50, (0.003, 0.18)), (120, -50, 260, 280, -50, (0.003, 0.18)),
+         (-30, -70, 300, -120, -90, (0.008, 0.24)), (40, -76, 280, 140, -100, (0.008, 0.24)),
+         (-190, -40, 240, -360, -70, (0.014, SMOKE_TOP)), (190, -40, 240, 360, -70, (0.014, SMOKE_TOP)),
+         (-100, -110, 220, -220, -160, (0.02, SMOKE_TOP)), (110, -110, 220, 230, -160, (0.02, SMOKE_TOP)))
+STEEL, STEEL_HI, STEEL_LO, STEEL_DARK = "FFC9C0C4", "FFF1EAE2", "FF9A90A0", "FF6E6678"
+RED, RED_HI, RED_LO = "FFC0503F", "FFE07A60", "FF8E3630"
+BRASS, BRASS_LO = "FFE2BC72", "FF9C7638"
+
+
+def hull_x(y: float) -> float:
+    """The hull's half width (unit) at unit height y, along its outline."""
+    prof = [(-760, 0), (-690, 54), (-560, 92), (-400, 104), (-240, 96), (-140, 82)]
+    for (y0, x0), (y1, x1) in zip(prof, prof[1:]):
+        if y0 <= y <= y1:
+            return x0 + (x1 - x0) * (y - y0) / (y1 - y0)
+    raise ValueError(y)
+
+
 def rocket() -> El:
+    """The little rocket (v16): a riveted steel hull with a brass porthole (its glass shows the far scene's light)
+    and a hatch onto a lit cabin. `lift` flies it: the engine lights in the ignition band (the hull rumbles, smoke
+    rolls out over the pad, the ground flares), then it climbs out of frame on a three-layer flame; its shadow
+    shrinks and fades as it rises. The app lands it the same way on arrival and before boarding."""
     body_pts = rp([(0, -760), (54, -690), (92, -560), (104, -400), (96, -240), (82, -140, "c"),
                    (-82, -140, "c"), (-96, -240), (-104, -400), (-92, -560), (-54, -690)])
-    body = S("RocketHull", body_pts, hfill(-104 * RX, 104 * RX, [("FFB8AEB8", 0), ("FFE6DDD2", 0.35),
-                                                               ("FFC9BCB6", 0.8), ("FF8E8494", 1)]), line(INK, 5))
+    body = S("RocketHull", body_pts, hfill(-104 * RX, 104 * RX, [(STEEL_LO, 0), (STEEL_HI, 0.3), (STEEL, 0.62),
+                                                               ("FF8A8094", 1)]), line(INK, 5))
+    # panel seams follow the hull's curve; rivets ride the band
+    seams = []
+    for i, y in enumerate((-600, -440, -230)):
+        hw = hull_x(y) - 3
+        seams.append(S(f"RocketSeam{i}", rp([(-hw, y), (0, y + 9), (hw, y)]), line("FF7A7086", 2.5), closed=False))
+    rivets = [E(f"RocketRivet{i}", x * RX, -315 * RY, 9, 9, fill(STEEL_HI), line("FF6E6678", 1.5))
+              for i, x in enumerate((-80, -48, -16, 16, 48, 80))]
+    gloss = S("RocketGloss", rp([(-58, -650), (-40, -662), (-46, -420), (-50, -200), (-66, -190), (-72, -420)]),
+              vfill(-662 * RY, -190 * RY, [("00FFFFFF", 0), ("B0FFFFFF", 0.3), ("90FFFFFF", 0.7), ("00FFFFFF", 1)]))
     nose = S("RocketNose", rp([(0, -760), (54, -690), (74, -640, "c"), (-74, -640, "c"), (-54, -690)]),
-             vfill(-760 * RY, -640 * RY, [("FFD8705A", 0), ("FFB04A3E", 1)]), line(INK, 4))
+             vfill(-760 * RY, -640 * RY, [(RED_HI, 0), (RED, 0.5), (RED_LO, 1)]), line(INK, 4))
+    nose_hi = S("RocketNoseGloss", rp([(-8, -742), (-34, -702), (-44, -662), (-30, -664), (-16, -706)]),
+                fill("90FFE8DC"))
+    tip = E("RocketTip", 0, -762 * RY, 22, 22, rfill(11, [(BRASS, 0), (BRASS_LO, 1)]), line(INK, 3))
     band = S("RocketBand", rp([(-100, -330, "c"), (100, -330, "c"), (102, -300, "c"), (-102, -300, "c")]),
-             fill("FFB04A3E"), line(INK, 3))
-    window = N("RocketWindow",
-               E("emitRocketWindowGlass", 0, 0, 96, 96, rfill(54, [("FFB8D4EA", 0), ("FF5A7EA8", 1)], emit=True)),
-               E("RocketWindowRing", 0, 0, 120, 120, fill("FF8E8494"), line(INK, 4)), x=0.0, y=-500.0 * RY)
+             vfill(-330 * RY, -300 * RY, [(RED_HI, 0), (RED, 0.4), (RED_LO, 1)]), line(INK, 3))
+    # the porthole: brass ring and bolts, its glass lit by the scene the rocket flies to
+    bolts = [E(f"RocketBolt{i}", 54 * math.cos(a), 54 * math.sin(a), 8, 8, fill(BRASS_LO))
+             for i, a in enumerate(i * math.tau / 8 + 0.4 for i in range(8))]
+    glass = E("emitRocketWindowGlass", 0, 0, 92, 92, light_glow(70, light_stop(0.0), stop("FF7FA6D0", 0.55),
+                                                                 stop("FF34507A", 0.9), cx=-14, cy=-16))
+    glass.children[-1].children[0].children[-1].attrs["colorValue"] = "FF2A4268"   # the glass's edge stays opaque
+    glint = S("RocketWindowGlint", [(-30, -14), (-14, -32), (6, -38), (-10, -24), (-24, -4)], fill("C0FFFFFF"))
+    window = N("RocketWindow", glint, *bolts, glass,
+               E("RocketWindowRing", 0, 0, 128, 128, rfill(64, [(BRASS, 0.6), (BRASS_LO, 1)]), line(INK, 4)),
+               x=0.0, y=-500.0 * RY)
+    # the hatch: a door swinging out on its left hinge onto a warm cabin light
     hatch_w, hatch_top, hatch_bottom = 150.0, -290.0 * RY, -150.0 * RY
-    hatch_leaf = N("RocketHatch",
-                   R("RocketHatchDoor", hatch_w / 2, (hatch_top + hatch_bottom) / 2, hatch_w, hatch_bottom - hatch_top,
-                     30, hfill(0, hatch_w, [("FFD8CFC6", 0), ("FFA89EA8", 1)]), line(INK, 3)),
-                   bind("open", 16, conv(-1.1, 1.0)), x=-hatch_w - 40, y=0.0)
-    hatch_hole = R("RocketHatchHole", -hatch_w / 2 - 40, (hatch_top + hatch_bottom) / 2, hatch_w,
-                   hatch_bottom - hatch_top, 30, fill("FF2A2236"), line(INK, 3))
+    hh = hatch_bottom - hatch_top
+    door = N("RocketHatch",
+             E("RocketHatchPort", hatch_w / 2, hatch_top + 44, 34, 34, rfill(17, [("FF9CC0E0", 0), ("FF4E6A90", 1)]),
+               line(INK, 2.5)),
+             R("RocketHatchHandle", hatch_w - 22, (hatch_top + hatch_bottom) / 2 + 10, 10, 36, 5, fill(STEEL_DARK),
+               line(INK, 2)),
+             R("RocketHatchInset", hatch_w / 2, (hatch_top + hatch_bottom) / 2, hatch_w - 26, hh - 26, 20,
+               line("FF8A8094", 2.5)),
+             R("RocketHatchDoor", hatch_w / 2, (hatch_top + hatch_bottom) / 2, hatch_w, hh, 30,
+               hfill(0, hatch_w, [(STEEL_HI, 0), (STEEL, 0.5), ("FF9A90A0", 1)]), line(INK, 3)),
+             bind("open", 16, conv(-1.1, 1.0)), x=-hatch_w - 40, y=0.0)
+    cx_, cy_ = -hatch_w / 2 - 40, (hatch_top + hatch_bottom) / 2
+    cabin = N("emitRocketCabin",
+              R("emitRocketCabinShadow", cx_, hatch_top + 18, hatch_w - 6, 30, 14,
+                vfill(hatch_top + 3, hatch_top + 33, [("C0302838", 0), ("00302838", 1)], emit=True)),
+              *[E(f"emitRocketCabinLamp{i}", cx_ - 40 + 24 * i, cy_ + 26, 9, 9, fill(c, emit=True))
+                for i, c in enumerate(("FF7BD88F", "FFFFE08A", "FFFF8552", "FF7FB8FF"))],
+              R("emitRocketCabinPanel", cx_, cy_ + 26, 116, 22, 8, fill("FF5A3A30", emit=True)),
+              R("emitRocketCabinLight", cx_, cy_, hatch_w - 6, hh - 6, 27,
+                rfill(hh, [("FFFFF6DA", 0), ("FFFFD49A", 0.45), ("FFC87A50", 1)], emit=True, cx=20, cy=-hh / 2)),
+              bind("open", 18), x=0.0, y=0.0, opacity=0.0)
+    hole = R("RocketHatchHole", -hatch_w / 2 - 40, (hatch_top + hatch_bottom) / 2, hatch_w, hh, 30,
+             vfill(hatch_top, hatch_bottom, [("FF3A3046", 0), ("FF221C2C", 1)]), line(INK, 3))
+    # its light falls out of the hatch onto the ground in front
+    door_light = S("emitRocketDoorLight", [(-hatch_w - 34, hatch_bottom), (-46, hatch_bottom), (60, 40), (-hatch_w - 150, 40)],
+                   vfill(hatch_bottom, 40, [("90FFD8A0", 0), ("00FFD8A0", 1)], emit=True), bind("open", 18), opacity=0.0)
     fins = [S("RocketFinL", rp([(-90, -280), (-150, -160), (-158, -60, "c"), (-82, -120, "c")]),
-              vfill(-280 * RY, -60 * RY, [("FFD8705A", 0), ("FF9C4038", 1)]), line(INK, 4)),
+              vfill(-280 * RY, -60 * RY, [(RED_HI, 0), (RED_LO, 1)]), line(INK, 4)),
             S("RocketFinR", rp([(90, -280), (150, -160), (158, -60, "c"), (82, -120, "c")]),
-              vfill(-280 * RY, -60 * RY, [("FFC85E4E", 0), ("FF8A3632", 1)]), line(INK, 4))]
-    legs = [S(f"RocketLeg{s}", rp([(s * 60, -140), (s * 96, 0), (s * 120, 0)]), line("FF5A5664", 10), closed=False)
-            for s in (-1, 1)]
+              vfill(-280 * RY, -60 * RY, [(RED, 0), ("FF7A2E2A", 1)]), line(INK, 4))]
+    fin_hi = S("RocketFinGloss", rp([(-100, -262), (-140, -168), (-146, -96)]), line("A0FFD8C8", 4), closed=False)
+    nozzle = S("RocketNozzle", rp([(-50, -142, "c"), (50, -142, "c"), (66, -104, "c"), (-66, -104, "c")]),
+               hfill(-66 * RX, 66 * RX, [("FF4A4452", 0), ("FF8A8094", 0.35), ("FF3A3442", 1)]), line(INK, 4))
+    legs = [N(f"RocketLeg{'LR'[s > 0]}",
+              E(f"RocketFoot{'LR'[s > 0]}", s * 112 * RX, -6, 70, 16, fill(STEEL_DARK), line(INK, 3)),
+              S(f"RocketStrut{'LR'[s > 0]}", rp([(s * 62, -150), (s * 112, -6)]), line(STEEL_DARK, 12), closed=False),
+              x=0.0, y=0.0) for s in (-1, 1)]
     rim = S("RocketRim", rp([(-100, -260), (-104, -400), (-92, -560), (-54, -690)]),
-            bound_line("lightKey", 4, SCENES["livingRoom"].key), closed=False, opacity=0.65)
+            bound_line("lightKey", 5, SCENES["livingRoom"].key), closed=False, opacity=0.7)
     shade = S("RocketShade", rp([(40, -700), (92, -560), (104, -400), (96, -240), (82, -140, "c"), (36, -140, "c"),
-                                 (60, -400)]), bound_fill("lightAmbient", SCENES["livingRoom"].ambient), opacity=0.4)
-    flame_inner = N("emitRocketFlameFlicker",
-                    S("emitRocketFlameCore", [(0, 10), (-50, 70), (0, 230), (50, 70)],
-                      fill("FFFFF1C8", emit=True)),
-                    S("emitRocketFlameOuter", [(0, 0), (-100, 80), (-44, 240), (0, 360), (44, 240), (100, 80)],
-                      vfill(0, 360, [("FFFFC46A", 0), ("FFFF8552", 0.6), ("00FF8552", 1)], emit=True)),
-                    x=0.0, y=0.0)
-    amb_tracks.append(track(d, flame_inner, {"scaleY": [(f, 1.0 + 0.12 * ((f // 6) % 2))
-                                                        for f in range(0, AMB_FRAMES + 1, 6)]}))
-    flame = N("emitRocketFlame", flame_inner,
-              bind("lift", 18, conv_tokens(*F.fn("min", [F.val(1)], [F.val(12), F.op("*"), *F.inp()]))),
-              x=0.0, y=-140.0 * RY, opacity=0.0)
-    body_node = N("RocketBody", rim, window, hatch_leaf, hatch_hole, band, nose, shade, body, *fins, *legs, flame,
+                                 (60, -400)]), bound_fill("lightAmbient", SCENES["livingRoom"].ambient), opacity=0.45)
+    # the flame: outer, mid and a white core with shock diamonds, flickering on the loop; it grows with the thrust
+    diamonds = [S(f"emitRocketDiamond{i}", [(0, y - 16), (12, y), (0, y + 16), (-12, y)], fill("E0FFFFFF", emit=True))
+                for i, y in enumerate((70, 130, 182))]
+    flicker = N("emitRocketFlameFlicker",
+                *diamonds,
+                S("emitRocketFlameCore", [(0, 0, "c"), (-34, 50), (-14, 190), (0, 250), (14, 190), (34, 50)],
+                  vfill(0, 250, [("FFFFFFF4", 0), ("FFFFF1C8", 0.6), ("00FFE7A8", 1)], emit=True)),
+                S("emitRocketFlameMid", [(0, 0, "c"), (-62, 60), (-40, 230), (0, 340), (40, 230), (62, 60)],
+                  vfill(0, 340, [("FFFFE08A", 0), ("FFFFB060", 0.55), ("00FF9A50", 1)], emit=True)),
+                S("emitRocketFlameOuter", [(0, -6, "c"), (-104, 70), (-60, 280), (0, 440), (60, 280), (104, 70)],
+                  vfill(0, 440, [("E0FF9A52", 0), ("A0FF6A42", 0.55), ("00E04A3A", 1)], emit=True)),
+                x=0.0, y=0.0)
+    amb_tracks.append(track(d, flicker, {
+        "scaleY": [(f, round(1.0 + 0.14 * math.sin(f * 1.7) * math.sin(f * 0.37), 4)) for f in range(0, AMB_FRAMES, 6)]
+        + [(AMB_FRAMES, 1.0)],
+        "scaleX": [(f, round(1.0 + 0.06 * math.sin(f * 2.3 + 1.0), 4)) for f in range(0, AMB_FRAMES, 6)]
+        + [(AMB_FRAMES, round(1.0 + 0.06 * math.sin(1.0), 4))]}))
+    heat = E("emitRocketHeat", 0, 10, 260, 140, rfill(130, [("C0FFC870", 0), ("50FF8A4A", 0.5), ("00FF6A3A", 1)],
+                                                         emit=True))
+    flame = N("emitRocketFlame", flicker, heat,
+              bind("lift", 18, conv_tokens(*F.fn("min", [F.val(1)], [F.val(60), F.op("*"), *F.inp()]))),
+              bind("lift", 17, windowed(0.0, 0.08, 0.6, 0.4)), bind("lift", 16, windowed(0.0, 0.05, 0.4, 0.6)),
+              x=0.0, y=-104.0 * RY, opacity=0.0, scaleX=0.6, scaleY=0.4)
+    # the scene's key light takes the steel (multiply), so the hull sits in the room, the night or the sunset
+    key_tint = S("RocketKeyTint", body_pts, bound_fill("lightKey", SCENES["livingRoom"].key), blendModeValue=MULTIPLY,
+                 opacity=0.35)
+    hull = N("RocketHullArt", rim, window, door, cabin, hole, gloss, *rivets, band, *seams, key_tint, nose_hi, tip,
+             nose, shade, body, fin_hi, *fins, nozzle, *legs, x=0.0, y=0.0)
+    # the rumble: a fast shake through the ignition band (history-free: a sine of `lift`), gone by the climb
+    k = RUMBLE_CYCLES * math.tau / IGNITION
+    shake = conv_tokens(F.val(RUMBLE_PX), F.op("*"), *F.fn("sin", [F.val(k), F.op("*"), *F.inp()]), F.op("*"),
+                        F.val(1), F.op("-"), F.val(RUMBLE_PX), F.op("*"), *F.fn("sin", [F.val(k), F.op("*"), *F.inp()]),
+                        F.op("*"), *window_tokens(IGNITION, 3 * IGNITION))
+    body_node = N("RocketBody", N("RocketRumble", hull, bind("lift", 13, shake), x=0.0, y=0.0), flame,
                   bind("lift", 14, conv(LIFT_TRAVEL)), x=0.0, y=0.0)
-    smoke = N("RocketSmoke",
-              *[E(f"RocketPuff{i}", cx, cy, w, h, fill("FF9C94A4"), line("FF6A6474", 3))
-                for i, (cx, cy, w, h) in enumerate([(-250, -24, 220, 150), (-80, -14, 280, 180), (110, -30, 240, 170),
-                                                    (290, -14, 180, 130)])],
-              bind("lift", 18, conv_tokens(*F.fn("max", [F.val(0)], [*F.fn("min", [F.val(1)],
-                                                                             [F.val(6), F.op("*"), *F.inp()]),
-                                                                   F.op("-"), F.val(1.6), F.op("*"), *F.inp()]))),
-              x=0.0, y=0.0, opacity=0.0)
-    pad = E("RocketPad", 0, 4, 520, 50, fill("FF3E3A48"), line(INK, 3))
-    return N("Rocket", smoke, body_node, pad, bind("rocket", 18), bind("rocket", 16, conv(0.08, 0.92)),
+    # the smoke rolls out over the pad, warm underneath from the flame
+    puffs = []
+    for i, (px, py, size, drift, rise, (a, b)) in enumerate(PUFFS):
+        r = size / 2
+        puff = E(f"RocketPuff{i}", 0, 0, size, size * 0.86,
+                 rfill(r, [("F4FBF7F2", 0), ("E0E4DCE0", 0.45), ("80D4CCD4", 0.75), ("00D4CCD4", 1)], cy=-r * 0.15))
+        puffs.append(N(f"RocketSmoke{i}", N(f"RocketPuffRise{i}", puff, bind("lift", 14, windowed(a, b, rise)),
+                                            x=0.0, y=0.0),
+                       bind("lift", 18, bump(a, b)), bind("lift", 13, windowed(a, b, drift * RX, px * RX)),
+                       bind("lift", 16, windowed(a, b, 1.0, 0.3)), bind("lift", 17, windowed(a, b, 0.85, 0.3)),
+                       x=px * RX, y=py, opacity=0.0, scaleX=0.3, scaleY=0.3))
+    smoke = N("RocketSmoke", *puffs, x=0.0, y=0.0)
+    flare = E("emitRocketGroundFlare", 0, -6, 900, 120, rfill(450, [("C0FFC070", 0), ("50FF8A4A", 0.45),
+                                                                    ("00FF6A3A", 1)], emit=True),
+              bind("lift", 18, bump(0.0, 0.4)), blendModeValue=SCREEN, opacity=0.0)
+    shadow = E("RocketShadow", 0, 2, 560, 60, rfill(280, [("70120E18", 0), ("40120E18", 0.6), ("00120E18", 1)]),
+               bind("lift", 18, conv_tokens(*clamp01(F.val(1), F.op("-"), F.val(3), F.op("*"), *F.inp()))),
+               bind("lift", 16, windowed(0.0, 0.33, -0.6, 1.0)))
+    return N("Rocket", smoke, body_node, flare, shadow, bind("rocket", 18), bind("rocket", 16, conv(0.08, 0.92)),
              bind("rocket", 17, conv(0.08, 0.92)), x=ROCKET_X, y=GROUND_Y, opacity=0.0)
 
 
@@ -1318,12 +1774,15 @@ def build() -> list[El]:
     _windows.clear()
     d.next = V10_APPEAR_CONV_ID
     conv(0.08, 0.92)
-    d.next = V10_DOOR_END
-    others = [path(), portal(), rocket()]
     d15.next = V15_DRAW_START
     with minting_in(d15):
-        families = [book(), *others]
+        families = [book()]
     assert d15.next < V15_LIGHT_START, d15.next   # the drawing stops short of the vignette's lights
+    d16 = Doc(client=0, start=V16_ID_START)
+    with minting_in(d16):
+        book_polish(families[0])
+        families += [path(), portal(), rocket()]
+    d.next = V10_FAMILIES_END
     amb = d("LinearAnimation", *amb_tracks, duration=AMB_FRAMES, fps=60, loopValue="loop", name="amb_journey")
     state = d("AnimationState", animationId=amb.ref(), x=160.0, y=100.0)
     layer = d("StateMachineLayer", d("AnyState", x=100.0, y=-100.0), d("ExitState", x=500.0, y=-100.0),

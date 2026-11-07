@@ -113,6 +113,34 @@ class _FallCurve extends Curve {
   }
 }
 
+/// The rocket's lift-off (v16): the ignition holds `lift` on the pad, crawling
+/// through the file's rumble band (0 → [band]) while the engine lights and
+/// the smoke rolls out, then it climbs, easeInCubic, out of frame.
+class _LiftOffCurve extends Curve {
+  const _LiftOffCurve();
+
+  /// `gen_journeys.IGNITION`: the file's rumble and smoke band of `lift`.
+  static const double band = 0.02;
+  static final double _ignitionShare =
+      JourneyTiming.ignition.inMilliseconds /
+      JourneyTiming.liftOff.inMilliseconds;
+
+  @override
+  double transform(double t) {
+    if (t <= 0) {
+      return 0;
+    }
+    if (t >= 1) {
+      return 1;
+    }
+    if (t <= _ignitionShare) {
+      return band * (t / _ignitionShare);
+    }
+    final double climb = (t - _ignitionShare) / (1 - _ignitionShare);
+    return band + (1 - band) * Curves.easeInCubic.transform(climb);
+  }
+}
+
 /// The overlay's numbers over a journey's beats (M7 ruling 9, v15 staging),
 /// history-free: a pure function of the beat and the time spent in it.
 /// Reduce motion jumps every move to its end (the walks are the avatar's
@@ -137,6 +165,10 @@ abstract final class JourneyChoreography {
   /// the riffle starts where the plain thresholds' open would end.
   static const int _arriveSwingLenMs = 450;
   static const int _arriveUnfoldLenMs = 510;
+
+  /// The rocket before boarding (v16): it lands from above as the open beat
+  /// starts, then its hatch opens.
+  static const int _boardHatchStartMs = 750;
 
   static JourneyFrame at(
     JourneyState? journey,
@@ -173,6 +205,19 @@ abstract final class JourneyChoreography {
       }
       final double t = ((ms - start) / length.inMilliseconds).clamp(0.0, 1.0);
       return curve.transform(t);
+    }
+
+    // The rocket's landing (from out of frame, decelerating onto the pad) and
+    // its lift-off (ignition on the pad, then the climb).
+    double landing(double start) =>
+        1 - ramp(start, JourneyTiming.lift, Curves.easeOutCubic);
+    double liftOff(double start) {
+      if (reduceMotion) {
+        return ms >= start ? 1 : 0;
+      }
+      final double t = ((ms - start) / JourneyTiming.liftOff.inMilliseconds)
+          .clamp(0.0, 1.0);
+      return const _LiftOffCurve().transform(t);
     }
 
     // The close's cover: held open until the fall starts, then the fall
@@ -217,7 +262,10 @@ abstract final class JourneyChoreography {
                   const _SwingCurve(),
                   1,
                 )
+              : rocket
+              ? ramp(_boardHatchStartMs.toDouble(), JourneyTiming.arriveOpen)
               : ramp(appearMs, JourneyTiming.appear),
+          lift: rocket ? landing(0) : 0,
           unfold: ramp(
             _openUnfoldStartMs.toDouble(),
             const Duration(milliseconds: _openUnfoldLenMs),
@@ -244,7 +292,7 @@ abstract final class JourneyChoreography {
           unfold:
               1 -
               ramp(0, const Duration(milliseconds: _foldLenMs), Curves.easeOut),
-          lift: rocket ? ramp(closeMs, JourneyTiming.lift, Curves.easeIn) : 0,
+          lift: rocket ? liftOff(closeMs) : 0,
           destination: destination,
           clip: true,
         );
@@ -261,7 +309,7 @@ abstract final class JourneyChoreography {
           return JourneyFrame(
             family: family,
             show: 1,
-            lift: 1 - ramp(0, JourneyTiming.lift, Curves.easeOut),
+            lift: landing(0),
             open: ramp(liftMs, JourneyTiming.arriveOpen),
             destination: destination,
             clip: true,
@@ -320,9 +368,11 @@ abstract final class JourneyChoreography {
           clip: true,
         );
       case JourneyPhase.vanish:
+        // the rocket takes off empty (v16); the others fade
         return JourneyFrame(
           family: family,
-          show: 1 - ramp(0, JourneyTiming.vanish),
+          show: rocket ? 1 : 1 - ramp(0, JourneyTiming.vanish),
+          lift: rocket ? liftOff(0) : 0,
           destination: destination,
         );
     }
@@ -340,7 +390,7 @@ abstract final class JourneyChoreography {
     JourneyPhase.arriveOpen => JourneyTiming.arriveOpenOf(journey.family),
     JourneyPhase.arriveClose =>
       JourneyTiming.close + const Duration(milliseconds: 20),
-    JourneyPhase.vanish => JourneyTiming.vanish,
+    JourneyPhase.vanish => JourneyTiming.vanishOf(journey.family),
     _ => Duration.zero,
   };
 }

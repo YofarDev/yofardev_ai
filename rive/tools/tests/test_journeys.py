@@ -229,25 +229,32 @@ def test_v15_mints_only_from_its_range(root: ET.Element) -> None:
     assert {c for c in shared if int(c.split(":")[1]) < gen_journeys.V15_ID_START} == {"0:151"}
 
 
+def _redrawn_ids(old: ET.Element, families: tuple[str, ...]) -> set[str]:
+    """The ids of an older file's `families` (redrawn since: v15 the door, v16 the path, portal and rocket): their
+    subtrees, the converters only they used and their ambient tracks."""
+    redrawn = [e for e in old.iter("Node") if e.get("name") in families]
+    gone = {e.get("id") for r in redrawn for e in r.iter()}
+    used_elsewhere = {b.get("converterId") for b in old.iter("DataBindContext") if b.get("id") not in gone}
+    own_convs = {b.get("converterId") for r in redrawn for b in r.iter("DataBindContext")} - used_elsewhere
+    for conv in old.findall("DataConverterFormula"):
+        if conv.get("id") in own_convs:
+            gone |= {e.get("id") for e in conv.iter()}
+    for ko in old.iter("KeyedObject"):
+        if ko.get("objectId") in gone:
+            gone |= {e.get("id") for e in ko.iter()}
+    return gone
+
+
 def test_v15_keeps_every_earlier_id(root: ET.Element) -> None:
-    """Every element of the v11 file outside the door (its subtree, its own converters and ambient track,
-    the `door` number) keeps its id and tag."""
+    """Every element of the v11 file outside the door and the thresholds v16 redrew (their subtrees, their own
+    converters and ambient tracks, the `door` number) keeps its id and tag."""
     try:
         text = subprocess.run(["git", "show", f"{V11}:rive/journeys/journeys.rml"], cwd=ROOT, capture_output=True,
                               text=True, check=True).stdout
     except (subprocess.CalledProcessError, FileNotFoundError):
         pytest.skip(f"git history with {V11} not available")
     old = ET.fromstring(text)
-    door = next(e for e in old.iter("Node") if e.get("name") == "Door")
-    gone = {e.get("id") for e in door.iter()}
-    used_elsewhere = {b.get("converterId") for b in old.iter("DataBindContext") if b.get("id") not in gone}
-    door_convs = {b.get("converterId") for b in door.iter("DataBindContext")} - used_elsewhere
-    for conv in old.findall("DataConverterFormula"):
-        if conv.get("id") in door_convs:
-            gone |= {e.get("id") for e in conv.iter()}
-    for ko in old.iter("KeyedObject"):
-        if ko.get("objectId") in gone:
-            gone |= {e.get("id") for e in ko.iter()}
+    gone = _redrawn_ids(old, ("Door", "Path", "Portal", "Rocket"))
     number = next(e for e in old.iter("ViewModelPropertyNumber") if e.get("name") == "door")
     gone |= {number.get("id")} | {e.get("id") for e in old.iter("ViewModelInstanceNumber")
                                   if e.get("viewModelPropertyId") == number.get("id")}
@@ -274,15 +281,18 @@ def _binds(el: ET.Element, props: dict[str, str]) -> list[tuple[str, int]]:
 
 
 def test_v15_keeps_the_books_ids(root: ET.Element) -> None:
-    """The vignette only adds: every element of the book before it (Task 1) keeps its id and tag."""
+    """The vignette only adds: every element of the book before it (Task 1) keeps its id and tag (and so does every
+    element outside the thresholds v16 redrew)."""
     try:
         text = subprocess.run(["git", "show", f"{TASK1}:rive/journeys/journeys.rml"], cwd=ROOT, capture_output=True,
                               text=True, check=True).stdout
     except (subprocess.CalledProcessError, FileNotFoundError):
         pytest.skip(f"git history with {TASK1} not available")
+    old = ET.fromstring(text)
+    gone = _redrawn_ids(old, ("Path", "Portal", "Rocket"))   # v16 redrew them
     new = {e.get("id"): e.tag for e in root.iter() if e.get("id")}
-    moved = [(e.get("id"), e.tag, e.get("name")) for e in ET.fromstring(text).iter()
-             if e.get("id") and new.get(e.get("id")) != e.tag]
+    moved = [(e.get("id"), e.tag, e.get("name")) for e in old.iter()
+             if e.get("id") and e.get("id") not in gone and new.get(e.get("id")) != e.tag]
     assert not moved, moved[:10]
 
 
@@ -640,7 +650,8 @@ def test_the_vignette_glows_in_the_other_scenes_light(root: ET.Element) -> None:
     """`vignetteKey` / `vignetteAmbient` default to the living room's, like `lightKey` / `lightAmbient`, so the file
     draws correctly unwritten. The vignette (panels, shaft, halo, motes, the hero), the medallion's foil and the
     light that comes out of the book (the gutter glow, the spill) take them; the book's own rim, shade and bevel stay
-    on `lightKey` / `lightAmbient`, and nothing outside the book uses the vignette's."""
+    on `lightKey` / `lightAmbient`. Outside the book (v16) only the far scene's light through the other thresholds
+    takes the vignette's key: the portal's core, the path's far end, the rocket's porthole."""
     props = _props(root)
     vm = root.find("ViewModel")
     inst = vm.find("ViewModelInstance")
@@ -662,7 +673,8 @@ def test_the_vignette_glows_in_the_other_scenes_light(root: ET.Element) -> None:
             for prop, k in _binds(paint, props):
                 assert k == key, (prop, k)
                 colours.setdefault(owner(paint), set()).add(prop)
-    for shape in ("BookRim", "BookShade", "CoverRim", "MedallionBevel", "RocketRim", "RocketShade", "PathBushRim"):
+    for shape in ("BookRim", "BookShade", "CoverRim", "MedallionBevel", "RocketRim", "RocketShade", "PathClump0Rim",
+                  "RocketKeyTint", "PathKeyTint", "BookPageKeyTint"):
         assert colours[shape] <= {"lightKey", "lightAmbient"}, shape
     for shape, prop in (("PanelFarRidge", "vignetteAmbient"), ("PanelFarRim", "vignetteKey"),
                         ("PanelMidRim", "vignetteKey"), ("PanelMidHills", "vignetteKey"),
@@ -674,8 +686,12 @@ def test_the_vignette_glows_in_the_other_scenes_light(root: ET.Element) -> None:
                         ("HeroBeachBackRim", "vignetteKey"), ("MedallionBeachTrunk", "vignetteKey")):
         assert colours[shape] == {prop}, shape
     assert colours["HeroSky"] == {"vignetteKey", "vignetteAmbient"}
+    far = {"emitPortalCore", "emitPathFarLight", "emitPathTrail", "emitPathRay0", "emitPathRay1", "emitPathRay2",
+           "emitRocketWindowGlass"}
+    for shape in far:
+        assert colours[shape] == {"vignetteKey"}, shape
     book = {e.get("name") for e in _node(root, "Book").iter()}
-    assert all(name in book for name, used in colours.items() if used & set(gen_journeys.VIGNETTE_LIGHTS))
+    assert all(name in book or name in far for name, used in colours.items() if used & set(gen_journeys.VIGNETTE_LIGHTS))
 
 
 def test_paper_and_foil_keep_their_tones_under_the_light(root: ET.Element) -> None:
@@ -739,6 +755,8 @@ def test_the_ambient_loop_is_seamless(root: ET.Element) -> None:
             gap = frames[-1][1] - frames[0][1]
             if kp.get("property") == "rotation":
                 gap = math.remainder(gap, math.tau)
+            if kp.get("property") == "offset":       # a trim path's offset: whole laps (v16, the portal's comets)
+                gap = math.remainder(gap, 1.0)
             assert gap == pytest.approx(0, abs=1e-4), (ids[ko.get("objectId")], kp.get("property"))   # RML: 4 decimals
     assert {"emitBookGlow", "emitBookShaftBreath", "emitHeroGlowBreath", "emitHeroCampfireFlame",
             "emitHeroLibraryFlame", "emitHeroDeepSpaceStar", *(f"emitBookMote{i}" for i in range(7))} <= keyed

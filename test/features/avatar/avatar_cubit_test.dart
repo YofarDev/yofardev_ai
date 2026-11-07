@@ -508,7 +508,7 @@ void main() {
           // the close beat includes the lift-off
           async.elapse(JourneyTiming.close);
           expect(avatarCubit.state.journey!.phase, JourneyPhase.close);
-          async.elapse(JourneyTiming.lift);
+          async.elapse(JourneyTiming.liftOff);
           expect(avatarCubit.state.journey!.phase, JourneyPhase.cut);
         });
       });
