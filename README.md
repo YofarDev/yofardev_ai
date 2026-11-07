@@ -9,6 +9,12 @@ Bring your own LLM: connect a cloud or local server through an OpenAI-compatible
 ## A look at the app
 
 <p align="center">
+  <a href="film/yofardev-ai-film.mp4"><img src="film/poster.jpg" width="100%" alt="Yofardev AI showcase film: open the two-minute video" /></a>
+</p>
+
+<p align="center"><b><a href="film/yofardev-ai-film.mp4">▶ Watch the showcase film</a></b> (2 min): every app frame is a real capture, with the app's own on-device voice and an original score. How it was made: <a href="film/README.md">film/README.md</a>.</p>
+
+<p align="center">
   <img src="screenshots/stage-living-room.png" width="24%" alt="The Rive avatar in the living room, with the stage composer and history controls" />
   <img src="screenshots/weather-tablet.png" width="24%" alt="The assistant checking the weather on its tablet, with a running-tool indicator" />
   <img src="screenshots/campfire-story.png" width="24%" alt="The assistant telling a story beside a rainy campfire, with a speech caption" />

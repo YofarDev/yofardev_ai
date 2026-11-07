@@ -1,6 +1,13 @@
 # Yofardev AI — portfolio film
 
-`out/yofardev-ai-film.mp4`: 1920×1080, 60 fps, H.264 + AAC 320k, about 2 min.
+`out/yofardev-ai-film.mp4`: 1920×1080, 60 fps, H.264 + AAC 320k, about 2 min (the
+master, git-ignored). `yofardev-ai-film.mp4` next to this file is the web encode
+the repo README links to (CRF 22, AAC 192k), with `poster.jpg`:
+
+```bash
+ffmpeg -i out/yofardev-ai-film.mp4 -c:v libx264 -preset slow -crf 22 -pix_fmt yuv420p \
+  -c:a aac -b:a 192k -movflags +faststart yofardev-ai-film.mp4
+```
 
 Every frame of the app in the film is the real macOS app (debug build, ultra
 tier) driven by the scripted capture harness and recorded at 60 fps by a
