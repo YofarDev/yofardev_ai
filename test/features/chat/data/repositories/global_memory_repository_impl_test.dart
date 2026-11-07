@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:yofardev_ai/core/models/failure.dart';
@@ -47,41 +45,42 @@ void main() {
     );
   });
 
-  test('deleteItem removes only the named item and persists the rest',
-      () async {
-    final GlobalMemoryItem keep = GlobalMemoryItem(
-      id: 'keep',
-      text: 'keep',
-      updatedAt: DateTime(2026, 1, 1),
-    );
-    final GlobalMemoryItem drop = GlobalMemoryItem(
-      id: 'drop',
-      text: 'drop',
-      updatedAt: DateTime(2026, 1, 2),
-    );
-    when(() => datasource.getMemory())
-        .thenAnswer((_) async => GlobalMemory(
-              items: <GlobalMemoryItem>[keep, drop],
-            ));
-    final List<GlobalMemory> saved = <GlobalMemory>[];
-    when(() => datasource.saveMemory(any())).thenAnswer(
-      (Invocation inv) async => saved.add(
-        inv.positionalArguments[0] as GlobalMemory,
-      ),
-    );
+  test(
+    'deleteItem removes only the named item and persists the rest',
+    () async {
+      final GlobalMemoryItem keep = GlobalMemoryItem(
+        id: 'keep',
+        text: 'keep',
+        updatedAt: DateTime(2026, 1, 1),
+      );
+      final GlobalMemoryItem drop = GlobalMemoryItem(
+        id: 'drop',
+        text: 'drop',
+        updatedAt: DateTime(2026, 1, 2),
+      );
+      when(() => datasource.getMemory()).thenAnswer(
+        (_) async => GlobalMemory(items: <GlobalMemoryItem>[keep, drop]),
+      );
+      final List<GlobalMemory> saved = <GlobalMemory>[];
+      when(() => datasource.saveMemory(any())).thenAnswer(
+        (Invocation inv) async =>
+            saved.add(inv.positionalArguments[0] as GlobalMemory),
+      );
 
-    final Result<GlobalMemory> result = await repo.deleteItem('drop');
+      final Result<GlobalMemory> result = await repo.deleteItem('drop');
 
-    result.when(
-      err: (_) => throw StateError('err'),
-      ok: (GlobalMemory m) => expect(m.items, <GlobalMemoryItem>[keep]),
-    );
-    expect(saved.single.items, <GlobalMemoryItem>[keep]);
-  });
+      result.when(
+        err: (_) => throw StateError('err'),
+        ok: (GlobalMemory m) => expect(m.items, <GlobalMemoryItem>[keep]),
+      );
+      expect(saved.single.items, <GlobalMemoryItem>[keep]);
+    },
+  );
 
   test('a throwing datasource maps to a typed failure', () async {
-    when(() => datasource.getMemory())
-        .thenThrow(const FormatException('not-json'));
+    when(
+      () => datasource.getMemory(),
+    ).thenThrow(const FormatException('not-json'));
 
     final Result<GlobalMemory> result = await repo.getMemory();
 

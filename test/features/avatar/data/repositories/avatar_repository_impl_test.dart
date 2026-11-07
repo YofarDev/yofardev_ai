@@ -8,8 +8,7 @@ import 'package:yofardev_ai/core/models/result.dart';
 import 'package:yofardev_ai/features/avatar/data/datasources/avatar_local_datasource.dart';
 import 'package:yofardev_ai/features/avatar/data/repositories/avatar_repository_impl.dart';
 
-class MockAvatarLocalDatasource extends Mock
-    implements AvatarLocalDatasource {}
+class MockAvatarLocalDatasource extends Mock implements AvatarLocalDatasource {}
 
 void main() {
   late MockAvatarLocalDatasource datasource;
@@ -22,8 +21,9 @@ void main() {
 
   test('a found chat maps through unchanged', () async {
     final Chat chat = Chat(id: 'c1');
-    when(() => datasource.getChat('c1'))
-        .thenAnswer((_) async => Result<Chat?>.ok(chat));
+    when(
+      () => datasource.getChat('c1'),
+    ).thenAnswer((_) async => Result<Chat?>.ok(chat));
 
     final Result<Chat> result = await repo.getChat('c1');
 
@@ -34,8 +34,9 @@ void main() {
   });
 
   test('a null chat becomes StorageFailure (not found)', () async {
-    when(() => datasource.getChat('c1'))
-        .thenAnswer((_) async => Result<Chat?>.ok(null));
+    when(
+      () => datasource.getChat('c1'),
+    ).thenAnswer((_) async => Result<Chat?>.ok(null));
 
     final Result<Chat> result = await repo.getChat('c1');
 
@@ -47,8 +48,9 @@ void main() {
 
   test('a datasource failure passes through untouched', () async {
     const NetworkFailure failure = NetworkFailure('offline');
-    when(() => datasource.getChat('c1'))
-        .thenAnswer((_) async => Result<Chat?>.err(failure));
+    when(
+      () => datasource.getChat('c1'),
+    ).thenAnswer((_) async => Result<Chat?>.err(failure));
 
     final Result<Chat> result = await repo.getChat('c1');
 
@@ -59,8 +61,7 @@ void main() {
   });
 
   test('a throwing datasource maps to a typed failure', () async {
-    when(() => datasource.getChat('c1'))
-        .thenThrow(TimeoutException('timeout'));
+    when(() => datasource.getChat('c1')).thenThrow(TimeoutException('timeout'));
 
     final Result<Chat> result = await repo.getChat('c1');
 

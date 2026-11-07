@@ -24,30 +24,38 @@ void main() {
     registerFallbackValue(chat.avatar);
   });
 
-  test('setAvatarBackground persists a copy of the avatar with the scene',
-      () async {
-    when(() => chatRepository.getChat('c1'))
-        .thenAnswer((_) async => Result<Chat?>.ok(chat));
-    when(() => chatRepository.updateAvatar('c1', any()))
-        .thenAnswer((_) async => Result<void>.ok(null));
+  test(
+    'setAvatarBackground persists a copy of the avatar with the scene',
+    () async {
+      when(
+        () => chatRepository.getChat('c1'),
+      ).thenAnswer((_) async => Result<Chat?>.ok(chat));
+      when(
+        () => chatRepository.updateAvatar('c1', any()),
+      ).thenAnswer((_) async => Result<void>.ok(null));
 
-    final Result<void> result =
-        await repo.setAvatarBackground('c1', AvatarScene.beach);
+      final Result<void> result = await repo.setAvatarBackground(
+        'c1',
+        AvatarScene.beach,
+      );
 
-    expect(result.isOk, isTrue);
-    final dynamic saved = verify(
-      () => chatRepository.updateAvatar('c1', captureAny()),
-    ).captured.single;
-    expect((saved as Avatar).background, AvatarScene.beach);
-  });
+      expect(result.isOk, isTrue);
+      final dynamic saved = verify(
+        () => chatRepository.updateAvatar('c1', captureAny()),
+      ).captured.single;
+      expect((saved as Avatar).background, AvatarScene.beach);
+    },
+  );
 
-  test('setAvatarBackground on an unknown chat is a StorageFailure',
-      () async {
-    when(() => chatRepository.getChat('nope'))
-        .thenAnswer((_) async => Result<Chat?>.ok(null));
+  test('setAvatarBackground on an unknown chat is a StorageFailure', () async {
+    when(
+      () => chatRepository.getChat('nope'),
+    ).thenAnswer((_) async => Result<Chat?>.ok(null));
 
-    final Result<void> result =
-        await repo.setAvatarBackground('nope', AvatarScene.beach);
+    final Result<void> result = await repo.setAvatarBackground(
+      'nope',
+      AvatarScene.beach,
+    );
 
     expect(
       result.when(err: (Failure f) => f, ok: (_) => throw StateError('err')),
@@ -56,25 +64,29 @@ void main() {
     verifyNever(() => chatRepository.updateAvatar(any(), any()));
   });
 
-  test('setAvatarBackground passes a repository error through as storage',
-      () async {
-    when(() => chatRepository.getChat('c1'))
-        .thenAnswer((_) async => Result<Chat?>.err(
-              const StorageFailure('nope'),
-            ));
+  test(
+    'setAvatarBackground passes a repository error through as storage',
+    () async {
+      when(() => chatRepository.getChat('c1')).thenAnswer(
+        (_) async => Result<Chat?>.err(const StorageFailure('nope')),
+      );
 
-    final Result<void> result =
-        await repo.setAvatarBackground('c1', AvatarScene.beach);
+      final Result<void> result = await repo.setAvatarBackground(
+        'c1',
+        AvatarScene.beach,
+      );
 
-    expect(
-      result.when(err: (Failure f) => f, ok: (_) => throw StateError('err')),
-      isA<StorageFailure>(),
-    );
-  });
+      expect(
+        result.when(err: (Failure f) => f, ok: (_) => throw StateError('err')),
+        isA<StorageFailure>(),
+      );
+    },
+  );
 
   test('getCurrentChatId returns the current chat id', () async {
-    when(() => chatRepository.getCurrentChat())
-        .thenAnswer((_) async => Result<Chat>.ok(chat));
+    when(
+      () => chatRepository.getCurrentChat(),
+    ).thenAnswer((_) async => Result<Chat>.ok(chat));
 
     final Result<String> result = await repo.getCurrentChatId();
 
@@ -84,11 +96,10 @@ void main() {
     );
   });
 
-  test('getCurrentChatId without a current chat is a StorageFailure',
-      () async {
-    when(() => chatRepository.getCurrentChat()).thenAnswer(
-      (_) async => Result<Chat>.err(const StorageFailure('none')),
-    );
+  test('getCurrentChatId without a current chat is a StorageFailure', () async {
+    when(
+      () => chatRepository.getCurrentChat(),
+    ).thenAnswer((_) async => Result<Chat>.err(const StorageFailure('none')));
 
     final Result<String> result = await repo.getCurrentChatId();
 
@@ -99,8 +110,9 @@ void main() {
   });
 
   test('a throwing repository maps to a typed failure', () async {
-    when(() => chatRepository.getCurrentChat())
-        .thenThrow(TimeoutException('timeout'));
+    when(
+      () => chatRepository.getCurrentChat(),
+    ).thenThrow(TimeoutException('timeout'));
 
     final Result<String> result = await repo.getCurrentChatId();
 

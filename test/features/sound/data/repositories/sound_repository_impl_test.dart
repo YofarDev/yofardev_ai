@@ -33,8 +33,7 @@ void main() {
 
   test('a known sound id maps the asset path and plays it', () async {
     final List<Source> sources = <Source>[];
-    when(() => player.setSource(any()))
-        .thenAnswer((Invocation inv) async {
+    when(() => player.setSource(any())).thenAnswer((Invocation inv) async {
       sources.add(inv.positionalArguments[0] as Source);
     });
 
