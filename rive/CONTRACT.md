@@ -346,12 +346,14 @@ scene rises as a paper-cut vignette. The app loads the file when a journey start
 it when the journey ends.
 
 - **Artboard:** `Journey`, 800×1000: the avatar's artboard size. The app draws it with the
-  avatar's fit (contain, bottom-centre), above the avatar and below the scene's `SceneFront`.
+  avatar's fit (contain, bottom-centre), below the scene's `SceneFront`: above the avatar for the
+  book, under it for the path, the portal and the rocket (v17).
   The ground line is y 1000, like the avatar's feet.
 - **State machine:** `Main`.
 - **View model:** `JourneyVM`.
-- **Threshold:** x 640 in artboard space. During a journey the app clips the avatar right of it,
-  so the avatar disappears into (and comes out of) the threshold. The book's right page block
+- **Threshold:** x 640 in artboard space. During a book journey the app clips the avatar right of
+  it, so the avatar disappears into (and comes out of) the book; v17: the other thresholds are drawn
+  under the avatar and the app stages it into them (see the v17 note below). The book's right page block
   covers x ≥ 640 from y 200 to the ground whether open or closed (the band rule); the path's
   ferns, the portal and the rocket cover it while open.
 - No listeners and no events. At every number 0 the artboard draws nothing.
@@ -371,6 +373,16 @@ it when the journey ends.
   path's tunnel and the rocket's porthole. The rocket's `lift` band 0–0.02 (`IGNITION`) is the
   ignition: the hull rumbles and the smoke rolls out there, before the climb; the app lands the
   rocket with `lift` before boarding and lifts it off empty after the arrival.
+- **v17 (the avatar goes in; no new names, no file change):** the app draws the path, the portal and
+  the rocket **under** the avatar (the avatar walks in front of them and into them); the book stays
+  above it, clipped at the spine (x 640) as before. The app stages the avatar into each threshold
+  with the file's own points (`JourneyPassage` in Dart mirrors them; a Python test keeps them
+  equal): the portal draws it to a point inside the mouth left of and above the core (PORTAL_X,
+  PORTAL_Y), spinning anticlockwise and lit by `vignetteKey`; the path shrinks it down the tunnel
+  to the trail's far edge (PATH_X − 10, GROUND_Y − 118), a silhouette; the rocket shrinks it onto the
+  sill of `RocketHatchHole` and clips it to that opening; the book folds it flat into the gutter.
+  So the art inside a threshold (the vortex, the tunnel, the cabin) must read behind a figure, and
+  those points must not move without the Dart mirror.
 
 | JourneyVM property | Type | Values / range |
 |---|---|---|
