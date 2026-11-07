@@ -364,6 +364,13 @@ it when the journey ends.
 - **Ids:** the book's elements mint from `gen_journeys.V15_ID_START` = 6000 (the v10 `door`'s ids
   stay unused, so every other id keeps its value); the two vignette colours sit past the drawing
   (from 20000).
+- **v16 (the thresholds' polish, no new names):** the path, the portal and the rocket are redrawn
+  from `gen_journeys.V16_ID_START` = 30000 (their v10 ids stay unused) and the book gains a page
+  face and cover details from the same range. `vignetteKey` / `vignetteAmbient` are written for
+  every threshold, not only the book: the far scene's light shows through the portal's core, the
+  path's tunnel and the rocket's porthole. The rocket's `lift` band 0–0.02 (`IGNITION`) is the
+  ignition: the hull rumbles and the smoke rolls out there, before the climb; the app lands the
+  rocket with `lift` before boarding and lifts it off empty after the arrival.
 
 | JourneyVM property | Type | Values / range |
 |---|---|---|
@@ -386,7 +393,7 @@ it when the journey ends.
 | `lift` | number | 0–1, default 0: the rocket's height off the ground, with its flame; 1 is out of frame at the top. The other thresholds ignore it. |
 | `lightKey` | color | the current scene's key light colour (the book's own rim and glow). Default `FFFFD49A`. |
 | `lightAmbient` | color | the current scene's ambient colour (the book's shadow side). Default `FF2C3346`. |
-| `vignetteKey` | color | v15: the vignette's key light, in the OTHER scene's rig — the destination's before the cut, the origin's from it (the vignette, hero and medallion glow). Default `FFFFD49A`. |
+| `vignetteKey` | color | v15: the vignette's key light, in the OTHER scene's rig — the destination's before the cut, the origin's from it (the vignette, hero and medallion glow; v16: also the portal's core, the path's far end and the rocket's porthole, written for every threshold). Default `FFFFD49A`. |
 | `vignetteAmbient` | color | v15: the vignette's ambient colour, same other-scene rule. Default `FF2C3346`. |
 | `jacket` | number | v11, 0–1, default 0: the storybook jacket hanging from the book's ribbon (book only; the ribbon shows with the book). The app sets it to 0 at the avatar's grab contact and back to 1 when the avatar hangs it on the next book. |
 
