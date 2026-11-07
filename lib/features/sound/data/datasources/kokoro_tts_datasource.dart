@@ -23,7 +23,7 @@ class TtsLanguageUnsupportedException implements Exception {
 }
 
 /// [TtsSynthesizer] on the on-device Kokoro engine: French with `ff_siwis`
-/// (espeak-ng `fr`), English with `af_heart` (English lexicons).
+/// (espeak-ng `fr`), English with `am_michael` (English lexicons).
 /// [VoiceEffect] is accepted and ignored (the TTS queue post-processes the
 /// WAV through `VoiceEffectsService`).
 class KokoroTtsDatasource implements TtsSynthesizer {

@@ -74,8 +74,8 @@ Future<bool> bundledAssetExists(String asset) async {
 ///   × [rainVolumeBehindGlass] in the cafe, the train compartment and the
 ///   library (behind their glass), 0 in deepSpace and mountainHut (it snows
 ///   there);
-/// - **wind**: the scene's base ([windBaseOf]: forestCabin 0.088, rooftop
-///   0.072, beach 0.048, campfire 0.04, mountainHut 0.024 behind glass, every
+/// - **wind**: the scene's base ([windBaseOf]: forestCabin 0.044, rooftop
+///   0.036, beach 0.024, campfire 0.02, mountainHut 0.012 behind glass, every
 ///   other scene 0) × (0.5 + 0.5 × the world's wind), × 0.5 while the wind is
 ///   unknown (no own-location report); a `gust` ([onGust]) swells it to
 ///   [gustSwell] × the base for [gustLength]. When [assetAvailable] is given
@@ -135,15 +135,15 @@ class AmbientBedService {
   static const String windAsset = 'foley/bed_wind.wav';
 
   // The beds' absolute levels (2026-11-02 ruling: the ambience played at 2.5 ×
-  // this — too loud next to the TTS — so every level is 40 % of the M8–M11
-  // mix).
-  static const double crackleVolume = 0.072;
-  static const double flareVolume = 0.14;
+  // this — too loud next to the TTS — so every level was 40 % of the M8–M11
+  // mix; 2026-11-07: still too loud, every level halved again, −6 dB).
+  static const double crackleVolume = 0.036;
+  static const double flareVolume = 0.07;
   static const Duration flareLength = Duration(seconds: 2);
-  static const double rainVolumeOutdoors = 0.10;
-  static const double rainVolumeIndoors = 0.048;
-  static const double rainVolumeBehindGlass = 0.048;
-  static const double rainVolumeRooftop = 0.10;
+  static const double rainVolumeOutdoors = 0.05;
+  static const double rainVolumeIndoors = 0.024;
+  static const double rainVolumeBehindGlass = 0.024;
+  static const double rainVolumeRooftop = 0.05;
 
   /// A `gust` swells the wind to this many times the scene's base for
   /// [gustLength].
@@ -288,11 +288,11 @@ class AmbientBedService {
   /// The wind bed's level in [scene] at full wind (M11 ruling 11): the
   /// outdoor scenes, mountainHut behind its glass; every indoor scene 0.
   static double windBaseOf(AvatarScene scene) => switch (scene) {
-    AvatarScene.forestCabin => 0.088,
-    AvatarScene.rooftop => 0.072,
-    AvatarScene.beach => 0.048,
-    AvatarScene.campfire => 0.04,
-    AvatarScene.mountainHut => 0.024,
+    AvatarScene.forestCabin => 0.044,
+    AvatarScene.rooftop => 0.036,
+    AvatarScene.beach => 0.024,
+    AvatarScene.campfire => 0.02,
+    AvatarScene.mountainHut => 0.012,
     AvatarScene.livingRoom ||
     AvatarScene.deepSpace ||
     AvatarScene.cafe ||

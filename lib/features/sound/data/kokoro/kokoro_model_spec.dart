@@ -1,7 +1,7 @@
 /// The Kokoro model the app downloads once, and the voices it speaks with.
 ///
 /// Kokoro-82M v1.0 int8, packaged by sherpa-onnx (k2-fsa) on GitHub
-/// releases. English uses `af_heart` through the English lexicons. French
+/// releases. English uses the male `am_michael` through the English lexicons. French
 /// has one voice in Kokoro (`ff_siwis`, female); the app speaks it with a
 /// blend of `ff_siwis` and the male `im_nicola` style (see
 /// [voiceBlendSources]), through espeak-ng.
@@ -25,7 +25,7 @@ abstract final class KokoroModelSpec {
 
   /// Speaker ids in `voices.bin` (order fixed by sherpa-onnx's
   /// `scripts/kokoro/v1.0/generate_voices_bin.py`).
-  static const int sidEnglish = 3; // af_heart
+  static const int sidEnglish = 16; // am_michael (male, ~117 Hz median)
   static const int sidFrench = voiceBlendSlot;
 
   /// Slots in `voices.bin` (sherpa-onnx's metadata says 54; the Chinese

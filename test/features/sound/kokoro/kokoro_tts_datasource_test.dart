@@ -39,7 +39,7 @@ void main() {
     expect(call.text, 'Bonjour');
   });
 
-  test('English (any region) speaks af_heart on the lexicon path', () async {
+  test('English (any region) speaks am_michael on the lexicon path', () async {
     await say('en');
     await say('en-US');
 

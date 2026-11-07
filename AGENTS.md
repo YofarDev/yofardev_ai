@@ -414,7 +414,7 @@ imports and the design-layer rules, so `flutter test` fails on violation.
   engine loads (idempotent via a `.voice-blend` marker holding the recipe, so existing installs
   get it without a re-download; change the recipe and it is re-applied), with espeak voice **`fr`**
   (`fr-fr` is not a voice file, and sherpa aborts the process on an unknown voice), English =
-  `af_heart` (sid 3) with the US lexicon. Output is
+  `am_michael` (sid 16, male, ~117 Hz median; was `af_heart` until 2026-11-07) with the US lexicon. Output is
   peak-normalized (`normalizePeak`, Kokoro speaks at ~half scale). `FallbackTtsSynthesizer`
   speaks Supertonic (`TtsDatasource`) while Kokoro is not ready, for other languages, or when a
   sentence fails — **Android only**: on macOS/iOS flutter_onnxruntime's ORT 1.28 wrapper binds to

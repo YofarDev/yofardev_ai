@@ -10,7 +10,7 @@ class KokoroModelPaths {
   String get voices => p.join(root, 'voices.bin');
   String get tokens => p.join(root, 'tokens.txt');
 
-  /// The American lexicon only: `af_heart` is an American voice (with the
+  /// The American lexicon only: `am_michael` is an American voice (with the
   /// British one too, sherpa-onnx warns about every word in both).
   String get lexicon => p.join(root, 'lexicon-us-en.txt');
   String get dataDir => p.join(root, 'espeak-ng-data');
