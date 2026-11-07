@@ -15,6 +15,7 @@ root. Bash and Flutter/Dart must be on `PATH`; `fgen`, `fstr`, `fl10n`,
 | `./scripts/fimp.sh` / `./scripts/fimp.sh --apply` | **Fix Imports** (preview-first): with no flags, displays proposed repairs and writes nothing; `--apply` repairs unambiguous broken imports, then re-runs analysis and reports failure without rollback. Never repairs a `lib/` import into `test/`, and never gives a test helper a `package:` URI. |
 | `./scripts/fcheck.sh [package_name]` | **Dependency Inventory** (review aid): compares dependencies with direct imports, or lists imports of one package. Results do not establish that a dependency is removable; inspect exports, indirect usage, code generation, assets and platform channels. |
 | `./scripts/frive.sh [scene...]` | **Rebuild Rive Assets**: regenerates the RML sources and rebuilds every `.riv` in `assets/rive/` deterministically (fixed seeds/ids). Fails on build warnings, size budgets (avatar 600 KB, scene 400 KB) or any name drifting from `rive/CONTRACT.md`. A scene argument (e.g. `campfire`) builds the avatar plus only that scene. Then runs the objective gates (`rive/tools/rive_gates.py`): per built scene `review_diorama.py --gates-only` (parallax corners and plane travel, pointer proofs, rain wet ground and seams, front-layer gates), and, with `FRIVE_GATES=all`, `motion_review.py --gates-only` (tablet and newspaper pop, hold seam and IK gates: run it after any avatar prop or gesture change); no images are written, and any `FAIL` fails the script. `FRIVE_GATES=0 ./scripts/frive.sh` skips them. Measured (M6, sequential renders): the build takes about 25 s, the scene gates about 2 min per scene (about 7 min for all four), the prop gates about 23 min more; `rive_gates.py [--props] <sceneId>` checks one scene. Requires the `rive` CLI (>= 1.7.0) and `uv`. |
+| `./scripts/fcoverage.sh [min]` | Coverage floor — full suite with `--coverage`, scoped to `core/` + feature `domain/` layers; fails under `min` (default 75 %) |
 | `./scripts/sync_skills.sh [--check] [--user]` | **Sync Skills**: Copies canonical top-level Markdown files from `.agents/skills` into matching skill directories in existing `.codex/skills/` targets. Missing target/skill directories are skipped and extras are retained. `--check` writes nothing and exits nonzero on drift. `--user` also targets existing `~/.agents/skills/` and `~/.claude/skills/` copies; use when user-level synchronization is requested. |
 
 The read-only scans (`fl10n`, `fdead`, `fcheck`, import preview, and skill drift
@@ -23,6 +24,16 @@ check) require judgment before acting on their output. `fanal` writes a report;
 
 `scripts/fimp.py`, `scripts/render_feature.py`, and `scripts/feature_templates/`
 are supporting assets used by the shell entry points.
+
+## Coverage floor (`fcoverage.sh`)
+
+`fcoverage.sh` measures line coverage where regressions hurt most — `lib/core/`
+and every feature's `domain/` layer — and fails below the floor (default 75 %,
+`FCOVERAGE_MIN=…` or first argument to override, `0` to measure only). It runs
+the whole suite itself, so it is deliberately not part of `fverify.sh`; run it
+when the balance of your change touches logic in the scoped layers. The floor
+should be ratcheted up as the measured baseline allows — check the table it
+prints before raising it.
 
 ## Development Commands
 
