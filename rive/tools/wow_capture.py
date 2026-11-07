@@ -191,7 +191,7 @@ def gates_wow2(tl: dict) -> list[str]:
 # M8: the book family adds `grab` (after open) and `hang` (after enter)
 PHASES = ["pullBack", "open", "grab", "exit", "close", "cut", "arriveOpen", "enter", "hang", "arriveClose",
           "vanish"]
-# beats in which the avatar is clipped at the threshold (journey_choreography.dart)
+# beats in which the journey stages the avatar (journey_choreography.dart: clipped, or v17 drawn into the threshold)
 CLIPPED = {"open", "grab", "exit", "close", "cut", "arriveOpen", "enter", "hang", "arriveClose"}
 
 

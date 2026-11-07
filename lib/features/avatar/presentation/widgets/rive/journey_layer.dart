@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart'
     show ValueListenable, visibleForTesting;
@@ -16,13 +15,19 @@ import '../../../domain/models/journey.dart';
 import '../../rive/avatar_face_writer.dart';
 import '../../rive/avatar_rive_contract.dart';
 import '../../rive/journey_choreography.dart';
+import '../../rive/journey_passage.dart';
+import 'avatar_passage_box.dart';
 import '../stage_camera.dart';
 
-/// The avatar with a scene journey's threshold over it (contract v15, the
-/// storybook; M7 rulings 5–9 with the v15 staging): [avatar] at a fixed
-/// index (never remounted), clipped right of the threshold while a journey
-/// runs, and the `Journey` artboard drawn above it with the avatar's fit
-/// (contain, bottom-centre).
+/// The avatar and a scene journey's threshold (contract v15, the storybook;
+/// M7 rulings 5–9 with the v15 staging; v17: the avatar goes in): [avatar]
+/// at a fixed index (never remounted), drawn through its [AvatarPassage]
+/// while a journey runs ([JourneyPassage]: into the portal's core, the
+/// path's tunnel, the rocket's hatch, folded into the book's gutter), and the
+/// `Journey` artboard drawn with the avatar's fit (contain, bottom-centre):
+/// under the avatar for the path, portal and rocket (the avatar walks in
+/// front of them and into them), over it for the book (its page block hides
+/// the folded avatar right of the spine).
 ///
 /// The threshold file loads when a [journey] starts and is disposed when it
 /// ends. A ticker turns the journey's beat and the time spent in it into the
@@ -71,7 +76,9 @@ class JourneyLayer extends StatefulWidget {
 class _JourneyLayerState extends State<JourneyLayer>
     with SingleTickerProviderStateMixin {
   late final Ticker _ticker = createTicker(_onTick);
-  final ValueNotifier<bool> _clip = ValueNotifier<bool>(false);
+  final ValueNotifier<PaintedPassage> _passage = ValueNotifier<PaintedPassage>(
+    PaintedPassage.none,
+  );
   Duration _beatStart = Duration.zero;
   Duration _now = Duration.zero;
   bool _restartBeat = true;
@@ -113,7 +120,7 @@ class _JourneyLayerState extends State<JourneyLayer>
   @override
   void dispose() {
     _ticker.dispose();
-    _clip.dispose();
+    _passage.dispose();
     _unload();
     super.dispose();
   }
@@ -124,7 +131,7 @@ class _JourneyLayerState extends State<JourneyLayer>
     if (journey == null || journey.reduced) {
       _ticker.stop();
       _serial = null;
-      _clip.value = false;
+      _passage.value = PaintedPassage.none;
       if (_file != null) {
         // The next frame no longer draws the overlay.
         _unload();
@@ -136,7 +143,8 @@ class _JourneyLayerState extends State<JourneyLayer>
       _restartBeat = true;
     }
     _apply(
-      JourneyChoreography.at(journey, Duration.zero, reduceMotion: true).clip,
+      JourneyChoreography.at(journey, Duration.zero, reduceMotion: true),
+      journey,
     );
     if (_file == null && !_loading) {
       unawaited(_load());
@@ -147,7 +155,38 @@ class _JourneyLayerState extends State<JourneyLayer>
     }
   }
 
-  void _apply(bool clip) => _clip.value = clip;
+  /// The avatar's passage, its tint resolved: the portal's glow in the far
+  /// scene's key light (the vignette's rig), the path's silhouette in the
+  /// scene's ambient, darkened.
+  void _apply(JourneyFrame frame, JourneyState journey) {
+    final AvatarPassage passage = frame.passage;
+    final double daylight = widget.daylight?.value ?? 0;
+    final int? tint = switch (passage.tint) {
+      PassageTint.none => null,
+      PassageTint.glow => SceneLights.at(
+        _otherScene(journey),
+        daylight,
+      ).keyColor,
+      PassageTint.silhouette => _darken(
+        SceneLights.at(journey.sceneNow, daylight).ambientColor,
+        0.55,
+      ),
+    };
+    _passage.value = PaintedPassage(passage, tint);
+  }
+
+  /// The scene NOT on screen: the destination before the cut, the origin
+  /// from it.
+  static AvatarScene _otherScene(JourneyState journey) =>
+      journey.phase.index >= JourneyPhase.cut.index ? journey.from : journey.to;
+
+  static int _darken(int argb, double k) {
+    int channel(int shift) => (((argb >> shift) & 0xFF) * k).round();
+    return (argb & 0xFF000000) |
+        (channel(16) << 16) |
+        (channel(8) << 8) |
+        channel(0);
+  }
 
   Future<void> _load() async {
     _loading = true;
@@ -244,9 +283,12 @@ class _JourneyLayerState extends State<JourneyLayer>
       _now - _beatStart,
       reduceMotion: _reduceMotion,
     );
-    _apply(frame.clip);
+    if (journey == null) {
+      return;
+    }
+    _apply(frame, journey);
     final AvatarVmSink? sink = widget.vmSink ?? _bindingSink;
-    if (sink == null || journey == null) {
+    if (sink == null) {
       return;
     }
     void number(String name, double value) {
@@ -290,9 +332,7 @@ class _JourneyLayerState extends State<JourneyLayer>
     // before the cut, the origin from it. v16: every threshold looks onto it
     // (the portal's core, the path's far end, the rocket's porthole), so it
     // is written for every family; only the book has a vignette number.
-    final AvatarScene other = journey.phase.index >= JourneyPhase.cut.index
-        ? journey.from
-        : journey.to;
+    final AvatarScene other = _otherScene(journey);
     final LightRig vignette = SceneLights.at(
       other,
       widget.daylight?.value ?? 0,
@@ -320,12 +360,9 @@ class _JourneyLayerState extends State<JourneyLayer>
   @override
   Widget build(BuildContext context) {
     final RiveWidgetController? controller = _controller;
-    return Stack(
-      fit: StackFit.expand,
-      children: <Widget>[
-        ClipRect(clipper: ThresholdClipper(_clip), child: widget.avatar),
-        if (controller != null && widget.journey != null)
-          IgnorePointer(
+    final JourneyState? journey = widget.journey;
+    final Widget? threshold = controller != null && journey != null
+        ? IgnorePointer(
             child: RiveWidget(
               controller: controller,
               fit: Fit.contain,
@@ -334,7 +371,17 @@ class _JourneyLayerState extends State<JourneyLayer>
                 scale: StageRenderScale.of(context),
               ),
             ),
-          ),
+          )
+        : null;
+    final bool over = journey?.family == JourneyFamily.book;
+    // Fixed slots: the avatar stays at index 1 whichever side the threshold
+    // is drawn on.
+    return Stack(
+      fit: StackFit.expand,
+      children: <Widget>[
+        if (threshold != null && !over) threshold else const SizedBox.shrink(),
+        AvatarPassageBox(passage: _passage, child: widget.avatar),
+        if (threshold != null && over) threshold else const SizedBox.shrink(),
       ],
     );
   }
@@ -357,46 +404,4 @@ class _BindingSink implements AvatarVmSink {
 
   @override
   void fireTrigger(String name) => _binding.fireTrigger(name);
-}
-
-/// Clips the avatar right of the journey threshold (artboard x
-/// [AvatarRiveContract.journeyThresholdX]) while [active] is true, mapped with
-/// the avatar's contain / bottom-centre fit; otherwise clips nothing.
-class ThresholdClipper extends CustomClipper<Rect> {
-  ThresholdClipper(this.active) : super(reclip: active);
-
-  final ValueListenable<bool> active;
-
-  /// The threshold's x in a [size] box (the avatar's fit).
-  static double thresholdX(Size size) {
-    final double scale = math.min(
-      size.width / AvatarRiveContract.journeyArtboardWidth,
-      size.height / AvatarRiveContract.journeyArtboardHeight,
-    );
-    final double left =
-        (size.width - AvatarRiveContract.journeyArtboardWidth * scale) / 2;
-    return left + AvatarRiveContract.journeyThresholdX * scale;
-  }
-
-  @override
-  Rect getClip(Size size) {
-    final Rect everything = Rect.fromLTRB(
-      -size.width,
-      -size.height,
-      size.width * 2,
-      size.height * 2,
-    );
-    if (!active.value) {
-      return everything;
-    }
-    return Rect.fromLTRB(
-      everything.left,
-      everything.top,
-      thresholdX(size),
-      everything.bottom,
-    );
-  }
-
-  @override
-  bool shouldReclip(ThresholdClipper oldClipper) => oldClipper.active != active;
 }

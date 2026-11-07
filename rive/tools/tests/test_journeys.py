@@ -872,3 +872,50 @@ def test_lints_clean_in_every_scene(root: ET.Element, scene: str) -> None:
     _strip_emissive(tree)
     text = ET.tostring(tree, encoding="unicode").replace("><", ">\n<")
     assert art_bible.lint_colours(text, scene) == []
+
+
+# ------------------------------------------------------------------ v17: the avatar goes in (app-side geometry)
+
+PASSAGE_DART = ROOT / "lib" / "features" / "avatar" / "presentation" / "rive" / "journey_passage.dart"
+
+
+def _dart_number(src: str, name: str) -> float:
+    m = re.search(rf"static const double {name} = (-?[\d.]+);", src)
+    assert m, name
+    return float(m.group(1))
+
+
+def _dart_offset(src: str, name: str) -> tuple[float, float]:
+    m = re.search(rf"static const Offset {name} = Offset\((-?[\d.]+), (-?[\d.]+)\);", src)
+    assert m, name
+    return float(m.group(1)), float(m.group(2))
+
+
+def test_the_passage_mirrors_the_journey_geometry(root: ET.Element) -> None:
+    """`JourneyPassage` (Dart) stages the avatar into each threshold with the drawing's own points: the portal's
+    core, the rocket's hatch opening, the tunnel's far end on the ground, the book's spine."""
+    src = PASSAGE_DART.read_text()
+    assert _dart_offset(src, "portalCore") == (gen_journeys.PORTAL_X, gen_journeys.PORTAL_Y)
+    assert _dart_number(src, "bookSpine") == gen_journeys.THRESHOLD_X
+    # the hatch opening: RocketHatchHole, in the rocket's frame (bottom centre at ROCKET_X, GROUND_Y)
+    shape = next(e for e in root.iter("Shape") if e.get("name") == "RocketHatchHole")
+    rect = shape.find("Rectangle")
+    w, h = float(rect.get("width")), float(rect.get("height"))
+    cx = gen_journeys.ROCKET_X + float(shape.get("x"))
+    cy = gen_journeys.GROUND_Y + float(shape.get("y"))
+    m = re.search(r"rocketHatch = Rect\.fromLTRB\(([\d.]+), ([\d.]+), ([\d.]+), ([\d.]+)\);", src)
+    assert m
+    assert tuple(float(v) for v in m.groups()) == pytest.approx((cx - w / 2, cy - h / 2, cx + w / 2, cy + h / 2))
+    assert _dart_number(src, "rocketHatchRadius") == float(rect.get("cornerRadiusTL"))
+    # the tunnel's far end: the trail's far edge, at the far light's x
+    far = _dart_offset(src, "pathFar")
+    assert far[0] == gen_journeys.PATH_X - 10
+    assert gen_journeys.GROUND_Y - 120 <= far[1] <= gen_journeys.GROUND_Y - 110
+    # the walk the app mirrors (PresenceWalk): gen_avatar's presence walk
+    avatar = (ROOT / "rive" / "tools" / "gen_avatar.py").read_text()
+    assert "ON_X, OFF_X = 400.0, 1250.0" in avatar
+    assert 'P_WALK_OUT = A("presence_walkOut", 96, walk_tracks(96, [(0, 80, ON_X, OFF_X)]))' in avatar
+    assert "if elapsed < 10:" in avatar and "x = x0 - direction * 7 * weight" in avatar
+    assert (_dart_number(src, "onX"), _dart_number(src, "offX")) == (400, 1250)
+    assert (_dart_number(src, "_weightFrames"), _dart_number(src, "_travelEnd"), _dart_number(src, "_weightShift")) \
+        == (10, 80, 7)

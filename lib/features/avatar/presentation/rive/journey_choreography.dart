@@ -4,9 +4,10 @@ import 'package:flutter/animation.dart';
 
 import '../../../../core/models/avatar_scene.dart';
 import '../../domain/models/journey.dart';
+import 'journey_passage.dart';
 
 /// What the journey overlay draws in one frame: the threshold's `JourneyVM`
-/// numbers and whether the avatar is clipped at the threshold.
+/// numbers and where the avatar is drawn as it goes into the threshold.
 class JourneyFrame {
   const JourneyFrame({
     this.family,
@@ -15,7 +16,7 @@ class JourneyFrame {
     this.unfold = 0,
     this.lift = 0,
     this.destination,
-    this.clip = false,
+    this.passage = AvatarPassage.none,
   });
 
   /// The threshold shown (null: nothing).
@@ -32,8 +33,9 @@ class JourneyFrame {
   /// before the cut, the origin from it — the scene NOT on screen.
   final AvatarScene? destination;
 
-  /// The avatar is clipped right of the threshold.
-  final bool clip;
+  /// Where the avatar is drawn: moved into the threshold, clipped, faded or
+  /// tinted (v17: the avatar goes in, [JourneyPassage]).
+  final AvatarPassage passage;
 
   static const JourneyFrame none = JourneyFrame();
 
@@ -46,16 +48,16 @@ class JourneyFrame {
       other.unfold == unfold &&
       other.lift == lift &&
       other.destination == destination &&
-      other.clip == clip;
+      other.passage == passage;
 
   @override
   int get hashCode =>
-      Object.hash(family, show, open, unfold, lift, destination, clip);
+      Object.hash(family, show, open, unfold, lift, destination, passage);
 
   @override
   String toString() =>
       'JourneyFrame(${family?.name}, show $show, open $open, unfold $unfold, '
-      'lift $lift, dest ${destination?.name}, clip $clip)';
+      'lift $lift, dest ${destination?.name}, $passage)';
 }
 
 /// The cover's staged swing (v15): the first 15 % of the span is the crack —
@@ -175,8 +177,8 @@ abstract final class JourneyChoreography {
     Duration elapsed, {
     bool reduceMotion = false,
   }) {
-    // A reduced journey (a cross-fade cut) draws no threshold and never
-    // clips the avatar.
+    // A reduced journey (a cross-fade cut) draws no threshold and leaves the
+    // avatar as it is.
     if (journey == null || journey.reduced) {
       return JourneyFrame.none;
     }
@@ -242,6 +244,33 @@ abstract final class JourneyChoreography {
               : journey.to)
         : null;
 
+    // The avatar's walk position in this beat (the walks are the avatar's
+    // own, mirrored by [PresenceWalk]) and where that puts it: on stage until
+    // the walk out, inside the threshold until the walk in. Out of sight
+    // (close, cut, arrival) it is all the way in: gone (the book's spine also
+    // clips it).
+    final double walkX = switch (journey.phase) {
+      JourneyPhase.exit => PresenceWalk.rootX(elapsed, out: true),
+      JourneyPhase.enter => PresenceWalk.rootX(elapsed, out: false),
+      JourneyPhase.close ||
+      JourneyPhase.cut ||
+      JourneyPhase.arriveOpen => PresenceWalk.offX,
+      _ => PresenceWalk.onX,
+    };
+    final bool away =
+        journey.phase == JourneyPhase.close ||
+        journey.phase == JourneyPhase.cut ||
+        journey.phase == JourneyPhase.arriveOpen;
+    final double inward = switch (journey.phase) {
+      JourneyPhase.exit => JourneyPassage.progress(family, elapsed, out: true),
+      JourneyPhase.enter => JourneyPassage.progress(
+        family,
+        elapsed,
+        out: false,
+      ),
+      _ => away ? 1 : 0,
+    };
+    final AvatarPassage passage = JourneyPassage.of(family, inward, walkX);
     final double appearMs = JourneyTiming.appear.inMilliseconds / 2;
     final double closeMs = JourneyTiming.close.inMilliseconds.toDouble();
     final double liftMs = JourneyTiming.lift.inMilliseconds.toDouble();
@@ -272,7 +301,7 @@ abstract final class JourneyChoreography {
             Curves.easeOut,
           ),
           destination: destination,
-          clip: true,
+          passage: passage,
         );
       case JourneyPhase.grab:
       case JourneyPhase.exit:
@@ -282,7 +311,7 @@ abstract final class JourneyChoreography {
           open: 1,
           unfold: 1,
           destination: destination,
-          clip: true,
+          passage: passage,
         );
       case JourneyPhase.close:
         return JourneyFrame(
@@ -294,7 +323,7 @@ abstract final class JourneyChoreography {
               ramp(0, const Duration(milliseconds: _foldLenMs), Curves.easeOut),
           lift: rocket ? liftOff(closeMs) : 0,
           destination: destination,
-          clip: true,
+          passage: passage,
         );
       case JourneyPhase.cut:
         return JourneyFrame(
@@ -302,7 +331,7 @@ abstract final class JourneyChoreography {
           show: 1,
           lift: rocket ? 1 : 0,
           destination: destination,
-          clip: true,
+          passage: passage,
         );
       case JourneyPhase.arriveOpen:
         if (rocket) {
@@ -312,7 +341,7 @@ abstract final class JourneyChoreography {
             lift: landing(0),
             open: ramp(liftMs, JourneyTiming.arriveOpen),
             destination: destination,
-            clip: true,
+            passage: passage,
           );
         }
         if (book) {
@@ -333,7 +362,7 @@ abstract final class JourneyChoreography {
               Curves.easeOut,
             ),
             destination: destination,
-            clip: true,
+            passage: passage,
           );
         }
         return JourneyFrame(
@@ -344,7 +373,7 @@ abstract final class JourneyChoreography {
             JourneyTiming.arriveOpen,
           ),
           destination: destination,
-          clip: true,
+          passage: passage,
         );
       case JourneyPhase.enter:
       case JourneyPhase.hang:
@@ -354,7 +383,7 @@ abstract final class JourneyChoreography {
           open: 1,
           unfold: 1,
           destination: destination,
-          clip: true,
+          passage: passage,
         );
       case JourneyPhase.arriveClose:
         return JourneyFrame(
@@ -365,7 +394,7 @@ abstract final class JourneyChoreography {
               1 -
               ramp(0, const Duration(milliseconds: _foldLenMs), Curves.easeOut),
           destination: destination,
-          clip: true,
+          passage: passage,
         );
       case JourneyPhase.vanish:
         // the rocket takes off empty (v16); the others fade
@@ -391,6 +420,9 @@ abstract final class JourneyChoreography {
     JourneyPhase.arriveClose =>
       JourneyTiming.close + const Duration(milliseconds: 20),
     JourneyPhase.vanish => JourneyTiming.vanishOf(journey.family),
+    // the avatar goes in (comes out) over its walk
+    JourneyPhase.exit || JourneyPhase.enter =>
+      PresenceWalk.length + const Duration(milliseconds: 20),
     _ => Duration.zero,
   };
 }

@@ -6,6 +6,7 @@ import 'package:yofardev_ai/core/models/performance/light_rig.dart';
 import 'package:yofardev_ai/features/avatar/domain/models/journey.dart';
 import 'package:yofardev_ai/features/avatar/presentation/rive/avatar_face_writer.dart';
 import 'package:yofardev_ai/features/avatar/presentation/rive/avatar_rive_contract.dart';
+import 'package:yofardev_ai/features/avatar/presentation/widgets/rive/avatar_passage_box.dart';
 import 'package:yofardev_ai/features/avatar/presentation/widgets/rive/journey_layer.dart';
 
 import '../../../../helpers/rive_test_assets.dart';
@@ -93,10 +94,13 @@ void main() {
   setUp(serveFakeRiveAssets);
 
   bool clipping(WidgetTester tester) {
-    final ClipRect clip = tester.widget<ClipRect>(
-      find.ancestor(of: find.byType(_Avatar), matching: find.byType(ClipRect)),
+    final AvatarPassageBox box = tester.widget<AvatarPassageBox>(
+      find.ancestor(
+        of: find.byType(_Avatar),
+        matching: find.byType(AvatarPassageBox),
+      ),
     );
-    return (clip.clipper! as ThresholdClipper).active.value;
+    return box.passage.value.passage.clips;
   }
 
   testWidgets('the avatar keeps its state and is clipped only mid-journey', (

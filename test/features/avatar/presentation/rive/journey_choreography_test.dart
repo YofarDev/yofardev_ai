@@ -3,6 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:yofardev_ai/core/models/avatar_scene.dart';
 import 'package:yofardev_ai/features/avatar/domain/models/journey.dart';
 import 'package:yofardev_ai/features/avatar/presentation/rive/journey_choreography.dart';
+import 'package:yofardev_ai/features/avatar/presentation/rive/journey_passage.dart';
+import 'package:yofardev_ai/features/avatar/presentation/widgets/rive/avatar_passage_box.dart';
 import 'package:yofardev_ai/features/avatar/presentation/widgets/rive/journey_layer.dart';
 
 JourneyState _j(
@@ -41,7 +43,7 @@ void main() {
   test('the threshold appears and opens, then holds open for the walk', () {
     expect(_at(JourneyPhase.pullBack, 300).show, 0);
     expect(_at(JourneyPhase.open, 0).show, 0);
-    expect(_at(JourneyPhase.open, 0).clip, isTrue);
+    expect(_at(JourneyPhase.open, 0).passage.clips, isTrue);
     expect(_at(JourneyPhase.open, 300).show, 1);
     expect(
       _at(JourneyPhase.open, 290).open,
@@ -52,7 +54,7 @@ void main() {
       lessThan(0.06),
     ); // the crack: barely open
     final JourneyFrame exit = _at(JourneyPhase.exit, 999);
-    expect((exit.show, exit.open, exit.clip), (1.0, 1.0, true));
+    expect((exit.show, exit.open, exit.passage.clips), (1.0, 1.0, true));
   });
 
   test('the book stages crack-swing then riffle-unfold, overlapping', () {
@@ -117,7 +119,7 @@ void main() {
       for (final int ms in <int>[0, 380, 900]) {
         final JourneyFrame f = _at(phase, ms);
         expect(
-          (f.show, f.open, f.unfold, f.clip),
+          (f.show, f.open, f.unfold, f.passage.clips),
           (1.0, 1.0, 1.0, true),
           reason: '$phase',
         );
@@ -143,7 +145,10 @@ void main() {
     expect(_at(JourneyPhase.close, 0).open, 1);
     expect(_at(JourneyPhase.close, 350).open, lessThan(1)); // mid-fall
     final JourneyFrame cut = _at(JourneyPhase.cut, 0);
-    expect((cut.show, cut.open, cut.lift, cut.clip), (1.0, 0.0, 0.0, true));
+    expect(
+      (cut.show, cut.open, cut.lift, cut.passage.clips),
+      (1.0, 0.0, 0.0, true),
+    );
     expect(_at(JourneyPhase.cut, 0).unfold, 0);
   });
 
@@ -208,7 +213,7 @@ void main() {
     expect(_at(JourneyPhase.arriveClose, 640).open, 0); // the fall lands
     expect(_at(JourneyPhase.vanish, 0).show, 1);
     expect(_at(JourneyPhase.vanish, 300).show, 0);
-    expect(_at(JourneyPhase.vanish, 0).clip, isFalse);
+    expect(_at(JourneyPhase.vanish, 0).passage.clips, isFalse);
   });
 
   test('each beat settles: past it the frame no longer changes', () {
@@ -259,24 +264,40 @@ void main() {
     expect(_at(JourneyPhase.vanish, 0, rm: true).show, 0);
   });
 
-  test('the threshold x follows the avatar fit (contain, bottom-centre)', () {
-    // the artboard fills a 800 x 1000 box: x 640
-    expect(ThresholdClipper.thresholdX(const Size(800, 1000)), 640);
-    // portrait phone: width-bound, 390 / 800
-    expect(
-      ThresholdClipper.thresholdX(const Size(390, 844)),
-      closeTo(312, 1e-9),
-    );
+  test('the passage maps the artboard with the avatar fit (contain, '
+      'bottom-centre)', () {
+    // the artboard fills a 800 x 1000 box
+    expect(RenderAvatarPassage.fit(const Size(800, 1000)), (1.0, Offset.zero));
+    // portrait phone: width-bound, 390 / 800, standing on the bottom edge
+    final (double k, Offset o) = RenderAvatarPassage.fit(const Size(390, 844));
+    expect(k, closeTo(390 / 800, 1e-9));
+    expect(o.dy, closeTo(844 - 1000 * 390 / 800, 1e-9));
     // landscape: height-bound and centred
-    expect(
-      ThresholdClipper.thresholdX(const Size(1280, 800)),
-      closeTo((1280 - 640) / 2 + 640 * 0.8, 1e-9),
+    final (double kl, Offset ol) = RenderAvatarPassage.fit(
+      const Size(1280, 800),
     );
-    final ValueNotifier<bool> active = ValueNotifier<bool>(false);
-    final ThresholdClipper clipper = ThresholdClipper(active);
-    expect(clipper.getClip(const Size(800, 1000)).right, greaterThan(800));
-    active.value = true;
-    expect(clipper.getClip(const Size(800, 1000)).right, 640);
+    expect(kl, 0.8);
+    expect(ol, const Offset((1280 - 640) / 2, 0));
+    // the book's spine clips at artboard x 640
+    final Path clip = RenderAvatarPassage.clipOf(
+      const AvatarPassage(planeX: 640),
+      const Size(1280, 800),
+    );
+    expect(clip.getBounds().right, closeTo(320 + 640 * 0.8, 1e-9));
+    // the transform lands an artboard point where AvatarPassage.map says
+    const AvatarPassage p = AvatarPassage(
+      pivot: Offset(795, 520),
+      offset: Offset(10, -20),
+      scaleX: 0.5,
+      scaleY: 0.4,
+      rotation: -1.1,
+    );
+    final Matrix4 m = RenderAvatarPassage.matrixOf(p, const Size(1280, 800));
+    const Offset a = Offset(400, 600);
+    final Offset local = MatrixUtils.transformPoint(m, ol + a * kl);
+    final Offset want = ol + p.map(a) * kl;
+    expect(local.dx, closeTo(want.dx, 1e-6));
+    expect(local.dy, closeTo(want.dy, 1e-6));
   });
 
   test('a reduced journey (reduce motion, M11 ruling 18) draws nothing and '

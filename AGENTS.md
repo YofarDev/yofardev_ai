@@ -387,6 +387,17 @@ imports and the design-layer rules, so `flutter test` fails on violation.
   (`JourneyTiming.liftOff` 1000 ms, the first `ignition` 350 ms crawling through the file's 0–0.02
   rumble/smoke band), and takes off empty in `vanish` (`JourneyTiming.vanishOf`). Evidence:
   `rive/review/thresholds-v16/`
+- The avatar goes in (contract v17 notes, 2026-11-07): `JourneyLayer` draws the path, portal and
+  rocket UNDER the avatar (the book stays over it, clipped at the spine) and paints the avatar through
+  `AvatarPassageBox` (clip, transform, opacity, colour filter; layers only while they act). The
+  passage is pure Dart: `JourneyPassage.of(family, u, x)` with `u` on the beat's clock
+  (`exitWindow` / `enterWindow`, ~1 s of the 1.6 s walk) and `x` from `PresenceWalk` (a mirror of
+  `gen_avatar.walk_tracks`): portal pull + anticlockwise spin + glow in the far scene's key, path
+  recession + silhouette, rocket shrink + hop onto the hatch sill + clip to the opening, book fold.
+  Its points mirror `gen_journeys.py` (`test_journeys.py::test_the_passage_mirrors_the_journey_geometry`).
+  **Never stop painting the avatar** (no early return at opacity 0, no singular transform): the Rive
+  avatar advances only while painted, and a paused avatar never sends `presence_done`. Evidence:
+  `rive/review/avatar-inside/`
 - TTS (Kokoro, 2026-11-01): the default voice is Kokoro-82M v1.0 int8 through `sherpa_onnx`
   **pinned 1.13.3** (all eight `sherpa_onnx_*` platform packages pinned in `dependency_overrides`):
   2.x dropped espeak-ng, and 1.13.3 is the last release whose bundled ONNX Runtime (1.24.3 on
