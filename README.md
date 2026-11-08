@@ -2,7 +2,7 @@
 
 An open-source Flutter app that gives an AI assistant a voice, an expressive Rive avatar, and a world to inhabit. Type a message or use speech input on supported platforms; the assistant streams its reply, speaks it aloud, and acts along with the conversation.
 
-[Android releases](https://github.com/YofarDev/yofardev_ai/releases) · [Web demo](https://yofardev-ai.web.app) (limited features) · [Support on Ko-fi](https://ko-fi.com/yofardev)
+[Android releases](https://github.com/YofarDev/yofardev_ai/releases) · [Web demo](https://yofardev-ai.web.app) (limited features) · [Buy me some tokens on Ko-fi](https://ko-fi.com/yofardev)
 
 Bring your own LLM: connect a cloud or local server through an OpenAI-compatible API. The voice runs on-device; the language model runs wherever your configured endpoint lives.
 
@@ -123,7 +123,7 @@ The [original YouTube demo](https://www.youtube.com/watch?v=UXpE2vQsJhY) shows a
 
 ## Support
 
-If you enjoy the app or want to support its development, [buy me a coffee on Ko-fi](https://ko-fi.com/yofardev). Bug reports and contributions are welcome through [GitHub issues](https://github.com/YofarDev/yofardev_ai/issues) and pull requests.
+If you enjoy the app or want to support its development, [buy me some tokens on Ko-fi](https://ko-fi.com/yofardev). Bug reports and contributions are welcome through [GitHub issues](https://github.com/YofarDev/yofardev_ai/issues) and pull requests.
 
 ## License
 

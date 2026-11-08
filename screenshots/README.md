@@ -7,11 +7,11 @@ The conversations and weather in these recordings are scripted using the integra
 | Image | Recording | Time in recording |
 | --- | --- | --- |
 | `stage-living-room.png` | `rive/review/m12/wow/wow2.mp4` | 0.0 s |
-| `weather-tablet.png` | `rive/review/m12/wow/wow2.mp4` | 6.8 s |
+| `weather-tablet.png` | film capture `film_hello` (8 Nov 2026, Kokoro voice, after the newspaper/tablet grip fix; not in the repo) | 26.9 s |
 | `campfire-story.png` | `rive/review/m12/wow/wow1.mp4` | 6.0 s |
 | `beach-sunset.png` | `rive/review/m12/wow/wow3.mp4` | 11.5 s |
 
-The PNGs are extracted at the recordings' original 486 × 832 resolution without retouching. From the repository root, for example:
+The PNGs are extracted at the recordings' original 486 × 832 resolution without retouching (`weather-tablet.png` was re-taken from a 574 × 1020 capture and scaled and cropped to the same size). From the repository root, for example:
 
 ```bash
 ffmpeg -y -ss 6.8 -i rive/review/m12/wow/wow2.mp4 -frames:v 1 screenshots/weather-tablet.png
