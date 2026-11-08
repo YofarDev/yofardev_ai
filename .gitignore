@@ -71,3 +71,6 @@ graphify-out/
 
 # test coverage output (scripts/fcoverage.sh)
 coverage/
+
+# firebase hosting deploy cache
+.firebase/
