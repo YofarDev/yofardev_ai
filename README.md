@@ -23,17 +23,15 @@ Bring your own LLM: connect a cloud or local server through an OpenAI-compatible
 
 Actual app captures from the Rive rework, recorded on macOS with scripted conversations. See [screenshot sources](screenshots/README.md).
 
-Short recordings: [a story by the fire](rive/review/m12/wow/wow1.mp4) · [a weather lookup](rive/review/m12/wow/wow2.mp4) · [a journey to the beach](rive/review/m12/wow/wow3.mp4). These scripted recordings use a system voice for repeatability; the app's default voice is Kokoro.
-
 ## Features
 
 ### A character and a living stage
 
 - **Expressive Rive avatar:** facial expressions, blinking, gaze, gestures, and speech-driven lip sync aligned with the sentence text and audio.
 - **Ten interactive scenes:** living room, campfire, beach, deep space, café, rooftop, mountain hut, forest cabin, train compartment, and library. Tap props, drag scene controls, and meet the resident wildlife.
-- **Animated journeys:** the avatar walks between scenes, with doors, outdoor paths, a rocket, or a portal depending on the destination.
+- **Animated journeys:** the avatar walks into the next scene through a pop-up storybook, a forest path, a rocket, or a portal, depending on the destination.
 - **A changing world:** time of day, rain, fog, moon phases, seasonal details, and ambient sound. Own-location weather can update the world when configured and permission is already granted.
-- **Wardrobe and personality:** hats, tops, glasses, colour variants, costumes, and personas that influence the assistant's replies and body language.
+- **Wardrobe and personality:** hats, tops, glasses, colour variants, and costumes (each with a signature move; Batman and RoboCop also change the voice), plus personas that influence the assistant's replies and body language.
 
 ### Conversation and voice
 
