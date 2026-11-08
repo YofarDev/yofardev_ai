@@ -29,37 +29,37 @@
  },
  {
   "id": "wardrobe",
-  "bars": 4,
+  "bars": 6,
   "from": 3000,
-  "dur": 600,
+  "dur": 900,
   "startBar": 21
  },
  {
   "id": "journey",
   "bars": 6,
-  "from": 3600,
+  "from": 3900,
   "dur": 900,
-  "startBar": 25
+  "startBar": 27
  },
  {
   "id": "world",
   "bars": 8,
-  "from": 4500,
+  "from": 4800,
   "dur": 1200,
-  "startBar": 31
+  "startBar": 33
  },
  {
   "id": "hood",
   "bars": 3,
-  "from": 5700,
+  "from": 6000,
   "dur": 450,
-  "startBar": 39
+  "startBar": 41
  },
  {
   "id": "finale",
   "bars": 6,
-  "from": 6150,
+  "from": 6450,
   "dur": 900,
-  "startBar": 42
+  "startBar": 44
  }
 ]

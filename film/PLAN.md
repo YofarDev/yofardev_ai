@@ -1,6 +1,6 @@
 # Yofardev AI — portfolio film
 
-16:9, 1920×1080, 60 fps, 117.5 s. Every frame of the app is the real macOS
+16:9, 1920×1080, 60 fps, 122.5 s. Every frame of the app is the real macOS
 app (debug build, ultra tier) recorded at 60 fps by a screen capture of its
 window; the voice is the app's own on-device Kokoro (`am_michael`); the
 score is original (composed in `music/compose.py`, rendered with fluidsynth +
@@ -15,7 +15,7 @@ evening with the avatar, in the app's own storybook-night look (ink
 things, it dresses up, it takes you places, its world is alive, it is built
 properly, it says goodnight.
 
-## Beats (as cut: 47 bars, 117.5 s)
+## Beats (as cut: 49 bars, 122.5 s)
 
 | Bars | Section | Footage |
 |---|---|---|
@@ -23,15 +23,15 @@ properly, it says goodnight.
 | 5–6 | Title hit: Yofardev AI, light streak | `film_hello`, blurred |
 | 7–11 | It listens (gaze on the caret, lean) · it talks (wave, voice, lip-sync callouts) | `film_hello` turn 1 |
 | 12–20 | Real tools, acted out: Tokyo weather (tablet), the news (paper); typing at 1.8× | `film_hello` turns 2–3 |
-| 21–24 | It dresses up: Batman, RoboCop, soubrette, singularity, one every 3 beats | `film_wardrobe` |
-| 25–30 | Ask for the beach, go there: the pop-up book | `wow3` |
-| 31–38 | The world: ten scenes, residents, four thresholds, drags, weather/clock | `scene` ×10, `tour`, `wow1`, `wow3`, `film_goodnight` |
-| 39–41 | Under the hood: numbers, stack, the real source scrolling behind | — |
-| 42–47 | Goodnight on the beach, end card on the last chord | `film_goodnight` |
+| 21–26 | It dresses up: four dimmed empty rooms light up one by one as each costume walks in, speaks (Batman and RoboCop through their voice effects) and does its signature move | `film_wardrobe` |
+| 27–32 | Ask for the beach, go there: the pop-up book | `wow3` |
+| 33–40 | The world: ten scenes, residents, four thresholds, drags, weather/clock | `scene` ×10, `tour`, `wow1`, `wow3`, `film_goodnight` |
+| 41–43 | Under the hood: numbers, stack, the real source scrolling behind | — |
+| 44–49 | Goodnight on the beach, end card on the last chord | `film_goodnight` |
 
 ## Swapping the music
 
 `music/score.wav` is the only music input (`tools/mixfilm.py` reads it). A
 replacement follows `music/sections.json`: 96 BPM, 2.5 s bars, soft intro
-0–10 s, hit at 10 s, light groove 15–60 s, build 60–75 s, climax 75–95 s,
-breakdown 95–102.5 s, resolve with the last chord at ~110 s. See README.md.
+0–10 s, hit at 10 s, light groove 15–65 s, build 65–80 s, climax 80–100 s,
+breakdown 100–107.5 s, resolve with the last chord at ~115 s. See README.md.

@@ -1,6 +1,6 @@
 // Every footage-driven timing of the edit, font-free so a Node script can
 // print the section lengths for the music (scripts/sections.ts).
-import { BAR, SceneId } from "./lib/consts";
+import { BAR, BEAT, SceneId } from "./lib/consts";
 import { Seg } from "./lib/segtypes";
 import { after, ev, events, turnAt } from "./data/events";
 
@@ -76,21 +76,28 @@ export const COSTUMES = [
   { label: "singularity", name: "Singularity", line: "I contain multitudes." },
 ];
 
-/** When each costume speaks, on the scene's clock: one every three beats
- * (the longest line is 1.7 s), the first on bar 1's third beat. The mix
- * reads the same plan. */
-export const WARDROBE_STEP = 112; // 3 beats
-export const wardrobePlan = () =>
-  COSTUMES.map((c, k) => {
+/** Each costume's window on the scene's clock: from the avatar walking
+ * back in (presence on screen) through its line, rounded up to whole beats;
+ * the windows follow one another from bar 1's second beat. The mix reads
+ * the same plan. */
+export const wardrobePlan = () => {
+  let at = 40;
+  return COSTUMES.map((c, k) => {
     const turn = turnAt(TW, c.label, 3500 + k * 11000);
     const speakMs = after(TW, "start", turn, turn + 5000);
-    const at = 56 + k * WARDROBE_STEP;
-    return { ...c, speakMs, at, len: WARDROBE_STEP, atMs: speakMs - (at / 60) * 1000 };
+    const enters = events(TW).filter((e) => e.type === "presenceDone" && e.ms > turn && e.ms <= speakMs);
+    const fromMs = (enters.length ? enters[enters.length - 1].ms : speakMs - 700) - 120;
+    const stopMs = after(TW, "stop", speakMs, speakMs + 1800);
+    const len = Math.round(Math.ceil((f(stopMs - fromMs) + 24) / BEAT) * BEAT);
+    const row = { ...c, speakMs, at, len, atMs: fromMs - (at / 60) * 1000 };
+    at += len;
+    return row;
   });
+};
 export const wardrobeBars = () => {
   const p = wardrobePlan();
   const last = p[p.length - 1];
-  return Math.ceil((last.at + last.len + 80) / BAR);
+  return Math.ceil((last.at + last.len + 70) / BAR);
 };
 
 const TJ = "wow3";

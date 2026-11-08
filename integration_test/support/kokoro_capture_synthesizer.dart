@@ -94,7 +94,29 @@ class KokoroCaptureSynthesizer implements TtsSynthesizer {
     _n++;
     await File(path).copy(copy);
     spoken.add((text: text, file: copy));
+    if (voiceEffect != VoiceEffect.none) {
+      unawaited(_keepEffect(path, copy));
+    }
     return path;
+  }
+
+  /// The queue writes the costume's processed copy (`<name>_fx.wav`, what
+  /// actually plays) next to [path] after this returns: keep it beside
+  /// [copy] too, so the film's mix plays the voice the app played.
+  Future<void> _keepEffect(String path, String copy) async {
+    final String stem = path.endsWith('.wav')
+        ? path.substring(0, path.length - 4)
+        : path;
+    final File fx = File('${stem}_fx.wav');
+    for (int i = 0; i < 300; i++) {
+      if (fx.existsSync() && fx.lengthSync() > 44) {
+        // let the write finish
+        await Future<void>.delayed(const Duration(milliseconds: 150));
+        await fx.copy('${copy.substring(0, copy.length - 4)}_fx.wav');
+        return;
+      }
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+    }
   }
 
   @override

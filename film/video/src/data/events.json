@@ -83,212 +83,212 @@
  "film_hello": {
   "events": [
    {
-    "ms": 2013,
+    "ms": 2023,
     "type": "poke",
     "prop": "cat"
    },
    {
-    "ms": 6562,
+    "ms": 6571,
     "type": "turn",
     "i": 0,
     "label": "hello"
    },
    {
-    "ms": 6562,
+    "ms": 6571,
     "type": "typing"
    },
    {
-    "ms": 9616,
+    "ms": 9440,
     "type": "send"
    },
    {
-    "ms": 11366,
+    "ms": 10983,
     "type": "preroll"
    },
    {
-    "ms": 12139,
+    "ms": 11681,
     "type": "start"
    },
    {
-    "ms": 12145,
+    "ms": 11686,
     "type": "caption",
     "text": "Oh, hi!"
    },
    {
-    "ms": 12146,
+    "ms": 11687,
     "type": "gesture",
     "name": "wave"
    },
    {
-    "ms": 13261,
+    "ms": 12816,
     "type": "stop"
    },
    {
-    "ms": 14224,
-    "type": "gestureDone"
-   },
-   {
-    "ms": 14397,
+    "ms": 13612,
     "type": "preroll"
    },
    {
-    "ms": 14775,
+    "ms": 13762,
+    "type": "gestureDone"
+   },
+   {
+    "ms": 14001,
     "type": "start"
    },
    {
-    "ms": 14776,
+    "ms": 14003,
     "type": "caption",
     "text": "Come on in, make yourself at home."
    },
    {
-    "ms": 17102,
+    "ms": 16322,
     "type": "stop"
    },
    {
-    "ms": 19472,
+    "ms": 18709,
     "type": "turnEnd",
     "i": 0,
     "label": "hello"
    },
    {
-    "ms": 20993,
+    "ms": 20229,
     "type": "turn",
     "i": 1,
     "label": "weather"
    },
    {
-    "ms": 20993,
+    "ms": 20229,
     "type": "typing"
    },
    {
-    "ms": 24848,
+    "ms": 24232,
     "type": "send"
    },
    {
-    "ms": 25036,
+    "ms": 24418,
     "type": "foley",
     "kind": "click"
    },
    {
-    "ms": 28954,
+    "ms": 28336,
     "type": "foley",
     "kind": "click"
    },
    {
-    "ms": 31228,
+    "ms": 30399,
     "type": "preroll"
    },
    {
-    "ms": 31605,
+    "ms": 30778,
     "type": "start"
    },
    {
-    "ms": 31606,
+    "ms": 30779,
     "type": "caption",
     "text": "Eighteen degrees in Tokyo, with a light rain."
    },
    {
-    "ms": 31606,
+    "ms": 30779,
     "type": "gesture",
     "name": "nod"
    },
    {
-    "ms": 32838,
+    "ms": 32011,
     "type": "gestureDone"
    },
    {
-    "ms": 34716,
+    "ms": 33889,
     "type": "stop"
    },
    {
-    "ms": 34716,
+    "ms": 33890,
     "type": "preroll"
    },
    {
-    "ms": 35088,
+    "ms": 34263,
     "type": "start"
    },
    {
-    "ms": 35088,
+    "ms": 34264,
     "type": "caption",
     "text": "Bring an umbrella!"
    },
    {
-    "ms": 36608,
+    "ms": 35784,
     "type": "stop"
    },
    {
-    "ms": 38933,
+    "ms": 38197,
     "type": "turnEnd",
     "i": 1,
     "label": "weather"
    },
    {
-    "ms": 40454,
+    "ms": 39717,
     "type": "turn",
     "i": 2,
     "label": "news"
    },
    {
-    "ms": 40454,
+    "ms": 39717,
     "type": "typing"
    },
    {
-    "ms": 43655,
+    "ms": 43024,
     "type": "send"
    },
    {
-    "ms": 43907,
+    "ms": 43275,
     "type": "foley",
     "kind": "paper"
    },
    {
-    "ms": 46921,
+    "ms": 46290,
     "type": "foley",
     "kind": "paper"
    },
    {
-    "ms": 48340,
+    "ms": 47696,
     "type": "preroll"
    },
    {
-    "ms": 48713,
+    "ms": 48067,
     "type": "start"
    },
    {
-    "ms": 48714,
+    "ms": 48068,
     "type": "caption",
     "text": "Oh, this is nice."
    },
    {
-    "ms": 50233,
+    "ms": 49587,
     "type": "stop"
    },
    {
-    "ms": 52605,
+    "ms": 51986,
     "type": "turnEnd",
     "i": 2,
     "label": "news"
    },
    {
-    "ms": 52757,
+    "ms": 52045,
     "type": "preroll"
    },
    {
-    "ms": 53148,
+    "ms": 52445,
     "type": "start"
    },
    {
-    "ms": 53149,
+    "ms": 52446,
     "type": "caption",
     "text": "A bright comet is visible this week, no telescope needed!"
    },
    {
-    "ms": 57002,
+    "ms": 56298,
     "type": "stop"
    }
   ],
-  "duration": 58.718,
+  "duration": 67.398,
   "audio": [
    "Oh, hi!",
    "Come on in, make yourself at home.",
@@ -311,453 +311,453 @@
     "type": "typing"
    },
    {
-    "ms": 6268,
+    "ms": 6080,
     "type": "send"
    },
    {
-    "ms": 6537,
+    "ms": 6348,
     "type": "foley",
     "kind": "step"
    },
    {
-    "ms": 6878,
+    "ms": 6691,
     "type": "foley",
     "kind": "step"
    },
    {
-    "ms": 7052,
+    "ms": 6865,
     "type": "foley",
     "kind": "step"
    },
    {
-    "ms": 7199,
+    "ms": 7011,
     "type": "foley",
     "kind": "step"
    },
    {
-    "ms": 7359,
+    "ms": 7171,
     "type": "foley",
     "kind": "step"
    },
    {
-    "ms": 7692,
+    "ms": 7505,
     "type": "foley",
     "kind": "step"
    },
    {
-    "ms": 7989,
+    "ms": 7788,
     "type": "presenceDone"
    },
    {
-    "ms": 8146,
+    "ms": 7958,
     "type": "foley",
     "kind": "step"
    },
    {
-    "ms": 8182,
+    "ms": 8024,
     "type": "preroll"
    },
    {
-    "ms": 8492,
+    "ms": 8305,
     "type": "foley",
     "kind": "step"
    },
    {
-    "ms": 8600,
+    "ms": 8420,
     "type": "start"
    },
    {
-    "ms": 8604,
+    "ms": 8425,
     "type": "caption",
     "text": "I am the night."
    },
    {
-    "ms": 8672,
+    "ms": 8479,
     "type": "foley",
     "kind": "step"
    },
    {
-    "ms": 8813,
+    "ms": 8625,
     "type": "foley",
     "kind": "step"
    },
    {
-    "ms": 8986,
+    "ms": 8799,
     "type": "foley",
     "kind": "step"
    },
    {
-    "ms": 9319,
+    "ms": 9132,
     "type": "foley",
     "kind": "step"
    },
    {
-    "ms": 9591,
+    "ms": 9405,
     "type": "gesture",
     "name": "signature"
    },
    {
-    "ms": 9603,
+    "ms": 9408,
     "type": "presenceDone"
    },
    {
-    "ms": 9968,
+    "ms": 9791,
     "type": "stop"
    },
    {
-    "ms": 10727,
+    "ms": 10563,
     "type": "gestureDone"
    },
    {
-    "ms": 12349,
+    "ms": 12161,
     "type": "turnEnd",
     "i": 0,
     "label": "batman"
    },
    {
-    "ms": 13869,
+    "ms": 13683,
     "type": "typing"
    },
    {
-    "ms": 13869,
+    "ms": 13683,
     "type": "turn",
     "i": 1,
     "label": "robocop"
    },
    {
-    "ms": 15764,
+    "ms": 15631,
     "type": "send"
    },
    {
-    "ms": 15975,
+    "ms": 15868,
     "type": "foley",
     "kind": "step"
    },
    {
-    "ms": 16322,
+    "ms": 16215,
     "type": "foley",
     "kind": "step"
    },
    {
-    "ms": 16495,
+    "ms": 16388,
     "type": "foley",
     "kind": "step"
    },
    {
-    "ms": 16642,
+    "ms": 16535,
     "type": "foley",
     "kind": "step"
    },
    {
-    "ms": 16802,
+    "ms": 16695,
     "type": "foley",
     "kind": "step"
    },
    {
-    "ms": 17135,
+    "ms": 17028,
     "type": "foley",
     "kind": "step"
    },
    {
-    "ms": 17425,
+    "ms": 17325,
     "type": "presenceDone"
    },
    {
-    "ms": 17589,
+    "ms": 17482,
     "type": "foley",
     "kind": "step"
    },
    {
-    "ms": 17929,
+    "ms": 17688,
     "type": "preroll"
    },
    {
-    "ms": 17936,
+    "ms": 17829,
     "type": "foley",
     "kind": "step"
    },
    {
-    "ms": 18109,
+    "ms": 18002,
     "type": "foley",
     "kind": "step"
    },
    {
-    "ms": 18256,
-    "type": "foley",
-    "kind": "step"
-   },
-   {
-    "ms": 18327,
+    "ms": 18067,
     "type": "start"
    },
    {
-    "ms": 18328,
+    "ms": 18068,
     "type": "caption",
     "text": "Scanning, all clear."
    },
    {
-    "ms": 18429,
+    "ms": 18149,
     "type": "foley",
     "kind": "step"
    },
    {
-    "ms": 18763,
+    "ms": 18322,
     "type": "foley",
     "kind": "step"
    },
    {
-    "ms": 19034,
+    "ms": 18656,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 18926,
     "type": "gesture",
     "name": "signature"
    },
    {
-    "ms": 19042,
+    "ms": 18943,
     "type": "presenceDone"
    },
    {
-    "ms": 20021,
+    "ms": 19761,
     "type": "stop"
    },
    {
-    "ms": 20263,
+    "ms": 20167,
     "type": "gestureDone"
    },
    {
-    "ms": 22419,
+    "ms": 22113,
     "type": "turnEnd",
     "i": 1,
     "label": "robocop"
    },
    {
-    "ms": 23939,
+    "ms": 23634,
     "type": "turn",
     "i": 2,
     "label": "soubrette"
    },
    {
-    "ms": 23939,
+    "ms": 23634,
     "type": "typing"
    },
    {
-    "ms": 26394,
+    "ms": 26115,
     "type": "send"
    },
    {
-    "ms": 26606,
+    "ms": 26352,
     "type": "foley",
     "kind": "step"
    },
    {
-    "ms": 26952,
+    "ms": 26699,
     "type": "foley",
     "kind": "step"
    },
    {
-    "ms": 27126,
+    "ms": 26872,
     "type": "foley",
     "kind": "step"
    },
    {
-    "ms": 27272,
+    "ms": 27019,
     "type": "foley",
     "kind": "step"
    },
    {
-    "ms": 27433,
+    "ms": 27179,
     "type": "foley",
     "kind": "step"
    },
    {
-    "ms": 27766,
+    "ms": 27512,
     "type": "foley",
     "kind": "step"
    },
    {
-    "ms": 28051,
+    "ms": 27786,
     "type": "presenceDone"
    },
    {
-    "ms": 28175,
+    "ms": 27826,
     "type": "preroll"
    },
    {
-    "ms": 28220,
+    "ms": 27966,
     "type": "foley",
     "kind": "step"
    },
    {
-    "ms": 28556,
+    "ms": 28197,
     "type": "start"
    },
    {
-    "ms": 28556,
+    "ms": 28198,
     "type": "caption",
     "text": "Enchant\u00e9e!"
    },
    {
-    "ms": 28580,
+    "ms": 28313,
     "type": "foley",
     "kind": "step"
    },
    {
-    "ms": 28740,
+    "ms": 28486,
     "type": "foley",
     "kind": "step"
    },
    {
-    "ms": 28887,
+    "ms": 28633,
     "type": "foley",
     "kind": "step"
    },
    {
-    "ms": 29060,
+    "ms": 28806,
     "type": "foley",
     "kind": "step"
    },
    {
-    "ms": 29393,
+    "ms": 29140,
     "type": "foley",
     "kind": "step"
    },
    {
-    "ms": 29663,
+    "ms": 29411,
     "type": "gesture",
     "name": "signature"
    },
    {
-    "ms": 29668,
+    "ms": 29437,
     "type": "presenceDone"
    },
    {
-    "ms": 29913,
+    "ms": 29598,
     "type": "stop"
    },
    {
-    "ms": 30890,
+    "ms": 30658,
     "type": "gestureDone"
    },
    {
-    "ms": 32290,
+    "ms": 31944,
     "type": "turnEnd",
     "i": 2,
     "label": "soubrette"
    },
    {
-    "ms": 33810,
+    "ms": 33464,
     "type": "typing"
    },
    {
-    "ms": 33810,
+    "ms": 33464,
     "type": "turn",
     "i": 3,
     "label": "singularity"
    },
    {
-    "ms": 36451,
+    "ms": 36159,
     "type": "send"
    },
    {
-    "ms": 36663,
+    "ms": 36382,
     "type": "foley",
     "kind": "step"
    },
    {
-    "ms": 37009,
+    "ms": 36729,
     "type": "foley",
     "kind": "step"
    },
    {
-    "ms": 37183,
+    "ms": 36902,
     "type": "foley",
     "kind": "step"
    },
    {
-    "ms": 37330,
+    "ms": 37049,
     "type": "foley",
     "kind": "step"
    },
    {
-    "ms": 37490,
+    "ms": 37209,
     "type": "foley",
     "kind": "step"
    },
    {
-    "ms": 37823,
+    "ms": 37543,
     "type": "foley",
     "kind": "step"
    },
    {
-    "ms": 38116,
+    "ms": 37819,
     "type": "presenceDone"
    },
    {
-    "ms": 38277,
+    "ms": 37996,
     "type": "foley",
     "kind": "step"
    },
    {
-    "ms": 38623,
+    "ms": 38343,
     "type": "foley",
     "kind": "step"
    },
    {
-    "ms": 38797,
-    "type": "foley",
-    "kind": "step"
-   },
-   {
-    "ms": 38912,
+    "ms": 38494,
     "type": "preroll"
    },
    {
-    "ms": 38943,
+    "ms": 38516,
     "type": "foley",
     "kind": "step"
    },
    {
-    "ms": 39117,
+    "ms": 38663,
     "type": "foley",
     "kind": "step"
    },
    {
-    "ms": 39294,
-    "type": "start"
+    "ms": 38837,
+    "type": "foley",
+    "kind": "step"
    },
    {
-    "ms": 39295,
+    "ms": 38873,
     "type": "caption",
     "text": "I contain multitudes."
    },
    {
-    "ms": 39451,
+    "ms": 38873,
+    "type": "start"
+   },
+   {
+    "ms": 39170,
     "type": "foley",
     "kind": "step"
    },
    {
-    "ms": 39720,
+    "ms": 39441,
     "type": "gesture",
     "name": "signature"
    },
    {
-    "ms": 39734,
+    "ms": 39469,
     "type": "presenceDone"
    },
    {
-    "ms": 40955,
+    "ms": 40692,
     "type": "gestureDone"
    },
    {
-    "ms": 41291,
+    "ms": 40881,
     "type": "stop"
    },
    {
-    "ms": 43654,
+    "ms": 43268,
     "type": "turnEnd",
     "i": 3,
     "label": "singularity"
    }
   ],
-  "duration": 47.301,
+  "duration": 46.938,
   "audio": [
    "I am the night.",
    "Scanning, all clear.",
@@ -3278,232 +3278,199 @@
  "wow3": {
   "events": [
    {
-    "ms": 2025,
+    "ms": 2022,
     "type": "typing"
    },
    {
-    "ms": 8494,
+    "ms": 8505,
     "type": "send"
    },
    {
-    "ms": 8541,
+    "ms": 8569,
     "type": "phase",
     "name": "pullBack"
    },
    {
-    "ms": 9143,
+    "ms": 9175,
     "type": "phase",
     "name": "open"
    },
    {
-    "ms": 9991,
+    "ms": 10015,
     "type": "foley",
     "kind": "paper"
    },
    {
-    "ms": 10471,
+    "ms": 10428,
     "type": "preroll"
    },
    {
-    "ms": 10546,
+    "ms": 10565,
     "type": "gesture",
     "name": "grab"
    },
    {
-    "ms": 10564,
+    "ms": 10594,
     "type": "phase",
     "name": "grab"
    },
    {
-    "ms": 10853,
+    "ms": 10808,
     "type": "start"
    },
    {
-    "ms": 10857,
+    "ms": 10812,
     "type": "caption",
     "text": "Let's go!"
    },
    {
-    "ms": 10963,
+    "ms": 10986,
     "type": "foley",
     "kind": "cloth"
    },
    {
-    "ms": 11486,
-    "type": "gestureDone"
-   },
-   {
-    "ms": 11486,
+    "ms": 11485,
     "type": "phase",
     "name": "exit"
    },
    {
-    "ms": 11667,
+    "ms": 11520,
+    "type": "gestureDone"
+   },
+   {
+    "ms": 11677,
     "type": "foley",
     "kind": "step"
    },
    {
-    "ms": 12014,
-    "type": "foley",
-    "kind": "step"
-   },
-   {
-    "ms": 12152,
+    "ms": 12072,
     "type": "stop"
    },
    {
-    "ms": 12187,
-    "type": "foley",
-    "kind": "step"
-   },
-   {
-    "ms": 12334,
-    "type": "foley",
-    "kind": "step"
-   },
-   {
-    "ms": 12494,
-    "type": "foley",
-    "kind": "step"
-   },
-   {
-    "ms": 12828,
-    "type": "foley",
-    "kind": "step"
-   },
-   {
-    "ms": 12896,
+    "ms": 12744,
     "type": "preroll"
    },
    {
-    "ms": 13103,
-    "type": "presenceDone"
-   },
-   {
-    "ms": 13103,
-    "type": "phase",
-    "name": "close"
-   },
-   {
-    "ms": 13313,
+    "ms": 13116,
     "type": "start"
    },
    {
-    "ms": 13314,
+    "ms": 13117,
     "type": "caption",
     "text": "Let me grab my jacket."
    },
    {
-    "ms": 13679,
+    "ms": 14489,
+    "type": "phase",
+    "name": "close"
+   },
+   {
+    "ms": 15008,
+    "type": "stop"
+   },
+   {
+    "ms": 15055,
     "type": "foley",
     "kind": "click"
    },
    {
-    "ms": 13766,
+    "ms": 15115,
+    "type": "phase",
+    "name": "cut"
+   },
+   {
+    "ms": 15159,
     "type": "phase",
     "name": "arriveOpen"
    },
    {
-    "ms": 14237,
+    "ms": 15611,
     "type": "foley",
     "kind": "paper"
    },
    {
-    "ms": 14786,
+    "ms": 15902,
+    "type": "preroll"
+   },
+   {
+    "ms": 16175,
     "type": "phase",
     "name": "enter"
    },
    {
-    "ms": 14975,
-    "type": "foley",
-    "kind": "step"
-   },
-   {
-    "ms": 15205,
-    "type": "stop"
-   },
-   {
-    "ms": 15322,
-    "type": "foley",
-    "kind": "step"
-   },
-   {
-    "ms": 15495,
-    "type": "foley",
-    "kind": "step"
-   },
-   {
-    "ms": 15642,
-    "type": "foley",
-    "kind": "step"
-   },
-   {
-    "ms": 15802,
-    "type": "foley",
-    "kind": "step"
-   },
-   {
-    "ms": 16135,
-    "type": "foley",
-    "kind": "step"
-   },
-   {
-    "ms": 16221,
-    "type": "preroll"
-   },
-   {
-    "ms": 16404,
-    "type": "gesture",
-    "name": "grab"
-   },
-   {
-    "ms": 16406,
-    "type": "presenceDone"
-   },
-   {
-    "ms": 16406,
-    "type": "phase",
-    "name": "hang"
-   },
-   {
-    "ms": 16622,
+    "ms": 16287,
     "type": "start"
    },
    {
-    "ms": 16622,
+    "ms": 16288,
     "type": "caption",
     "text": "Here we are, just in time for the sunset."
    },
    {
-    "ms": 16816,
+    "ms": 16347,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 16693,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 16867,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 17013,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 17174,
+    "type": "foley",
+    "kind": "step"
+   },
+   {
+    "ms": 19060,
+    "type": "stop"
+   },
+   {
+    "ms": 19145,
+    "type": "gesture",
+    "name": "grab"
+   },
+   {
+    "ms": 19186,
+    "type": "phase",
+    "name": "hang"
+   },
+   {
+    "ms": 19561,
     "type": "foley",
     "kind": "cloth"
    },
    {
-    "ms": 17326,
+    "ms": 20065,
     "type": "phase",
     "name": "arriveClose"
    },
    {
-    "ms": 17361,
+    "ms": 20099,
     "type": "gestureDone"
    },
    {
-    "ms": 17953,
+    "ms": 20692,
     "type": "phase",
     "name": "vanish"
    },
    {
-    "ms": 18286,
+    "ms": 21022,
     "type": "phase",
     "name": "none"
-   },
-   {
-    "ms": 19396,
-    "type": "stop"
    }
   ],
-  "duration": 25.456,
+  "duration": 25.124,
   "audio": [
    "Let's go!",
    "Let me grab my jacket.",

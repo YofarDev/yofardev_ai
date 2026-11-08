@@ -1,6 +1,7 @@
 import React from "react";
 import { Video } from "@remotion/media";
-import { interpolate, Sequence, staticFile, useCurrentFrame } from "remotion";
+import { Freeze, interpolate, Sequence, staticFile, useCurrentFrame } from "remotion";
+import { runDuration } from "../data/events";
 
 /** A captured run, playing from `atMs` on the run's own clock. The video is
  * 576×1024 (9:16); it fills its parent (object-fit cover). `zoom` and
@@ -27,6 +28,18 @@ export const Clip: React.FC<{
       left: (bw - vw) / 2,
       top: (bh - vh) * focus[1],
     };
+  }
+  // never play past the recording (the app window closes after a run): hold
+  // the last good frame instead
+  const frame = useCurrentFrame();
+  const lastMs = runDuration(tag, 1e9) - 1300;
+  const maxFrame = Math.max(0, Math.floor(((lastMs - atMs) / 1000) * 60 / rate));
+  if (frame > maxFrame) {
+    return (
+      <Freeze frame={maxFrame}>
+        <Clip tag={tag} atMs={atMs} zoom={zoom} focus={focus} style={style} box={box} rate={rate} />
+      </Freeze>
+    );
   }
   return (
     <div style={{ position: "absolute", inset: 0, overflow: "hidden", ...style }}>

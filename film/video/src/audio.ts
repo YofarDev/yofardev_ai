@@ -36,7 +36,7 @@ export function regions(): Region[] {
   }
   // wardrobe: each costume's line while its phone is lit
   for (const p of wardrobePlan()) {
-    add({ tag: "film_wardrobe", at: s.wardrobe.from + p.at - 40, atMs: p.atMs + ((p.at - 40) / 60) * 1000, frames: p.len + 70, voice: 1, foley: 0.7 });
+    add({ tag: "film_wardrobe", at: s.wardrobe.from + p.at, atMs: p.atMs + (p.at / 60) * 1000, frames: p.len + 30, voice: 1, foley: 0.7 });
   }
   // journey
   for (const g of journeyPlan().segs) {

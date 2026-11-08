@@ -27,9 +27,9 @@ export const Wardrobe: React.FC<{ dur: number }> = ({ dur }) => {
         const x = -total / 2 + W / 2 + k * (W + gap);
         const pop = interpolate(frame, [4 + k * 4, 34 + k * 4], [0, 1], { ...clamp, easing: Easing.bezier(0.16, 1, 0.3, 1) });
         // lit while its line plays (a bar), dimmed while another one is
-        const lit = interpolate(frame, [p.at - 18, p.at - 6, p.at + p.len - 14, p.at + p.len - 2], [0, 1, 1, 0], clamp);
-        const anyLit = plan.some((q) => frame >= q.at - 18 && frame <= q.at + q.len - 2);
-        const allOn = frame > plan[3].at + plan[3].len - 2;
+        const lit = interpolate(frame, [p.at - 12, p.at, p.at + p.len - 12, p.at + p.len], [0, 1, 1, 0], clamp);
+        const anyLit = plan.some((q) => frame >= q.at - 12 && frame <= q.at + q.len);
+        const allOn = frame > plan[3].at + plan[3].len;
         const dim = allOn ? 1 : anyLit ? 0.45 + 0.55 * lit : 1;
         return (
           <React.Fragment key={k}>
@@ -70,20 +70,19 @@ export const Wardrobe: React.FC<{ dur: number }> = ({ dur }) => {
   );
 };
 
-/** A costume's phone: held on the costume mid-line before its turn, playing
- * through its line (and the signature move), held again after. */
+/** A costume's phone: waiting on the empty room before its turn, playing
+ * the walk-in, the line and the signature move, then held. */
 const CostumeClip: React.FC<{ atMs: number; at: number; len: number }> = ({ atMs, at, len }) => {
-  const playFrom = Math.max(0, at - 50);
-  const playTo = at + len - 8;
+  const playTo = at + len;
   return (
     <>
-      <Sequence durationInFrames={playFrom} layout="none">
-        <Freeze frame={at + 30}>
+      <Sequence durationInFrames={at} layout="none">
+        <Freeze frame={at}>
           <Clip tag="film_wardrobe" atMs={atMs} />
         </Freeze>
       </Sequence>
-      <Sequence from={playFrom} durationInFrames={playTo - playFrom} layout="none">
-        <Clip tag="film_wardrobe" atMs={atMs + (playFrom / 60) * 1000} />
+      <Sequence from={at} durationInFrames={len} layout="none">
+        <Clip tag="film_wardrobe" atMs={atMs + (at / 60) * 1000} />
       </Sequence>
       <Sequence from={playTo} layout="none">
         <Freeze frame={0}>
