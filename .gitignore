@@ -68,7 +68,6 @@ flutter_analysis.md
 graphify-out/
 # rive_native pub-cache symlink
 /native
-showcase/work/
 
 # test coverage output (scripts/fcoverage.sh)
 coverage/
