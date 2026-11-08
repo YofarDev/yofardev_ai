@@ -1507,6 +1507,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Hide'**
   String get ttsVoiceDismiss;
+
+  /// No description provided for @llmSetupTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect an AI to start chatting'**
+  String get llmSetupTitle;
+
+  /// No description provided for @llmSetupBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Add an API key (OpenAI-compatible or Gemini). It stays on this device.'**
+  String get llmSetupBody;
+
+  /// No description provided for @llmSetupAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Set up'**
+  String get llmSetupAction;
+
+  /// No description provided for @llmSetupDismiss.
+  ///
+  /// In en, this message translates to:
+  /// **'Later'**
+  String get llmSetupDismiss;
 }
 
 class _AppLocalizationsDelegate

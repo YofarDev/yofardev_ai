@@ -234,5 +234,9 @@
   "ttsVoiceDownload": "Télécharger",
   "ttsVoiceFallbackNote": "En attendant, la voix de secours parle.",
   "ttsVoiceBannerTitle": "Installation de la nouvelle voix",
-  "ttsVoiceDismiss": "Masquer"
+  "ttsVoiceDismiss": "Masquer",
+  "llmSetupTitle": "Connectez une IA pour commencer à discuter",
+  "llmSetupBody": "Ajoutez une clé d'API (compatible OpenAI ou Gemini). Elle reste sur cet appareil.",
+  "llmSetupAction": "Configurer",
+  "llmSetupDismiss": "Plus tard"
 }

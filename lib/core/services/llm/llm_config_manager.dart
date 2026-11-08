@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../models/llm_config.dart';
@@ -21,6 +22,14 @@ class LlmConfigManager {
   List<LlmConfig> _configs = <LlmConfig>[];
   String? _currentConfigId;
 
+  final ValueNotifier<bool?> _configured = ValueNotifier<bool?>(null);
+
+  /// Whether at least one configuration exists: null until [init] has read
+  /// the stored ones, then updated on every save and delete.
+  ValueListenable<bool?> get configured => _configured;
+
+  void _syncConfigured() => _configured.value = _configs.isNotEmpty;
+
   Future<void> init() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     final String? configsJson = prefs.getString(_configsKey);
@@ -40,6 +49,7 @@ class LlmConfigManager {
     }
 
     _currentConfigId = prefs.getString(_currentConfigIdKey);
+    _syncConfigured();
   }
 
   List<LlmConfig> getAllConfigs() => List<LlmConfig>.unmodifiable(_configs);
@@ -68,6 +78,7 @@ class LlmConfigManager {
     } else {
       _configs.add(config);
     }
+    _syncConfigured();
     await _saveToPrefs();
 
     if (_configs.length == 1) {
@@ -77,6 +88,7 @@ class LlmConfigManager {
 
   Future<void> deleteConfig(String id) async {
     _configs.removeWhere((LlmConfig c) => c.id == id);
+    _syncConfigured();
     if (_currentConfigId == id) {
       _currentConfigId = _configs.isNotEmpty ? _configs.first.id : null;
       final SharedPreferences prefs = await SharedPreferences.getInstance();

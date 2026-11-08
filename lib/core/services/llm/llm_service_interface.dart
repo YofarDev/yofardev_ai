@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart' show ValueListenable;
+
 import '../../models/llm_config.dart';
 import '../../models/llm_message.dart';
 import '../../models/llm_task_type.dart';
@@ -15,6 +17,10 @@ abstract class LlmServiceInterface {
 
   /// Get the currently active LLM configuration
   LlmConfig? getCurrentConfig();
+
+  /// Whether any configuration exists: null until [init] has loaded them,
+  /// then kept current by [saveConfig] and [deleteConfig].
+  ValueListenable<bool?> get configured;
 
   /// Save a configuration (add new or update existing)
   Future<void> saveConfig(LlmConfig config);

@@ -6,6 +6,7 @@ import 'package:nested/nested.dart';
 import '../../../core/design/design.dart';
 import '../../../core/models/demo_script.dart';
 import '../../../core/services/motion/parallax_source.dart';
+import '../../../core/services/llm/llm_service_interface.dart';
 import '../../../core/services/quality/quality_tier_service.dart';
 import '../../../core/services/world/world_state_service.dart';
 import '../../../core/services/app_lifecycle_service.dart';
@@ -44,6 +45,7 @@ class HomeScreen extends StatefulWidget {
     this.lifecycle,
     this.quality,
     this.voiceEngine,
+    this.llm,
   });
 
   final SpeechInputService speech;
@@ -71,6 +73,9 @@ class HomeScreen extends StatefulWidget {
 
   /// The Kokoro voice's install, for the first-run notice (null: none).
   final TtsEngineStatusService? voiceEngine;
+
+  /// The LLM configurations, for the "connect an AI" notice (null: none).
+  final LlmServiceInterface? llm;
 
   /// The ambient beds, following the scene (null: silent).
   final AmbientBedService? beds;
@@ -208,6 +213,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       lifecycle: widget.lifecycle,
       quality: widget.quality,
       voiceEngine: widget.voiceEngine,
+      llm: widget.llm,
       onStartDemo: _startDemoMode,
     );
     if (!kDebugMode) {
@@ -234,7 +240,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         widget.beds != oldWidget.beds ||
         widget.lifecycle != oldWidget.lifecycle ||
         widget.quality != oldWidget.quality ||
-        widget.voiceEngine != oldWidget.voiceEngine) {
+        widget.voiceEngine != oldWidget.voiceEngine ||
+        widget.llm != oldWidget.llm) {
       _stage = _buildStage();
     }
   }

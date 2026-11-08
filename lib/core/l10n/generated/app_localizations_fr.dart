@@ -778,4 +778,17 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get ttsVoiceDismiss => 'Masquer';
+
+  @override
+  String get llmSetupTitle => 'Connectez une IA pour commencer à discuter';
+
+  @override
+  String get llmSetupBody =>
+      'Ajoutez une clé d\'API (compatible OpenAI ou Gemini). Elle reste sur cet appareil.';
+
+  @override
+  String get llmSetupAction => 'Configurer';
+
+  @override
+  String get llmSetupDismiss => 'Plus tard';
 }

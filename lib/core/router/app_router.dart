@@ -30,6 +30,7 @@ import '../../features/settings/screens/settings_screen.dart';
 import '../../features/sound/sound.dart';
 import '../../core/res/app_constants.dart';
 import '../../core/services/app_lifecycle_service.dart';
+import '../../core/services/llm/llm_service_interface.dart';
 import '../../core/services/audio/ambient_bed_service.dart';
 import '../../core/services/audio/foley_service.dart';
 import '../../core/services/motion/parallax_source.dart';
@@ -82,6 +83,7 @@ class AppRouter {
             lifecycle: getIt<AppLifecycleService>(),
             quality: getIt<QualityTierService>(),
             voiceEngine: getIt<TtsEngineStatusService>(),
+            llm: getIt<LlmServiceInterface>(),
           );
           return MaterialPage<void>(
             key: state.pageKey,

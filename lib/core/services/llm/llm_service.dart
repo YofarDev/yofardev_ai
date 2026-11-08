@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart' show ValueListenable;
 import 'package:http/http.dart' as http;
 
 import '../../utils/logger.dart';
@@ -83,6 +84,9 @@ class LlmService implements LlmServiceInterface {
 
   @override
   LlmConfig? getCurrentConfig() => _configManager.getCurrentConfig();
+
+  @override
+  ValueListenable<bool?> get configured => _configManager.configured;
 
   @override
   Future<void> saveConfig(LlmConfig config) async {

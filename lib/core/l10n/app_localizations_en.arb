@@ -474,5 +474,9 @@
   "ttsVoiceDownload": "Download",
   "ttsVoiceFallbackNote": "Until then, the backup voice speaks.",
   "ttsVoiceBannerTitle": "Installing the new voice",
-  "ttsVoiceDismiss": "Hide"
+  "ttsVoiceDismiss": "Hide",
+  "llmSetupTitle": "Connect an AI to start chatting",
+  "llmSetupBody": "Add an API key (OpenAI-compatible or Gemini). It stays on this device.",
+  "llmSetupAction": "Set up",
+  "llmSetupDismiss": "Later"
 }

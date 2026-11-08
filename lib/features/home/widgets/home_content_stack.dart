@@ -13,6 +13,7 @@ import '../../../core/models/avatar_scene.dart';
 import '../../../core/models/performance/performance.dart';
 import '../../../core/models/talking_phase.dart';
 import '../../../core/services/app_lifecycle_service.dart';
+import '../../../core/services/llm/llm_service_interface.dart';
 import '../../../core/services/audio/ambient_bed_service.dart';
 import '../../../core/services/audio/foley_service.dart';
 import '../../sound/sound.dart';
@@ -29,6 +30,7 @@ import 'stage/stage_caption_bubble.dart';
 import 'stage/stage_composer.dart';
 import 'stage/stage_scrim.dart';
 import 'stage/stage_semantics.dart';
+import 'stage/stage_setup_notice.dart';
 import 'stage/stage_tool_chip.dart';
 import 'stage/stage_voice_notice.dart';
 import 'stage/stage_top_bar.dart';
@@ -67,6 +69,7 @@ class HomeContentStack extends StatefulWidget {
     this.lifecycle,
     this.quality,
     this.voiceEngine,
+    this.llm,
     required this.onStartDemo,
   });
 
@@ -94,6 +97,10 @@ class HomeContentStack extends StatefulWidget {
   /// The Kokoro voice's install, for the first-run notice above the tool
   /// chip (null: no notice).
   final TtsEngineStatusService? voiceEngine;
+
+  /// The LLM configurations: with none, a notice above the composer asks
+  /// to connect one (null: no notice).
+  final LlmServiceInterface? llm;
 
   /// The ambient beds: hear the scene from here (null: silent).
   final AmbientBedService? beds;
@@ -290,6 +297,7 @@ class _HomeContentStackState extends State<HomeContentStack>
           tier: widget.quality?.tier,
           foley: widget.foley,
           voiceEngine: widget.voiceEngine,
+          llm: widget.llm,
         ),
         // Low tier: the mouth is read once per sentence (M11 ruling 13).
         BlocListener<CaptionCubit, CaptionState>(
@@ -671,6 +679,7 @@ class _BottomChrome extends StatelessWidget {
     this.tier,
     this.foley,
     this.voiceEngine,
+    this.llm,
   });
 
   /// The composer's mic haptic goes through it (null: none).
@@ -678,6 +687,9 @@ class _BottomChrome extends StatelessWidget {
 
   /// The Kokoro voice's install (null: no first-run notice).
   final TtsEngineStatusService? voiceEngine;
+
+  /// The LLM configurations (null: no setup notice).
+  final LlmServiceInterface? llm;
 
   final ValueNotifier<ComposerOrbState> composerMode;
   final ValueChanged<ComposerOrbState> onComposerMode;
@@ -731,6 +743,7 @@ class _BottomChrome extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
+              StageSetupNotice(llm: llm),
               StageVoiceNotice(engine: voiceEngine),
               const StageToolChip(),
               StageCaption(

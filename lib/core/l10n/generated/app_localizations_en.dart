@@ -767,4 +767,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get ttsVoiceDismiss => 'Hide';
+
+  @override
+  String get llmSetupTitle => 'Connect an AI to start chatting';
+
+  @override
+  String get llmSetupBody =>
+      'Add an API key (OpenAI-compatible or Gemini). It stays on this device.';
+
+  @override
+  String get llmSetupAction => 'Set up';
+
+  @override
+  String get llmSetupDismiss => 'Later';
 }

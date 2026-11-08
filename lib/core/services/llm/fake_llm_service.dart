@@ -122,6 +122,9 @@ class FakeLlmService implements LlmServiceInterface {
   LlmConfig? getCurrentConfig() => _realService.getCurrentConfig();
 
   @override
+  ValueListenable<bool?> get configured => _realService.configured;
+
+  @override
   Future<void> saveConfig(LlmConfig config) => _realService.saveConfig(config);
 
   @override
