@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:bloc_test/bloc_test.dart';
+import 'package:fake_async/fake_async.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:yofardev_ai/core/models/avatar_cue.dart';
@@ -1096,6 +1097,89 @@ void main() {
         expect(newState.audioPathsWaitingSentences.length, 2);
         expect(state.audioPathsWaitingSentences, isEmpty);
       });
+    });
+  });
+
+  // ── A lost playback completion ───────────────────────────────
+
+  test('a playback completion that never arrives does not hang the voice: '
+      'past the watch budget the sentence ends and the next one plays', () {
+    // Everything is built inside the fake zone: the cubit's stream listeners
+    // run in the zone they were registered in, and the watch is a timer.
+    fakeAsync((FakeAsync async) {
+      final MockTtsQueueService queue = MockTtsQueueService();
+      final MockAudioAmplitudeService amplitudes = MockAudioAmplitudeService();
+      final MockAudioPlayerService player = MockAudioPlayerService();
+      final MockTtsPlaybackService playback = MockTtsPlaybackService();
+      final InterruptionService interruptions = InterruptionService();
+      final List<String> played = <String>[];
+      when(
+        () => amplitudes.extractAmplitudes(any()),
+      ).thenAnswer((_) async => <int>[10, 20, 30, 40, 50]);
+      when(
+        () => amplitudes.analyzeSpeech(
+          any(),
+          text: any(named: 'text'),
+          language: any(named: 'language'),
+        ),
+      ).thenAnswer((_) async => null);
+      when(() => queue.deleteAudio(any())).thenAnswer((Invocation _) async {});
+      when(
+        () => queue.cueOnlyStream,
+      ).thenAnswer((_) => const Stream<List<AvatarCue>>.empty());
+      when(() => queue.consumeCues(any())).thenReturn(const <AvatarCue>[]);
+      when(() => player.play(any())).thenAnswer((Invocation invocation) async {
+        played.add(invocation.positionalArguments.first as String);
+        return const Duration(milliseconds: 2000);
+      });
+      when(() => player.stop()).thenAnswer((_) async {});
+      when(() => player.preload(any())).thenAnswer((Invocation _) async {});
+      when(() => playback.stop()).thenAnswer((_) async {});
+      when(() => playback.interrupt()).thenAnswer((_) async {});
+      final ChatTtsCubit cubit = ChatTtsCubit(
+        ttsQueueManager: queue,
+        audioAmplitudeService: amplitudes,
+        audioPlayerService: player,
+        interruptionService: interruptions,
+        ttsPlaybackService: playback,
+        speechPreroll: Duration.zero,
+      );
+      // 2 s of audio (125 ms of amplitudes): the floor sets the budget.
+      final Duration budget =
+          ChatTtsCubit.playbackCompletionFloor +
+          ChatTtsCubit.playbackCompletionMargin;
+
+      queue.emitAudioPath('/tmp/tts/a.wav');
+      queue.emitAudioPath('/tmp/tts/b.wav');
+      async.elapse(const Duration(milliseconds: 500));
+      expect(played, <String>['/tmp/tts/a.wav']);
+
+      // The first sentence's completion is lost: the second waits out the
+      // budget...
+      async.elapse(budget - const Duration(seconds: 1));
+      expect(played, <String>['/tmp/tts/a.wav']);
+      verifyNever(() => player.stop());
+
+      // ...then the first one is stopped (it may still sound) and the second
+      // plays.
+      async.elapse(const Duration(seconds: 2));
+      expect(played, <String>['/tmp/tts/a.wav', '/tmp/tts/b.wav']);
+      verify(() => player.stop()).called(1);
+      expect(playback.captions, hasLength(2));
+
+      // The second one completes normally.
+      player.emitPlaybackComplete();
+      async.elapse(const Duration(milliseconds: 100));
+      expect(cubit.state.audioPathsWaitingSentences, isEmpty);
+      verify(() => queue.deleteAudio('/tmp/tts/a.wav')).called(1);
+      verify(() => queue.deleteAudio('/tmp/tts/b.wav')).called(1);
+
+      unawaited(cubit.close());
+      interruptions.dispose();
+      playback.dispose();
+      player.dispose();
+      queue.dispose();
+      async.flushMicrotasks();
     });
   });
 }

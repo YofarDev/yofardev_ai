@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 import '../../../../core/design/design.dart';
 
 /// Caption text straight on the stage, kept legible by a soft halo in the
-/// look's ink; two lines max, broken evenly (see [BalancedText]).
+/// look's ink; capped at [maxLines] lines (null: unlimited), broken evenly
+/// when capped (see [BalancedText]).
 class StageLine extends StatelessWidget {
   const StageLine({
     super.key,
@@ -11,6 +12,7 @@ class StageLine extends StatelessWidget {
     required this.style,
     required this.align,
     this.color,
+    this.maxLines = 2,
   });
 
   final String text;
@@ -20,12 +22,16 @@ class StageLine extends StatelessWidget {
   /// The text colour; null is the theme's `onSurface`.
   final Color? color;
 
+  /// The line cap; null shows the whole text.
+  final int? maxLines;
+
   @override
   Widget build(BuildContext context) {
     final Color ink = context.tokens.background;
     return BalancedText(
       text,
       align: align,
+      maxLines: maxLines,
       style: style?.copyWith(
         color: color ?? context.colors.onSurface,
         shadows: <Shadow>[
@@ -37,22 +43,30 @@ class StageLine extends StatelessWidget {
   }
 }
 
-/// Two lines max, broken evenly: when the text needs two lines it takes the
-/// narrowest width that still fits in two, so the second line is never a
-/// lone word. Longer text ends with an ellipsis.
+/// At most [maxLines] lines (null: unlimited), broken evenly: when the text
+/// needs exactly that many lines it takes the narrowest width that still
+/// fits, so the last line is never a lone word; an uncapped text that fits
+/// the two-line display look keeps that balancing. Longer capped text ends
+/// with an ellipsis.
 class BalancedText extends StatelessWidget {
   const BalancedText(
     this.text, {
     super.key,
     required this.align,
     required this.style,
+    this.maxLines = 2,
   });
 
   final String text;
   final TextAlign align;
   final TextStyle? style;
 
-  static const int _maxLines = 2;
+  /// The line cap; null shows the whole text.
+  final int? maxLines;
+
+  /// The display look's line count: an uncapped text that fits it keeps the
+  /// even-break balancing instead of growing to full width.
+  static const int _balanceLines = 2;
 
   int _lines(TextPainter painter, double width) {
     painter.layout(maxWidth: width);
@@ -66,14 +80,15 @@ class BalancedText extends StatelessWidget {
       textScaler: MediaQuery.textScalerOf(context),
     );
     try {
-      if (_lines(painter, maxWidth) != _maxLines) {
+      final int target = maxLines ?? _balanceLines;
+      if (_lines(painter, maxWidth) != target) {
         return maxWidth;
       }
       double low = maxWidth / 2;
       double high = maxWidth;
       while (high - low > 1) {
         final double mid = (low + high) / 2;
-        if (_lines(painter, mid) <= _maxLines) {
+        if (_lines(painter, mid) <= target) {
           high = mid;
         } else {
           low = mid;
@@ -91,11 +106,16 @@ class BalancedText extends StatelessWidget {
       builder: (BuildContext context, BoxConstraints constraints) {
         final Widget child = Text(
           text,
-          maxLines: _maxLines,
-          overflow: TextOverflow.ellipsis,
+          maxLines: maxLines,
+          overflow: maxLines == null
+              ? TextOverflow.visible
+              : TextOverflow.ellipsis,
           textAlign: align,
           style: style,
         );
+        if (!constraints.hasBoundedWidth) {
+          return child;
+        }
         if (!constraints.hasBoundedWidth) {
           return child;
         }

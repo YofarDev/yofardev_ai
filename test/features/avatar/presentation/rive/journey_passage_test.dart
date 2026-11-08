@@ -57,19 +57,17 @@ void main() {
     }
   });
 
-  test('on stage nothing changes; the book clips at its spine', () {
-    for (final JourneyFamily family in _open) {
+  test('on stage nothing changes; the book clips only mid-passage', () {
+    // The standing avatar (its phase bubble over the open book) is whole; the
+    // spine clip holds only while it folds into the gutter.
+    for (final JourneyFamily family in JourneyFamily.values) {
       expect(
         JourneyPassage.of(family, 0, PresenceWalk.onX),
         AvatarPassage.none,
+        reason: '$family',
       );
     }
-    final AvatarPassage book = JourneyPassage.of(
-      JourneyFamily.book,
-      0,
-      PresenceWalk.onX,
-    );
-    expect((book.transforms, book.planeX, book.opacity), (false, 640.0, 1.0));
+    expect(JourneyPassage.of(JourneyFamily.book, 0.5, 575).clips, isTrue);
   });
 
   test('until it reaches the threshold the avatar keeps its own walk', () {

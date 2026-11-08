@@ -26,8 +26,10 @@ import '../stage_camera.dart';
 /// path's tunnel, the rocket's hatch, folded into the book's gutter), and the
 /// `Journey` artboard drawn with the avatar's fit (contain, bottom-centre):
 /// under the avatar for the path, portal and rocket (the avatar walks in
-/// front of them and into them), over it for the book (its page block hides
-/// the folded avatar right of the spine).
+/// front of them and into them), and for the book only while the avatar
+/// folds into its gutter ([thresholdOverAvatar]) — the page hides the folded
+/// figure right of the spine — under it otherwise, so the standing avatar
+/// (its phase bubble, among others) overlays the open book.
 ///
 /// The threshold file loads when a [journey] starts and is disposed when it
 /// ends. A ticker turns the journey's beat and the time spent in it into the
@@ -69,6 +71,13 @@ class JourneyLayer extends StatefulWidget {
   static double journeyJacketOf(JourneyState journey, double jacket) =>
       journey.hasJacket ? jacket.clamp(0.0, 1.0) : 0;
 
+  /// Whether [frame]'s threshold draws OVER the avatar: only the book does,
+  /// and only while the avatar folds into its gutter (the spine clip holds) —
+  /// outside the passage the standing avatar overlays the book.
+  @visibleForTesting
+  static bool thresholdOverAvatar(JourneyFrame frame) =>
+      frame.family == JourneyFamily.book && frame.passage.clips;
+
   @override
   State<JourneyLayer> createState() => _JourneyLayerState();
 }
@@ -84,6 +93,11 @@ class _JourneyLayerState extends State<JourneyLayer>
   bool _restartBeat = true;
   int? _serial;
   bool _reduceMotion = false;
+
+  /// Whether the threshold is drawn over the avatar now (the book,
+  /// mid-passage only — [thresholdOverAvatar]); a flip moves the threshold
+  /// between the Stack's fixed slots.
+  bool _over = false;
   File? _file;
   RiveWidgetController? _controller;
   RiveVmBinding? _binding;
@@ -132,6 +146,7 @@ class _JourneyLayerState extends State<JourneyLayer>
       _ticker.stop();
       _serial = null;
       _passage.value = PaintedPassage.none;
+      _over = false;
       if (_file != null) {
         // The next frame no longer draws the overlay.
         _unload();
@@ -173,6 +188,10 @@ class _JourneyLayerState extends State<JourneyLayer>
       ),
     };
     _passage.value = PaintedPassage(passage, tint);
+    final bool over = JourneyLayer.thresholdOverAvatar(frame);
+    if (over != _over) {
+      setState(() => _over = over);
+    }
   }
 
   /// The scene NOT on screen: the destination before the cut, the origin
@@ -373,7 +392,7 @@ class _JourneyLayerState extends State<JourneyLayer>
             ),
           )
         : null;
-    final bool over = journey?.family == JourneyFamily.book;
+    final bool over = journey != null && _over;
     // Fixed slots: the avatar stays at index 1 whichever side the threshold
     // is drawn on.
     return Stack(

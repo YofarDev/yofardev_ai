@@ -2565,6 +2565,8 @@ with kit.minting(d, M10S), kit.minting(arm_rig.AD, M10SA):
     artboard.children.extend([laser_off, laser_loop, *SIG.values()])
 
 tablet_grip.install(artboard, tablet.node)
+# The newspaper gets the same treatment: in front of the sleeves, edge-hand copies over the page.
+tablet_grip.install(artboard, paper.node, kind="newspaper", anchor="NewsFold", start=1340000, scale_y=None)
 
 out = os.path.join(os.path.dirname(__file__), "..", "avatar", "avatar.rml")
 os.makedirs(os.path.dirname(out), exist_ok=True)

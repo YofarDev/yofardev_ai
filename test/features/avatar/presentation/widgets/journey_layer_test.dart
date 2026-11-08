@@ -6,6 +6,7 @@ import 'package:yofardev_ai/core/models/performance/light_rig.dart';
 import 'package:yofardev_ai/features/avatar/domain/models/journey.dart';
 import 'package:yofardev_ai/features/avatar/presentation/rive/avatar_face_writer.dart';
 import 'package:yofardev_ai/features/avatar/presentation/rive/avatar_rive_contract.dart';
+import 'package:yofardev_ai/features/avatar/presentation/rive/journey_choreography.dart';
 import 'package:yofardev_ai/features/avatar/presentation/widgets/rive/avatar_passage_box.dart';
 import 'package:yofardev_ai/features/avatar/presentation/widgets/rive/journey_layer.dart';
 
@@ -103,7 +104,7 @@ void main() {
     return box.passage.value.passage.clips;
   }
 
-  testWidgets('the avatar keeps its state and is clipped only mid-journey', (
+  testWidgets('the avatar keeps its state and is clipped only mid-passage', (
     WidgetTester tester,
   ) async {
     final GlobalKey<_AvatarState> key = GlobalKey<_AvatarState>();
@@ -118,10 +119,15 @@ void main() {
     final _AvatarState state = key.currentState!;
     expect(clipping(tester), isFalse);
 
+    // The walk's first beats keep the avatar whole (its phase bubble over the
+    // open book); the fold clips it only once the passage runs.
     await tester.pumpWidget(layer(_j(JourneyPhase.exit, 3)));
     await tester.pump(const Duration(milliseconds: 16));
-    expect(clipping(tester), isTrue);
+    expect(clipping(tester), isFalse);
     expect(key.currentState, same(state));
+
+    await tester.pump(const Duration(milliseconds: 600));
+    expect(clipping(tester), isTrue);
 
     await tester.pumpWidget(layer(_j(JourneyPhase.vanish, 9)));
     await tester.pump(const Duration(milliseconds: 16));
@@ -132,6 +138,69 @@ void main() {
     expect(clipping(tester), isFalse);
     expect(key.currentState, same(state));
   });
+
+  test(
+    'the book draws over the avatar only while it folds into its gutter',
+    () {
+      // Outside the passage the standing avatar (its thought bubble) overlays
+      // the threshold; mid-passage the page hides the folded figure.
+      bool over(JourneyFamily family, JourneyPhase phase, int ms) =>
+          JourneyLayer.thresholdOverAvatar(
+            JourneyChoreography.at(
+              JourneyState(
+                from: AvatarScene.livingRoom,
+                to: AvatarScene.beach,
+                family: family,
+                phase: phase,
+                serial: 7,
+              ),
+              Duration(milliseconds: ms),
+            ),
+          );
+
+      // Standing beats: the bubble overlays the open (or closing) book.
+      for (final (JourneyPhase phase, int ms) in const <(JourneyPhase, int)>[
+        (JourneyPhase.pullBack, 0),
+        (JourneyPhase.open, 600),
+        (JourneyPhase.grab, 0),
+        (JourneyPhase.exit, 100), // the walk, before the fold starts
+        (JourneyPhase.arriveClose, 0),
+        (JourneyPhase.vanish, 0),
+      ]) {
+        expect(
+          over(JourneyFamily.book, phase, ms),
+          isFalse,
+          reason: '$phase $ms',
+        );
+      }
+      // Mid-passage: behind the page, on the way in and out.
+      for (final (JourneyPhase phase, int ms) in const <(JourneyPhase, int)>[
+        (JourneyPhase.exit, 600),
+        (JourneyPhase.close, 0),
+        (JourneyPhase.cut, 0),
+        (JourneyPhase.arriveOpen, 120),
+        (JourneyPhase.enter, 800),
+      ]) {
+        expect(
+          over(JourneyFamily.book, phase, ms),
+          isTrue,
+          reason: '$phase $ms',
+        );
+      }
+      // The thresholds the avatar walks in front of never draw over it.
+      for (final JourneyFamily family in <JourneyFamily>[
+        JourneyFamily.path,
+        JourneyFamily.portal,
+        JourneyFamily.rocket,
+      ]) {
+        expect(
+          over(family, JourneyPhase.exit, 600),
+          isFalse,
+          reason: family.name,
+        );
+      }
+    },
+  );
 
   testWidgets('a grab book frame writes the book, its vignette number and '
       'the jacket', (WidgetTester tester) async {

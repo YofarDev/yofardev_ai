@@ -388,7 +388,9 @@ imports and the design-layer rules, so `flutter test` fails on violation.
   rumble/smoke band), and takes off empty in `vanish` (`JourneyTiming.vanishOf`). Evidence:
   `rive/review/thresholds-v16/`
 - The avatar goes in (contract v17 notes, 2026-11-07): `JourneyLayer` draws the path, portal and
-  rocket UNDER the avatar (the book stays over it, clipped at the spine) and paints the avatar through
+  rocket UNDER the avatar (the book over it only mid-passage — while the avatar folds into its
+  gutter, `JourneyLayer.thresholdOverAvatar`; otherwise under, so the standing avatar's phase
+  bubble overlays the open book) and paints the avatar through
   `AvatarPassageBox` (clip, transform, opacity, colour filter; layers only while they act). The
   passage is pure Dart: `JourneyPassage.of(family, u, x)` with `u` on the beat's clock
   (`exitWindow` / `enterWindow`, ~1 s of the 1.6 s walk) and `x` from `PresenceWalk` (a mirror of

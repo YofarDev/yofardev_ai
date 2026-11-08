@@ -122,20 +122,21 @@ void main() {
     expect(find.text('Second moon, first.'), findsOneWidget);
   });
 
-  testWidgets('long sentences stay on two lines', (WidgetTester tester) async {
+  testWidgets('long sentences show in full', (WidgetTester tester) async {
+    const String long =
+        'moon moon moon moon moon moon moon moon moon moon '
+        'moon moon moon moon moon moon moon moon moon moon moon moon';
     await pumpCaption(tester);
-    await say(
-      tester,
-      CaptionState(text: List<String>.filled(30, 'moon').join(' '), seq: 1),
-    );
+    await say(tester, const CaptionState(text: long, seq: 1));
     final Text text = tester.widget<Text>(
       find.descendant(
         of: find.byKey(StageCaption.lineKey),
         matching: find.byType(Text),
       ),
     );
-    expect(text.maxLines, 2);
-    expect(text.overflow, TextOverflow.ellipsis);
+    expect(text.maxLines, isNull);
+    expect(text.overflow, TextOverflow.visible);
+    expect(find.text(long), findsOneWidget);
   });
 
   testWidgets('is a live region and a tap turns captions off', (

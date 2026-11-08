@@ -82,6 +82,17 @@ class ChatTtsCubit extends Cubit<ChatTtsState> {
   /// sentence starts this long after it is ready to play.
   static const Duration defaultSpeechPreroll = Duration(milliseconds: 350);
 
+  /// Safety net for a lost playback completion (a platform glitch): past the
+  /// audio's own length plus this margin, the sentence ends whether the
+  /// player reported it or not. Without it one lost event would hang the
+  /// playback loop forever and silence every reply after it, until an
+  /// interruption.
+  static const Duration playbackCompletionMargin = Duration(seconds: 5);
+
+  /// Shortest completion watch when neither the player's duration nor the
+  /// amplitude frames say how long the audio is.
+  static const Duration playbackCompletionFloor = Duration(seconds: 3);
+
   final Duration _speechPreroll;
 
   /// Incremented by every interruption: a sentence waiting out its pre-roll
@@ -324,11 +335,50 @@ class ChatTtsCubit extends Cubit<ChatTtsState> {
           }),
         );
       }
+      // The completion watch budget: the audio's own length as far as
+      // anything knows it — the player's duration, the amplitude frames
+      // (they were read from the file itself) and a floor for when both
+      // failed.
+      final Duration completionBudget = <Duration>[
+        audioDuration,
+        Duration(
+          milliseconds:
+              amplitudes.length *
+              AudioAmplitudeService.frameDuration.inMilliseconds,
+        ),
+        playbackCompletionFloor,
+      ].reduce((Duration a, Duration b) => a > b ? a : b);
+      // A lost completion event must not hang the voice on one sentence
+      // forever: past the budget the sentence is over whether the player
+      // said so or not.
+      bool completionTimedOut = false;
+      final Completer<void> completionWatch = Completer<void>();
+      final Timer completionTimer = Timer(
+        completionBudget + playbackCompletionMargin,
+        () {
+          completionTimedOut = true;
+          completionWatch.complete();
+        },
+      );
       await Future.any(<Future<void>>[
         _audioPlayerService.onPlaybackComplete.first,
         stopSignal.future,
+        completionWatch.future,
       ]);
+      completionTimer.cancel();
       sentenceOver = true;
+
+      if (completionTimedOut) {
+        AppLogger.warning(
+          'No playback completion for $audioPath after '
+          '${(completionBudget + playbackCompletionMargin).inMilliseconds} ms,'
+          ' ending the sentence and moving on',
+          tag: 'ChatTtsCubit',
+        );
+        // The player may still be producing sound: stop it before the next
+        // sentence starts.
+        await _audioPlayerService.stop();
+      }
 
       AppLogger.debug('Audio playback completed', tag: 'ChatTtsCubit');
       _amplitudeFutures.remove(audioPath);

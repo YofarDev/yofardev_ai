@@ -57,3 +57,22 @@ def test_every_costume_colours_the_new_grips_and_resets_to_bare_skin() -> None:
                 assert values(objects[original]) == values(objects[duplicate])
                 checked += 1
             assert checked > 0
+
+
+def test_newspaper_is_in_front_of_the_sleeves_with_grips_over_the_page() -> None:
+    root = ET.parse(ROOT / "rive/avatar/avatar.rml").getroot()
+    parents = {c: p for p in root.iter() for c in p}
+    paper = next(e for e in root.iter() if e.get("name") == "Newspaper")
+    shoulder = parents[paper]
+    assert list(shoulder).index(paper) < next(i for i, e in enumerate(shoulder) if e.get("name") == "SwingL")
+    front = next(e for e in paper.iter("Shape") if e.get("name") == "NewsFold")
+    grips = [e for e in root.iter() if e.get("name") == "Hand_newspaperGrip"]
+    assert len(grips) == 2
+    for grip in grips:
+        target = grip.find("DrawRules").find("DrawTarget")
+        assert target.get("drawableId") == front.get("id")
+        solo = parents[grip]
+        used = {a.get("name") for a in root.iter("LinearAnimation") for obj in a
+                if obj.get("objectId") == solo.get("id")
+                for k in obj.iter("KeyFrameId") if k.get("value") == grip.get("id")}
+        assert used and all(n.startswith("prop_newspaper_") for n in used)

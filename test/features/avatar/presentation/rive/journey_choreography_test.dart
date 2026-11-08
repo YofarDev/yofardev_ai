@@ -43,7 +43,9 @@ void main() {
   test('the threshold appears and opens, then holds open for the walk', () {
     expect(_at(JourneyPhase.pullBack, 300).show, 0);
     expect(_at(JourneyPhase.open, 0).show, 0);
-    expect(_at(JourneyPhase.open, 0).passage.clips, isTrue);
+    // the standing avatar is whole while the book opens (its phase bubble
+    // overlays it); the spine clip waits for the fold
+    expect(_at(JourneyPhase.open, 0).passage.clips, isFalse);
     expect(_at(JourneyPhase.open, 300).show, 1);
     expect(
       _at(JourneyPhase.open, 290).open,
@@ -120,7 +122,8 @@ void main() {
         final JourneyFrame f = _at(phase, ms);
         expect(
           (f.show, f.open, f.unfold, f.passage.clips),
-          (1.0, 1.0, 1.0, true),
+          // the avatar is on stage for the beats, in front of the book
+          (1.0, 1.0, 1.0, false),
           reason: '$phase',
         );
       }

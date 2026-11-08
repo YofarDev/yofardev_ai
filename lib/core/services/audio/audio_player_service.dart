@@ -12,6 +12,11 @@ class AudioPlayerService {
   /// Idle second player holding the preloaded next sentence's source.
   AudioPlayer? _nextPlayer;
   String? _preloadedPath;
+
+  /// Plays [playAsset]'s one-shot sounds, apart from the sentence players: a
+  /// sound effect over speech must not replace the sentence, swallow the
+  /// completion the TTS queue waits for, or leave its volume behind.
+  AudioPlayer? _assetPlayer;
   StreamSubscription<void>? _completionSubscription;
   int _playbackGeneration = 0;
 
@@ -55,8 +60,8 @@ class AudioPlayerService {
     if (_preloadedPath == audioPath) {
       return;
     }
-    // Snapshot the generation: if stop()/playAsset() invalidates the preload
-    // while setSource is in flight, the resolved source must not be recorded.
+    // Snapshot the generation: if stop() invalidates the preload while
+    // setSource is in flight, the resolved source must not be recorded.
     final int generation = _playbackGeneration;
     try {
       final AudioPlayer player = (_nextPlayer ??= AudioPlayer());
@@ -134,20 +139,14 @@ class AudioPlayerService {
     }
   }
 
-  /// Play an audio asset from the assets folder
+  /// Play an audio asset from the assets folder, fire-and-forget, on its own
+  /// player: a sentence playing meanwhile plays on and still completes, and
+  /// [stop] (a speech interruption) leaves the asset alone.
   Future<void> playAsset(String assetPath, {double volume = 1.0}) async {
     try {
       AppLogger.debug('Playing asset: $assetPath', tag: 'AudioPlayerService');
 
-      final AudioPlayer player = await _getOrCreatePlayer();
-      // Asset playback is fire-and-forget: its completion must not be
-      // forwarded as a TTS playback completion.
-      _playbackGeneration++;
-      _sourceGeneration = -1;
-      // The main player is hijacked for the asset: any swapped-in player
-      // from here on must not carry a stale preloaded source.
-      _preloadedPath = null;
-
+      final AudioPlayer player = _assetPlayer ??= AudioPlayer();
       await player.setSource(AssetSource(assetPath));
       await player.setVolume(volume);
       await player.resume();
@@ -194,6 +193,11 @@ class AudioPlayerService {
     _nextPlayer = null;
     if (nextPlayer != null) {
       unawaited(nextPlayer.dispose());
+    }
+    final AudioPlayer? assetPlayer = _assetPlayer;
+    _assetPlayer = null;
+    if (assetPlayer != null) {
+      unawaited(assetPlayer.dispose());
     }
     unawaited(_completionSubscription?.cancel());
     _completionSubscription = null;

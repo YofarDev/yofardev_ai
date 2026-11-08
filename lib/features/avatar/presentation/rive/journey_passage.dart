@@ -245,9 +245,11 @@ abstract final class JourneyPassage {
   }
 
   /// The avatar's passage at progress [u] with its `Root` at [x] (the ground
-  /// is y 1000).
+  /// is y 1000). At `u <= 0` it is none for every family: the standing
+  /// avatar (its phase bubble) is whole and overlays the threshold — the
+  /// book's spine clip holds only while it folds into the gutter.
   static AvatarPassage of(JourneyFamily family, double u, double x) {
-    if (u <= 0 && family != JourneyFamily.book) {
+    if (u <= 0) {
       return AvatarPassage.none;
     }
     return switch (family) {

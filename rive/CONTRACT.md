@@ -375,7 +375,9 @@ it when the journey ends.
   rocket with `lift` before boarding and lifts it off empty after the arrival.
 - **v17 (the avatar goes in; no new names, no file change):** the app draws the path, the portal and
   the rocket **under** the avatar (the avatar walks in front of them and into them); the book stays
-  above it, clipped at the spine (x 640) as before. The app stages the avatar into each threshold
+  above it only while the avatar folds into its gutter (the spine clip, x 640, holds just for the
+  passage) and under it otherwise, so the standing avatar — its phase bubble among others — overlays
+  the open book. The app stages the avatar into each threshold
   with the file's own points (`JourneyPassage` in Dart mirrors them; a Python test keeps them
   equal): the portal draws it to a point inside the mouth left of and above the core (PORTAL_X,
   PORTAL_Y), spinning anticlockwise and lit by `vignetteKey`; the path shrinks it down the tunnel
