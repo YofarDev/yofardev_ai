@@ -45,6 +45,11 @@ CANONICAL="$TEMPLATE_ROOT/.agents/skills"
 [[ ! -d "$CANONICAL" ]] && echo "Canonical skills dir not found: $CANONICAL" && exit 1
 
 GREEN='\033[0;32m'; YELLOW='\033[1;33m'; CYAN='\033[0;36m'; DIM='\033[2m'; BOLD='\033[1m'; RESET='\033[0m'
+# Colours only on an interactive terminal: agents, pipes and CI get plain text
+# (ANSI escapes are pure noise in a captured log). NO_COLOR is honoured too.
+if [ ! -t 1 ] || [ -n "${NO_COLOR:-}" ]; then
+  GREEN=''; YELLOW=''; CYAN=''; DIM=''; BOLD=''; RESET=''
+fi
 ok()   { echo -e "  ${GREEN}✓${RESET} $*"; }
 skip() { echo -e "  ${DIM}·${RESET} $*"; }
 diff_(){ echo -e "  ${YELLOW}≠${RESET} $*"; }

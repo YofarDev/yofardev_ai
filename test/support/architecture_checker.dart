@@ -88,8 +88,28 @@ const List<String> serviceLocatorImportAllowlist = <String>[
   'lib/core/router/app_router.dart',
 ];
 
-/// The only file allowed to *register* dependencies.
+/// The app-wide DI composition root.
 const String serviceLocatorPath = 'lib/core/di/service_locator.dart';
+
+/// True for a feature's composition root, `lib/features/<f>/<f>_module.dart`.
+///
+/// A feature module registers that feature's dependencies on the `GetIt` it
+/// receives and declares its routes. Like [serviceLocatorPath] it may import
+/// `package:get_it` and register; it never imports `service_locator.dart`
+/// (the locator is passed in), and other features cannot import it (only the
+/// public barrel crosses feature boundaries).
+bool isFeatureModule(String appRelativePath) =>
+    RegExp(r'^lib/features/([^/]+)/\1_module\.dart$').hasMatch(appRelativePath);
+
+/// Files that may use get_it directly: the [locatorAllowlist] plus feature
+/// modules.
+bool _mayUseLocator(String appRelativePath) =>
+    locatorAllowlist.contains(appRelativePath) ||
+    isFeatureModule(appRelativePath);
+
+/// Files that may register dependencies.
+bool _mayRegister(String appRelativePath) =>
+    appRelativePath == serviceLocatorPath || isFeatureModule(appRelativePath);
 
 /// App paths a domain file must never depend on. The design layer replaces
 /// the template's `lib/core/theme` (project adaptation 3).
@@ -478,15 +498,16 @@ class _AnalyzerRun {
         // External dependency — only `package:get_it` and, in domain, Flutter
         // UI libraries are restricted.
         if (uri.startsWith('package:get_it/') &&
-            !locatorAllowlist.contains(importer.path)) {
+            !_mayUseLocator(importer.path)) {
           violations.add(
             ArchitectureViolation(
               ruleId: 'locator-access',
               path: importer.path,
               line: line,
               explanation:
-                  'imports $uri — get_it is owned by $serviceLocatorPath; '
-                  'features receive dependencies through constructors',
+                  'imports $uri — get_it is owned by $serviceLocatorPath and '
+                  'feature modules (<f>/<f>_module.dart); feature classes '
+                  'receive dependencies through constructors',
             ),
           );
         }
@@ -851,7 +872,7 @@ class _RuleVisitor extends RecursiveAstVisitor<void> {
   @override
   void visitSimpleIdentifier(SimpleIdentifier node) {
     final Element? element = node.element;
-    if (element != null && !locatorAllowlist.contains(_importer.path)) {
+    if (element != null && !_mayUseLocator(_importer.path)) {
       final bool isGetItReference =
           _isGetItElement(element) || _isDiFileVariableElement(element);
       if (isGetItReference) {
@@ -862,8 +883,8 @@ class _RuleVisitor extends RecursiveAstVisitor<void> {
             line: _line(node),
             explanation:
                 "references the service locator ('${node.token.lexeme}') — "
-                'resolution is limited to ${locatorAllowlist.join(', ')}; '
-                'feature classes use constructor injection',
+                'resolution is limited to ${locatorAllowlist.join(', ')} and '
+                'feature modules; feature classes use constructor injection',
           ),
         );
       }
@@ -878,7 +899,7 @@ class _RuleVisitor extends RecursiveAstVisitor<void> {
     if (element != null &&
         (element.name?.startsWith('register') ?? false) &&
         _isGetItElement(element) &&
-        _importer.path != serviceLocatorPath) {
+        !_mayRegister(_importer.path)) {
       _run.violations.add(
         ArchitectureViolation(
           ruleId: 'registration-outside-di',
@@ -886,8 +907,8 @@ class _RuleVisitor extends RecursiveAstVisitor<void> {
           line: _line(node),
           explanation:
               "registers a dependency ('${methodName.name}') outside "
-              '$serviceLocatorPath — registration is owned by the service '
-              'locator only',
+              '$serviceLocatorPath and feature modules '
+              '(lib/features/<f>/<f>_module.dart)',
         ),
       );
     }

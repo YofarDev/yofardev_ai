@@ -1,4 +1,4 @@
-import 'package:fpdart/fpdart.dart';
+import 'package:fpdart/fpdart.dart' show Either;
 
 import '../../../../core/models/failure.dart';
 import '../models/{{FEATURE_SNAKE}}.dart';

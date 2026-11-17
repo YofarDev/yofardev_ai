@@ -24,4 +24,6 @@ class RouteConstants {
   // Debug routes (registered only in debug builds)
   static const String riveLab = '/rive-lab';
   static const String uiLab = '/ui-lab';
+
+  // fgen:route-constants
 }

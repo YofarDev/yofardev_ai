@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fpdart/fpdart.dart';
+import 'package:fpdart/fpdart.dart' show Either;
 import 'package:mocktail/mocktail.dart';
 import 'package:{{PROJECT_NAME}}/core/models/failure.dart';
 import 'package:{{PROJECT_NAME}}/features/{{FEATURE_SNAKE}}/data/datasources/{{FEATURE_SNAKE}}_remote_datasource.dart';

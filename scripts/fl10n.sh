@@ -35,6 +35,11 @@ done
 # -- Colours ------------------------------------------------------------------
 GREEN='\033[0;32m'; YELLOW='\033[1;33m'
 CYAN='\033[0;36m'; BOLD='\033[1m'; DIM='\033[2m'; RESET='\033[0m'
+# Colours only on an interactive terminal: agents, pipes and CI get plain text
+# (ANSI escapes are pure noise in a captured log). NO_COLOR is honoured too.
+if [ ! -t 1 ] || [ -n "${NO_COLOR:-}" ]; then
+  GREEN=''; YELLOW=''; CYAN=''; BOLD=''; DIM=''; RESET=''
+fi
 
 ok() { echo -e "${GREEN}[ ok ]${RESET} $*"; }
 

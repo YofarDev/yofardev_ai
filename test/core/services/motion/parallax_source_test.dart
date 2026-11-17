@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sensors_plus/sensors_plus.dart' show AccelerometerEvent;
 import 'package:yofardev_ai/core/services/motion/parallax_source.dart';
+import 'package:yofardev_ai/core/utils/logger.dart';
 import 'package:yofardev_ai/core/services/power/power_saver_source.dart';
 
 class _FakePower implements PowerSaverSource {
@@ -148,6 +149,11 @@ void main() {
     test(
       'a stream error reads 0, is logged, and the pointer takes over',
       () async {
+        // The suite-wide config silences AppLogger; this test asserts the log.
+        final bool savedLogging = AppLogger.enabled;
+        AppLogger.enabled = true;
+        addTearDown(() => AppLogger.enabled = savedLogging);
+
         final List<String?> logs = <String?>[];
         final DebugPrintCallback saved = debugPrint;
         debugPrint = (String? message, {int? wrapWidth}) => logs.add(message);

@@ -110,9 +110,7 @@ The app uses feature-based Clean Architecture under `lib/features/`, with shared
 Before finishing a change:
 
 ```bash
-dart fix --apply
-dart format .
-./scripts/fverify.sh
+./scripts/fverify.sh --fix
 ```
 
 The local quality gate checks formatting, analyzes the app, and runs tests, including the architecture rules. There are no CI workflows. See [AGENTS.md](AGENTS.md) for project conventions and [scripts/README.md](scripts/README.md) for scaffolding, localization, and asset tools.

@@ -243,6 +243,7 @@ class AppRouter {
                 ),
               ),
         ),
+      // fgen:routes
     ],
     errorBuilder: (BuildContext context, GoRouterState state) => Scaffold(
       body: Center(child: Text(AppLocalizations.of(context).pageNotFound)),

@@ -1,4 +1,4 @@
-import 'package:fpdart/fpdart.dart';
+import 'package:fpdart/fpdart.dart' show Either, Left, Right;
 
 import '../../../../core/errors/exception_mapper.dart';
 import '../../../../core/models/failure.dart';

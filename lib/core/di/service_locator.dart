@@ -672,6 +672,8 @@ Future<void> setupServiceLocator({
       ttsEngineStatusService: getIt<TtsEngineStatusService>(),
     ),
   );
+
+  // fgen:register-features
 }
 
 /// Post-registration bootstrap: data migrations and optional warmup.
