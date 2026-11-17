@@ -14,13 +14,13 @@ import 'presentation/screens/{{FEATURE_SNAKE}}_screen.dart';
 /// routes. Only `service_locator.dart` and `app_router.dart` import this file.
 void register{{FEATURE_PASCAL}}Feature(
   GetIt getIt, {
-  I{{FEATURE_PASCAL}}RemoteDataSource? remoteDataSource,
+  {{FEATURE_PASCAL}}RemoteDataSource? remoteDataSource,
 }) {
-  getIt.registerLazySingleton<I{{FEATURE_PASCAL}}RemoteDataSource>(
-    () => remoteDataSource ?? {{FEATURE_PASCAL}}RemoteDataSource(),
+  getIt.registerLazySingleton<{{FEATURE_PASCAL}}RemoteDataSource>(
+    () => remoteDataSource ?? {{FEATURE_PASCAL}}RemoteDataSourceImpl(),
   );
-  getIt.registerLazySingleton<I{{FEATURE_PASCAL}}Repository>(
-    () => {{FEATURE_PASCAL}}Repository(getIt<I{{FEATURE_PASCAL}}RemoteDataSource>()),
+  getIt.registerLazySingleton<{{FEATURE_PASCAL}}Repository>(
+    () => {{FEATURE_PASCAL}}RepositoryImpl(getIt<{{FEATURE_PASCAL}}RemoteDataSource>()),
   );
 {{MODULE_SERVICE_REGISTRATION}}  getIt.registerFactory<{{FEATURE_PASCAL}}Cubit>(
     () => {{FEATURE_PASCAL}}Cubit(getIt<{{CUBIT_DEP_TYPE}}>()),
@@ -29,7 +29,7 @@ void register{{FEATURE_PASCAL}}Feature(
 
 List<RouteBase> {{FEATURE_CAMEL}}Routes(GetIt getIt) => <RouteBase>[
   GoRoute(
-    path: Routes.{{FEATURE_CAMEL}},
+    path: RouteConstants.{{FEATURE_CAMEL}},
     name: '{{FEATURE_PASCAL}}',
     builder: (BuildContext context, GoRouterState state) =>
         BlocProvider<{{FEATURE_PASCAL}}Cubit>(

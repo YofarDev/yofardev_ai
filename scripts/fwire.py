@@ -51,7 +51,7 @@ def plan(snake: str, pascal: str, camel: str, project: str) -> list[dict]:
                 f"import 'package:{project}/features/{snake}/data/repositories/{snake}_repository_impl.dart';",
                 f"import 'package:{project}/features/{snake}/domain/repositories/{snake}_repository.dart';",
             ],
-            "line": f"expect(getIt<I{pascal}Repository>(), isA<{pascal}Repository>());",
+            "line": f"expect(getIt<{pascal}Repository>(), isA<{pascal}RepositoryImpl>());",
         },
     ]
 

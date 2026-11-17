@@ -8,7 +8,7 @@ import 'package:{{PROJECT_NAME}}/features/{{FEATURE_SNAKE}}/data/datasources/{{F
 import 'package:{{PROJECT_NAME}}/features/{{FEATURE_SNAKE}}/{{FEATURE_SNAKE}}_module.dart';
 import '{{FLOW_TEST_DATA_IMPORT}}';
 
-class _Fake{{FEATURE_PASCAL}}DataSource implements I{{FEATURE_PASCAL}}RemoteDataSource {
+class _Fake{{FEATURE_PASCAL}}DataSource implements {{FEATURE_PASCAL}}RemoteDataSource {
   @override
   Future<{{DATA_SOURCE_RETURN_TYPE}}> getData() async => {{FLOW_TEST_DATA}};
 }
@@ -23,7 +23,7 @@ void main() {
     addTearDown(getIt.reset);
     register{{FEATURE_PASCAL}}Feature(getIt, remoteDataSource: _Fake{{FEATURE_PASCAL}}DataSource());
     final GoRouter router = GoRouter(
-      initialLocation: Routes.{{FEATURE_CAMEL}},
+      initialLocation: RouteConstants.{{FEATURE_CAMEL}},
       routes: {{FEATURE_CAMEL}}Routes(getIt),
     );
     addTearDown(router.dispose);

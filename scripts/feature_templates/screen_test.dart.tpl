@@ -99,16 +99,12 @@ void main() {
       ),
     );
 
-    cubit.pushState(
-      const {{FEATURE_PASCAL}}State.error(failure: Failure.networkError()),
-    );
+    const NetworkFailure failure = NetworkFailure('offline');
+    cubit.pushState({{FEATURE_PASCAL}}State.error(failure: failure));
     await tester.pump();
 
     // The category is localized (English), not a raw exception string.
-    expect(
-      find.text('Network error. Please check your connection.'),
-      findsOneWidget,
-    );
+    expect(find.text('Network error'), findsOneWidget);
 
     await tester.tap(find.byIcon(Icons.refresh));
     await tester.pump();

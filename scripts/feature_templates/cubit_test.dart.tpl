@@ -1,8 +1,8 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fpdart/fpdart.dart' show Left, Right;
 import 'package:mocktail/mocktail.dart';
 import 'package:{{PROJECT_NAME}}/core/models/failure.dart';
+import 'package:{{PROJECT_NAME}}/core/models/result.dart';
 import 'package:{{PROJECT_NAME}}/features/{{FEATURE_SNAKE}}/domain/models/{{FEATURE_SNAKE}}.dart';
 import '{{CUBIT_TEST_MOCK_IMPORT}}';
 import 'package:{{PROJECT_NAME}}/features/{{FEATURE_SNAKE}}/presentation/bloc/{{FEATURE_SNAKE}}_cubit.dart';
@@ -15,6 +15,9 @@ class Mock{{CUBIT_TEST_MOCK_TYPE}} extends Mock implements {{CUBIT_TEST_MOCK_TYP
 /// cases here only for logic this cubit owns.
 void main() {
   group('{{FEATURE_PASCAL}}Cubit', () {
+    // One shared instance: [Failure] has no == override, so identity is what
+    // makes the emitted and expected error states equal.
+    const NetworkFailure failure = NetworkFailure('offline');
     late {{FEATURE_PASCAL}}Cubit cubit;
     late Mock{{CUBIT_TEST_MOCK_TYPE}} mockSource;
 
@@ -35,7 +38,9 @@ void main() {
       'emits [loading, loaded] when loadData is successful',
       build: () {
         when(() => mockSource.getData()).thenAnswer(
-          (_) async => const Right<Failure, {{FEATURE_PASCAL}}>({{FEATURE_PASCAL}}(id: '1', name: 'Test')),
+          (_) async => Result<{{FEATURE_PASCAL}}>.ok(
+            const {{FEATURE_PASCAL}}(id: '1', name: 'Test'),
+          ),
         );
         return cubit;
       },
@@ -50,14 +55,14 @@ void main() {
       'emits [loading, error] when loadData fails',
       build: () {
         when(() => mockSource.getData()).thenAnswer(
-          (_) async => const Left<Failure, {{FEATURE_PASCAL}}>(Failure.networkError()),
+          (_) async => Result<{{FEATURE_PASCAL}}>.err(failure),
         );
         return cubit;
       },
       act: ({{FEATURE_PASCAL}}Cubit cubit) => cubit.loadData(),
       expect: () => <{{FEATURE_PASCAL}}State>[
         const {{FEATURE_PASCAL}}State.loading(),
-        const {{FEATURE_PASCAL}}State.error(failure: Failure.networkError()),
+        {{FEATURE_PASCAL}}State.error(failure: failure),
       ],
     );
   });

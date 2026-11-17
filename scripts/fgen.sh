@@ -337,7 +337,7 @@ render_job w "$STAGE_LIB/presentation/bloc/${FEATURE_SNAKE}_state.dart" state.da
 # --- 13. Presentation Layer: Cubit ------------------------------------------------------
 # The cubit depends on the repository interface directly (lean default) or on
 # the domain service (--with-service) — never on another cubit.
-CUBIT_DEP_TYPE="I${FEATURE_PASCAL}Repository"
+CUBIT_DEP_TYPE="${FEATURE_PASCAL}Repository"
 CUBIT_DEP_IMPORT="'../../domain/repositories/${FEATURE_SNAKE}_repository.dart'"
 if [ "$WITH_SERVICE" = true ]; then
     CUBIT_DEP_TYPE="${FEATURE_PASCAL}Service"
@@ -352,7 +352,7 @@ if [ "$WITH_SERVICE" = true ]; then
     MODULE_SERVICE_IMPORT="import 'domain/services/${FEATURE_SNAKE}_service.dart';
 "
     MODULE_SERVICE_REGISTRATION="  getIt.registerLazySingleton<${FEATURE_PASCAL}Service>(
-    () => ${FEATURE_PASCAL}Service(getIt<I${FEATURE_PASCAL}Repository>()),
+    () => ${FEATURE_PASCAL}Service(getIt<${FEATURE_PASCAL}Repository>()),
   );
 "
 fi
@@ -388,7 +388,7 @@ if [ "$WITH_SERVICE" = true ]; then
 fi
 
 # --- 17. Test Layer: Cubit Test -------------------------------------------------------------
-CUBIT_TEST_MOCK_TYPE="I${FEATURE_PASCAL}Repository"
+CUBIT_TEST_MOCK_TYPE="${FEATURE_PASCAL}Repository"
 CUBIT_TEST_MOCK_IMPORT="package:$PROJECT_NAME/features/$FEATURE_SNAKE/domain/repositories/${FEATURE_SNAKE}_repository.dart"
 if [ "$WITH_SERVICE" = true ]; then
     CUBIT_TEST_MOCK_TYPE="${FEATURE_PASCAL}Service"
