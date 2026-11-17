@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// A reusable section widget for function calling configuration
 class FunctionCallingSection extends StatelessWidget {

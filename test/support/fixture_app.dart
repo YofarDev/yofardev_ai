@@ -20,7 +20,7 @@ final Map<String, String> fixtureApp = <String, String>{
   'lib/core/l10n/generated/app_localizations.dart':
       'class AppLocalizations {}\n',
   'lib/main.dart': '''
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import 'app.dart';
 import 'core/di/service_locator.dart';
@@ -32,7 +32,7 @@ Future<void> main() async {
 }
 ''',
   'lib/app.dart': '''
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'core/di/service_locator.dart';
@@ -81,7 +81,7 @@ Future<void> setupServiceLocator() async {
 }
 ''',
   'lib/core/router/app_router.dart': '''
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
@@ -108,7 +108,7 @@ class AppRouter {
 }
 ''',
   'lib/core/theme/app_theme.dart': '''
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 class AppTheme {
   AppTheme._();
@@ -117,7 +117,7 @@ class AppTheme {
 }
 ''',
   'lib/core/design/design.dart': '''
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 class AppDesign {
   AppDesign._();
@@ -233,7 +233,7 @@ class AlphaCubit extends Cubit<AlphaState> {
 }
 ''',
   'lib/features/alpha/presentation/screens/alpha_screen.dart': '''
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../bloc/alpha_cubit.dart';
@@ -281,7 +281,7 @@ class BetaRepository implements BetaContract {
 }
 ''',
   'lib/features/beta/presentation/beta_screen.dart': '''
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 class BetaScreen extends StatelessWidget {
   const BetaScreen({super.key});

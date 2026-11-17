@@ -61,7 +61,14 @@ def add_imports(text: str, imports: list[str]) -> str:
     if not missing:
         return text
     lines = text.split("\n")
-    last = max((n for n, line in enumerate(lines) if line.startswith("import ")), default=-1)
+    last = -1
+    n = 0
+    while n < len(lines):
+        if lines[n].startswith("import "):
+            while n < len(lines) and ";" not in lines[n]:
+                n += 1  # multi-line directive: run to its closing `;`
+            last = n
+        n += 1
     lines[last + 1:last + 1] = missing
     return "\n".join(lines)
 

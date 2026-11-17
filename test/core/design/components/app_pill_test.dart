@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:golden_toolkit/golden_toolkit.dart';
@@ -8,6 +8,7 @@ import 'package:yofardev_ai/core/design/design.dart';
 
 import '../../../helpers/golden_test_helper.dart';
 import 'component_test_harness.dart';
+import 'package:yofardev_ai/core/l10n/app_localization_delegates.dart';
 
 void main() {
   setUpAll(() async {
@@ -188,6 +189,8 @@ void main() {
       expect(theme.colorScheme.primary, isNot(amber));
       await tester.pumpWidget(
         MaterialApp(
+          localizationsDelegates: appLocalizationsDelegates,
+          supportedLocales: const <Locale>[Locale('en'), Locale('fr')],
           theme: theme,
           home: Material(
             child: Center(

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:yofardev_ai/core/design/components/components.dart';
@@ -9,6 +9,7 @@ import 'package:yofardev_ai/features/avatar/avatar.dart';
 import 'package:yofardev_ai/features/home/screens/ui_lab_screen.dart';
 import 'package:yofardev_ai/features/home/widgets/lab/lab_service_extension.dart';
 import 'package:yofardev_ai/features/talking/talking.dart';
+import 'package:yofardev_ai/core/l10n/app_localization_delegates.dart';
 
 /// Fake builder: no font is ever loaded.
 TextTheme _fakeTextTheme(LookFonts fonts, ColorScheme scheme) =>
@@ -46,6 +47,8 @@ void main() {
     final _FaceProbe probe = _FaceProbe();
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: appLocalizationsDelegates,
+        supportedLocales: const <Locale>[Locale('en'), Locale('fr')],
         theme: AppTheme.dark,
         home: UiLabScreen(
           textThemeBuilder: _fakeTextTheme,

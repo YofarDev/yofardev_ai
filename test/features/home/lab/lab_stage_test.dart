@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:yofardev_ai/core/design/looks/looks.dart';
 import 'package:yofardev_ai/core/models/avatar_scene.dart';
@@ -10,6 +10,7 @@ import 'package:yofardev_ai/features/home/widgets/lab/lab_config.dart';
 import 'package:yofardev_ai/features/home/widgets/lab/lab_stage_preview.dart';
 import 'package:yofardev_ai/features/avatar/avatar.dart';
 import 'package:yofardev_ai/features/talking/talking.dart';
+import 'package:yofardev_ai/core/l10n/app_localization_delegates.dart';
 
 /// Fake builder: no font is ever loaded.
 TextTheme _fakeTextTheme(LookFonts fonts, ColorScheme scheme) =>
@@ -73,6 +74,8 @@ Widget _harness(
   bool disableAnimations = false,
 }) {
   return MaterialApp(
+    localizationsDelegates: appLocalizationsDelegates,
+    supportedLocales: const <Locale>[Locale('en'), Locale('fr')],
     theme: buildLookTheme(
       UiLooks.storybook,
       config.scene,

@@ -1,6 +1,6 @@
 // ignore-l10n: debug — the UI lab is debug-only; its strings are hardcoded.
 import 'package:flutter/foundation.dart' show ValueListenable;
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../../../../core/design/design.dart';
 import '../../../../core/models/avatar_config.dart';

@@ -1,8 +1,9 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:yofardev_ai/core/design/design.dart';
+import 'package:yofardev_ai/core/l10n/app_localization_delegates.dart';
 import 'package:yofardev_ai/core/l10n/generated/app_localizations.dart';
 import 'package:yofardev_ai/core/router/route_constants.dart';
 import 'package:yofardev_ai/core/services/llm/llm_service_interface.dart';
@@ -58,7 +59,7 @@ void main() {
       MaterialApp.router(
         theme: AppTheme.dark,
         locale: const Locale('en'),
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        localizationsDelegates: appLocalizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         routerConfig: router,
       ),

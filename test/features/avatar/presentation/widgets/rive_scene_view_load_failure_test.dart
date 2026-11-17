@@ -1,11 +1,12 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:yofardev_ai/core/models/avatar_scene.dart';
 import 'package:yofardev_ai/features/avatar/presentation/widgets/rive/rive_scene_view.dart';
 
 import '../../../../helpers/rive_test_assets.dart';
+import 'package:yofardev_ai/core/l10n/app_localization_delegates.dart';
 
 /// A scene whose `.riv` is not bundled makes `rootBundle.load` throw a
 /// `FlutterError` (an `Error`, not an `Exception`): the view must catch it,
@@ -51,6 +52,8 @@ void main() {
     final List<AvatarScene> shown = <AvatarScene>[];
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: appLocalizationsDelegates,
+        supportedLocales: const <Locale>[Locale('en'), Locale('fr')],
         home: RiveSceneView(
           scene: AvatarScene.cafe,
           sceneEvent: (sceneEvent: SceneEvent.espresso, seq: 0),
@@ -75,6 +78,8 @@ void main() {
     serveWithout(AvatarScene.rooftop);
     await tester.pumpWidget(
       const MaterialApp(
+        localizationsDelegates: appLocalizationsDelegates,
+        supportedLocales: <Locale>[Locale('en'), Locale('fr')],
         home: RiveSceneView(
           scene: AvatarScene.livingRoom,
           sceneEvent: (sceneEvent: SceneEvent.lightsOff, seq: 0),
@@ -90,6 +95,8 @@ void main() {
       'the next switch', (WidgetTester tester) async {
     serveWithout(AvatarScene.mountainHut);
     Widget stage(AvatarScene scene) => MaterialApp(
+      localizationsDelegates: appLocalizationsDelegates,
+      supportedLocales: const <Locale>[Locale('en'), Locale('fr')],
       home: RiveSceneView(
         scene: scene,
         sceneEvent: (sceneEvent: SceneEvent.flare, seq: 0),

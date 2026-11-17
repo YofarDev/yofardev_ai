@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Widget displaying a preview of a selected image
 class PickedImagePreview extends StatelessWidget {

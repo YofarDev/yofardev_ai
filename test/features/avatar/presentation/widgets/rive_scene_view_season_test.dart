@@ -1,10 +1,11 @@
 // ignore_for_file: invalid_use_of_protected_member, invalid_use_of_visible_for_testing_member
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:yofardev_ai/core/models/avatar_scene.dart';
 import 'package:yofardev_ai/features/avatar/presentation/widgets/rive/rive_scene_view.dart';
 
 import '../../../../helpers/rive_test_assets.dart';
+import 'package:yofardev_ai/core/l10n/app_localization_delegates.dart';
 
 void main() {
   setUp(serveFakeRiveAssets);
@@ -20,6 +21,8 @@ void main() {
     addTearDown(spring2.dispose);
 
     Widget view(ValueNotifier<double> s) => MaterialApp(
+      localizationsDelegates: appLocalizationsDelegates,
+      supportedLocales: const <Locale>[Locale('en'), Locale('fr')],
       home: RiveSceneView(
         scene: AvatarScene.forestCabin,
         sceneEvent: (sceneEvent: SceneEvent.gust, seq: 0),

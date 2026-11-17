@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:yofardev_ai/core/models/avatar_scene.dart';
 import 'package:yofardev_ai/core/models/performance/performance.dart';
@@ -6,6 +6,7 @@ import 'package:yofardev_ai/features/avatar/presentation/rive/scene_front_follow
 import 'package:yofardev_ai/features/avatar/presentation/widgets/rive/rive_scene_view.dart';
 
 import '../../../../helpers/rive_test_assets.dart';
+import 'package:yofardev_ai/core/l10n/app_localization_delegates.dart';
 
 void main() {
   group('tier gates (M11 ruling 13)', () {
@@ -75,6 +76,8 @@ void main() {
     addTearDown(tier.dispose);
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: appLocalizationsDelegates,
+        supportedLocales: const <Locale>[Locale('en'), Locale('fr')],
         home: RiveSceneView(
           scene: AvatarScene.campfire,
           sceneEvent: (sceneEvent: SceneEvent.flare, seq: 0),

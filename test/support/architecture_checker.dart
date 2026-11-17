@@ -1127,7 +1127,9 @@ bool _isFlutterUiImport(String uri) {
     return false;
   }
   return uri.startsWith('package:flutter/') ||
-      uri.startsWith('package:flutter_localizations/');
+      uri.startsWith('package:flutter_localizations/') ||
+      uri.startsWith('package:material_ui/') ||
+      uri.startsWith('package:cupertino_ui/');
 }
 
 /// Whether [appPath] is an app-owned file domain must not depend on.

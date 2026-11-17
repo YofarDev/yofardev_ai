@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:yofardev_ai/core/models/performance/speech_timeline.dart';
@@ -37,6 +37,7 @@ import 'package:yofardev_ai/features/sound/domain/tts_queue_item.dart';
 import 'package:yofardev_ai/features/talking/domain/repositories/talking_repository.dart';
 import 'package:yofardev_ai/features/talking/domain/services/tts_playback_service.dart';
 import 'package:yofardev_ai/features/talking/presentation/bloc/talking_cubit.dart';
+import 'package:yofardev_ai/core/l10n/app_localization_delegates.dart';
 
 class MockAvatarRepository extends Mock implements AvatarRepository {}
 
@@ -486,6 +487,8 @@ void main() {
       // Arrange
       await tester.pumpWidget(
         MaterialApp(
+          localizationsDelegates: appLocalizationsDelegates,
+          supportedLocales: const <Locale>[Locale('en'), Locale('fr')],
           home: MultiBlocProvider(
             providers: <BlocProvider<dynamic>>[
               BlocProvider<ChatCubit>.value(value: chatsCubit),
@@ -511,6 +514,8 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
+          localizationsDelegates: appLocalizationsDelegates,
+          supportedLocales: const <Locale>[Locale('en'), Locale('fr')],
           home: MultiBlocProvider(
             providers: <BlocProvider<dynamic>>[
               BlocProvider<ChatCubit>.value(value: chatsCubit),
@@ -536,6 +541,8 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
+          localizationsDelegates: appLocalizationsDelegates,
+          supportedLocales: const <Locale>[Locale('en'), Locale('fr')],
           home: MultiBlocProvider(
             providers: <BlocProvider<dynamic>>[
               BlocProvider<ChatCubit>.value(value: chatsCubit),
@@ -568,6 +575,8 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
+          localizationsDelegates: appLocalizationsDelegates,
+          supportedLocales: const <Locale>[Locale('en'), Locale('fr')],
           home: MultiBlocProvider(
             providers: <BlocProvider<dynamic>>[
               BlocProvider<ChatCubit>.value(value: chatsCubit),

@@ -78,7 +78,7 @@ Or simply run your app - the code will be generated automatically if
 Import the generated localization class and use it in your widgets:
 
 ```dart
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'core/l10n/generated/app_localizations.dart';
 
 class MyWidget extends StatelessWidget {

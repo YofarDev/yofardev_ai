@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:rive/rive.dart' show RiveHitTestBehavior;
 import 'package:yofardev_ai/core/models/avatar_scene.dart';
@@ -15,6 +15,7 @@ import 'package:yofardev_ai/features/avatar/presentation/widgets/rive/rive_scene
 import 'package:yofardev_ai/features/avatar/presentation/widgets/stage_camera.dart';
 
 import '../../../../helpers/rive_test_assets.dart';
+import 'package:yofardev_ai/core/l10n/app_localization_delegates.dart';
 
 const Size _phone = Size(390, 844);
 
@@ -77,6 +78,8 @@ void main() {
     );
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: appLocalizationsDelegates,
+        supportedLocales: const <Locale>[Locale('en'), Locale('fr')],
         home: Scaffold(
           body: shot == null ? scene : StageCamera(shot: shot, child: scene),
         ),
@@ -213,6 +216,8 @@ void main() {
     final double before = vm['cord']!;
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: appLocalizationsDelegates,
+        supportedLocales: const <Locale>[Locale('en'), Locale('fr')],
         home: Scaffold(
           body: RiveSceneView(
             scene: AvatarScene.campfire,

@@ -1,10 +1,9 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:nested/nested.dart';
 
 import 'core/di/service_locator.dart';
-import 'core/l10n/generated/app_localizations.dart';
+import 'core/l10n/app_localization_delegates.dart';
 import 'core/services/audio/interruption_service.dart';
 import 'core/design/design.dart';
 import 'core/router/app_router.dart';
@@ -85,12 +84,10 @@ class AppView extends StatelessWidget {
               debugShowCheckedModeBanner: false,
               locale: Locale(settings.currentLanguage),
               supportedLocales: const <Locale>[Locale('fr'), Locale('en')],
-              localizationsDelegates: const <LocalizationsDelegate<dynamic>>[
-                AppLocalizations.delegate,
-                GlobalMaterialLocalizations.delegate,
-                GlobalWidgetsLocalizations.delegate,
-                GlobalCupertinoLocalizations.delegate,
-              ],
+              // material_ui widgets read material_ui's localizations, so the
+              // shared delegate list (not the gen-l10n flutter_localizations
+              // one) is what makes non-English locales resolve.
+              localizationsDelegates: appLocalizationsDelegates,
               theme: AppTheme.forScene(scene),
               themeMode: ThemeMode.dark,
               themeAnimationDuration: AppMotion.slow,

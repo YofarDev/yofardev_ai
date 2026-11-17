@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:yofardev_ai/features/avatar/presentation/rive/journey_passage.dart';
 import 'package:yofardev_ai/features/avatar/presentation/widgets/rive/avatar_passage_box.dart';

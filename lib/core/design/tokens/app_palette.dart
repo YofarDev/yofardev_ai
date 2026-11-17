@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Raw hex values of the shipping look, Storybook night: a lamp-lit picture
 /// book seen from a dark theatre. Used only inside `lib/core/design/`; the

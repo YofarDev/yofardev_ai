@@ -1,8 +1,9 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:yofardev_ai/core/design/theme/app_theme.dart';
 import 'package:yofardev_ai/core/widgets/glassmorphic/glassmorphic_text_field.dart';
+import 'package:yofardev_ai/core/l10n/app_localization_delegates.dart';
 
 /// Pins the drawn hint/label geometry of [GlassmorphicTextField] to what the
 /// pre-migration widget (direct `GoogleFonts.plusJakartaSans` styles, commit
@@ -19,6 +20,8 @@ void main() {
   ) async {
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: appLocalizationsDelegates,
+        supportedLocales: const <Locale>[Locale('en'), Locale('fr')],
         theme: AppTheme.dark,
         home: const Scaffold(
           body: GlassmorphicTextField(hintText: 'Hint', labelText: 'Label'),

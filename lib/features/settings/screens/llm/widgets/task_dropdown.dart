@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import '../../../../../core/models/llm_config.dart';
 import '../../../../../core/design/design.dart';
 import 'styled_dropdown.dart';
