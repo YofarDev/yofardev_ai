@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:{{PROJECT_NAME}}/core/bloc/latest_request_wins.dart';
 import 'package:{{PROJECT_NAME}}/core/l10n/generated/app_localizations.dart';
 import 'package:{{PROJECT_NAME}}/core/models/failure.dart';
 import 'package:{{PROJECT_NAME}}/features/{{FEATURE_SNAKE}}/domain/models/{{FEATURE_SNAKE}}.dart';
@@ -10,6 +11,7 @@ import 'package:{{PROJECT_NAME}}/features/{{FEATURE_SNAKE}}/presentation/screens
 
 /// Fake cubit so tests can push states without driving the real repository.
 class Fake{{FEATURE_PASCAL}}Cubit extends Cubit<{{FEATURE_PASCAL}}State>
+    with LatestRequestWins<{{FEATURE_PASCAL}}State>
     implements {{FEATURE_PASCAL}}Cubit {
   Fake{{FEATURE_PASCAL}}Cubit() : super(const {{FEATURE_PASCAL}}State.initial());
 
@@ -97,16 +99,12 @@ void main() {
       ),
     );
 
-    cubit.pushState(
-      const {{FEATURE_PASCAL}}State.error(failure: Failure.networkError()),
-    );
+    const NetworkFailure failure = NetworkFailure('offline');
+    cubit.pushState({{FEATURE_PASCAL}}State.error(failure: failure));
     await tester.pump();
 
     // The category is localized (English), not a raw exception string.
-    expect(
-      find.text('Network error. Please check your connection.'),
-      findsOneWidget,
-    );
+    expect(find.text('Network error'), findsOneWidget);
 
     await tester.tap(find.byIcon(Icons.refresh));
     await tester.pump();

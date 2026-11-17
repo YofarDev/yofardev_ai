@@ -40,7 +40,9 @@ import 'package:yofardev_ai/features/talking/presentation/bloc/talking_cubit.dar
 /// (AudioPlayerService, AudioAmplitudeService, VoiceEffectsService,
 /// TtsDatasource) touch platform channels when *used*; here they are only
 /// constructed, which is safe. If construction itself ever needs a channel,
-/// exclude that one type here with a comment naming the plugin.
+/// exclude that one type here with a comment naming the plugin. `fgen`
+/// adds a resolve line per generated feature at the `// fgen:resolve`
+/// marker; add one for every hand-written registration.
 void main() {
   test('service locator resolves the pure-Dart dependency graph', () async {
     // Plugin-backed audio types construct audioplayers AudioPlayers that
@@ -58,6 +60,7 @@ void main() {
     expect(getIt<SoundRepository>(), isNotNull);
     expect(getIt<TalkingRepository>(), isNotNull);
     expect(getIt<DemoRepository>(), isNotNull);
+    // fgen:resolve
 
     // Cross-feature domain services
     expect(getIt<ToolRegistry>(), isNotNull);

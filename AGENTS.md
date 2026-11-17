@@ -46,8 +46,9 @@ dart format .
 | Script | Purpose |
 |--------|---------|
 | `./scripts/fverify.sh` | Quality gate — run before finishing any change |
-| `./scripts/fgen.sh "name" [--with-service] [--with-dto]` | Scaffold a new Clean Architecture feature + codegen; refuses to overwrite existing features |
-| `./scripts/fstr.sh "key" "FR" "EN"` | Add an l10n key to both ARB files, then regenerate |
+| `./scripts/fmap.sh` | Read-only project map: one line per feature (routes, wiring, layers, barrel dependencies) |
+| `./scripts/fgen.sh "name" [--with-service] [--with-dto]` | Scaffold a new Clean Architecture feature (module, barrel, tests, translations) and wire it at the `// fgen:` markers; refuses existing feature directories |
+| `./scripts/fstr.sh "key" "FR" "EN" [key "FR" "EN"]...` | Add l10n keys to both ARB files (several triples in one call), then regenerate once |
 | `./scripts/fl10n.sh` | Find hardcoded user-facing strings missing `AppLocalizations` |
 | `./scripts/fimp.sh [--apply]` | Preview (default) or apply broken-import repairs |
 | `./scripts/fanal.sh` / `fdead.sh` / `fcheck.sh` | Advisory audits: analysis report / unreferenced files / dependency inventory — findings need manual review |
@@ -431,7 +432,7 @@ imports and the design-layer rules, so `flutter test` fails on violation.
 - Fresh worktree: `rive_native` host tests fail with "Failed to lookup symbol 'init'" until
   `mkdir -p build/rive_native && ln -sfn ~/.pub-cache/hosted/pub.dev/rive_native-0.1.11/native build/rive_native/native`
   (gitignored)
-- New features: use `./scripts/fgen.sh`, then wire DI (`service_locator.dart`) and route (`core/router/app_router.dart`) manually — a generated scaffold is not routed/registered until then
+- New features: use `./scripts/fgen.sh` — it wires the module into DI, router and the DI test at the `// fgen:` markers in `service_locator.dart`, `app_router.dart`, `route_constants.dart` and the DI test; hand-written features register as before
 
 ### Key Files
 
@@ -493,5 +494,6 @@ Each feature except `home` exposes a public API barrel at
 
 ---
 
-**Last Updated**: 2026-11-02 (analyzer-based architecture gate from
+**Last Updated**: 2026-11-17 (FlutterForge template upgrade to 6053fbf; feature-module
+checker rule, fgen auto-wiring markers, fverify --fix, fmap) — analyzer-based architecture gate from
 FlutterForge, shared repository contracts in `core/repositories/`)

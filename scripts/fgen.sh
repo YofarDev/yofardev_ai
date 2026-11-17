@@ -47,6 +47,11 @@ GREEN='\033[0;32m'
 BLUE='\033[0;34m'
 RED='\033[0;31m'
 NC='\033[0m' # No Color
+# Colours only on an interactive terminal: agents, pipes and CI get plain text
+# (ANSI escapes are pure noise in a captured log). NO_COLOR is honoured too.
+if [ ! -t 1 ] || [ -n "${NO_COLOR:-}" ]; then
+  GREEN=''; BLUE=''; RED=''; NC=''
+fi
 
 err() {
     echo -e "${RED}Error: $*${NC}" >&2
@@ -204,25 +209,30 @@ for arb in "$APP_ROOT/lib/core/l10n/app_localizations_en.arb" \
     done
 done
 
-echo -e "${BLUE}🚀 Generating boilerplate for feature: ${GREEN}$FEATURE_SNAKE${NC}"
-echo -e "${BLUE}   Project: ${GREEN}$PROJECT_NAME${NC}"
-echo -e "${BLUE}   App root: ${GREEN}$APP_ROOT${NC}"
-echo -e "${BLUE}   Layout: ${GREEN}lean$( [ "$WITH_SERVICE" = true ] && printf ' + service' )$( [ "$WITH_DTO" = true ] && printf ' + dto' )${NC}"
+echo "Generating feature $FEATURE_SNAKE (lean$( [ "$WITH_SERVICE" = true ] && printf ' + service' )$( [ "$WITH_DTO" = true ] && printf ' + dto' )) in $PROJECT_NAME..."
 
 # Templates are explicit shipped assets; render data without shell evaluation.
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TEMPLATE_DIR="$SCRIPT_DIR/feature_templates"
-for template in domain_model.dart.tpl repository_contract.dart.tpl domain_service.dart.tpl remote_datasource.dart.tpl dto.dart.tpl repository_impl_imports.dart.tpl repository_impl_dto_import.dart.tpl repository_impl_body.dart.tpl state.dart.tpl cubit.dart.tpl screen.dart.tpl repository_test_imports.dart.tpl repository_test_dto_import.dart.tpl repository_test_setup.dart.tpl repository_test_dto_result.dart.tpl repository_test_domain_result.dart.tpl repository_test_body.dart.tpl dto_test.dart.tpl service_test.dart.tpl cubit_test.dart.tpl screen_test.dart.tpl; do
+for template in barrel.dart.tpl module.dart.tpl flow_test.dart.tpl domain_model.dart.tpl repository_contract.dart.tpl domain_service.dart.tpl remote_datasource.dart.tpl dto.dart.tpl repository_impl_imports.dart.tpl repository_impl_dto_import.dart.tpl repository_impl_body.dart.tpl state.dart.tpl cubit.dart.tpl screen.dart.tpl repository_test_imports.dart.tpl repository_test_dto_import.dart.tpl repository_test_setup.dart.tpl repository_test_dto_result.dart.tpl repository_test_domain_result.dart.tpl repository_test_body.dart.tpl dto_test.dart.tpl service_test.dart.tpl cubit_test.dart.tpl screen_test.dart.tpl; do
     if [ ! -f "$TEMPLATE_DIR/$template" ]; then
         err "Required feature template missing: $template"
         exit 1
     fi
 done
 [ -f "$SCRIPT_DIR/render_feature.py" ] || { err "Feature renderer missing."; exit 1; }
-render_template() {
-    local template="$1"
-    shift
-    uv run --no-project "$SCRIPT_DIR/render_feature.py" "$TEMPLATE_DIR/$template" "$@"
+[ -f "$SCRIPT_DIR/fwire.py" ] || { err "Feature wiring helper missing."; exit 1; }
+# Refuse a route-constant collision before anything is written.
+if ! uv run --no-project "$SCRIPT_DIR/fwire.py" check "$APP_ROOT" "$FEATURE_SNAKE" "$FEATURE_PASCAL" "$FEATURE_CAMEL" "$PROJECT_NAME"; then
+    err "Refusing to generate: choose another feature name."
+    exit 1
+fi
+# Rendering is queued and done by ONE renderer process (see step 18c): a job
+# is "mode output template pair-count key value...", NUL-separated.
+render_job() {
+    local mode="$1" output="$2" template="$3"
+    shift 3
+    printf '%s\0' "$mode" "$output" "$TEMPLATE_DIR/$template" "$(( $# / 2 ))" "$@" >> "$STAGE_ROOT/render.jobs"
 }
 
 # --- 5. Render into an owned temporary directory ------------------------------------
@@ -237,7 +247,6 @@ trap cleanup EXIT
 STAGE_LIB="$STAGE_ROOT/lib/features/$FEATURE_SNAKE"
 STAGE_TEST="$STAGE_ROOT/test/features/$FEATURE_SNAKE"
 
-echo -e "${BLUE}📂 Rendering directories...${NC}"
 # NOTE: every path is quoted and passed as a single argument. Do NOT collect
 # the optional directories into an unquoted variable for word splitting — an
 # app root containing spaces would silently create wrong directories and the
@@ -263,14 +272,21 @@ fi
 # The domain model is the app's representation. Without --with-dto there is no
 # transport schema to serialize against, so no fromJson/$...g.dart is emitted;
 # add one only when the domain model itself must cross a persistence boundary.
-render_template domain_model.dart.tpl FEATURE_PASCAL "$FEATURE_PASCAL" FEATURE_SNAKE "$FEATURE_SNAKE" > "$STAGE_LIB/domain/models/${FEATURE_SNAKE}.dart"
+render_job w "$STAGE_LIB/domain/models/${FEATURE_SNAKE}.dart" domain_model.dart.tpl FEATURE_PASCAL "$FEATURE_PASCAL" FEATURE_SNAKE "$FEATURE_SNAKE"
+
+# --- 6b. Public barrel: the only file other features may import -------------
+BARREL_SERVICE_EXPORT=""
+if [ "$WITH_SERVICE" = true ]; then
+    BARREL_SERVICE_EXPORT="export 'domain/services/${FEATURE_SNAKE}_service.dart';"
+fi
+render_job w "$STAGE_LIB/${FEATURE_SNAKE}.dart" barrel.dart.tpl BARREL_SERVICE_EXPORT "$BARREL_SERVICE_EXPORT" FEATURE_SNAKE "$FEATURE_SNAKE"
 
 # --- 7. Domain Layer: Repository Interface ---
-render_template repository_contract.dart.tpl FEATURE_PASCAL "$FEATURE_PASCAL" FEATURE_SNAKE "$FEATURE_SNAKE" > "$STAGE_LIB/domain/repositories/${FEATURE_SNAKE}_repository.dart"
+render_job w "$STAGE_LIB/domain/repositories/${FEATURE_SNAKE}_repository.dart" repository_contract.dart.tpl FEATURE_PASCAL "$FEATURE_PASCAL" FEATURE_SNAKE "$FEATURE_SNAKE"
 
 # --- 8. Domain Layer: Service (only with --with-service) ------------------------------
 if [ "$WITH_SERVICE" = true ]; then
-    render_template domain_service.dart.tpl FEATURE_PASCAL "$FEATURE_PASCAL" FEATURE_SNAKE "$FEATURE_SNAKE" > "$STAGE_LIB/domain/services/${FEATURE_SNAKE}_service.dart"
+    render_job w "$STAGE_LIB/domain/services/${FEATURE_SNAKE}_service.dart" domain_service.dart.tpl FEATURE_PASCAL "$FEATURE_PASCAL" FEATURE_SNAKE "$FEATURE_SNAKE"
 fi
 
 # --- 9. Data Layer: Data Source (interface + placeholder implementation) --------------
@@ -291,11 +307,11 @@ if [ "$WITH_DTO" = true ]; then
     DATA_SOURCE_RETURN_DOC="// Returns the transport DTO; the repository maps it to the domain model
     // inside its guarded boundary."
 fi
-render_template remote_datasource.dart.tpl DATA_SOURCE_CONSTRUCTION "$DATA_SOURCE_CONSTRUCTION" DATA_SOURCE_IMPORTS "$DATA_SOURCE_IMPORTS" DATA_SOURCE_RETURN_DOC "$DATA_SOURCE_RETURN_DOC" DATA_SOURCE_RETURN_TYPE "$DATA_SOURCE_RETURN_TYPE" FEATURE_PASCAL "$FEATURE_PASCAL" > "$STAGE_LIB/data/datasources/${FEATURE_SNAKE}_remote_datasource.dart"
+render_job w "$STAGE_LIB/data/datasources/${FEATURE_SNAKE}_remote_datasource.dart" remote_datasource.dart.tpl DATA_SOURCE_CONSTRUCTION "$DATA_SOURCE_CONSTRUCTION" DATA_SOURCE_IMPORTS "$DATA_SOURCE_IMPORTS" DATA_SOURCE_RETURN_DOC "$DATA_SOURCE_RETURN_DOC" DATA_SOURCE_RETURN_TYPE "$DATA_SOURCE_RETURN_TYPE" FEATURE_PASCAL "$FEATURE_PASCAL"
 
 # --- 10. Data Layer: DTO (only with --with-dto) ---------------------------------------
 if [ "$WITH_DTO" = true ]; then
-    render_template dto.dart.tpl FEATURE_PASCAL "$FEATURE_PASCAL" FEATURE_SNAKE "$FEATURE_SNAKE" > "$STAGE_LIB/data/models/${FEATURE_SNAKE}_dto.dart"
+    render_job w "$STAGE_LIB/data/models/${FEATURE_SNAKE}_dto.dart" dto.dart.tpl FEATURE_PASCAL "$FEATURE_PASCAL" FEATURE_SNAKE "$FEATURE_SNAKE"
 fi
 
 # --- 11. Data Layer: Repository Implementation -----------------------------------------
@@ -309,98 +325,119 @@ if [ "$WITH_DTO" = true ]; then
       // become a typed failure instead of escaping as an exception.
       final ${FEATURE_PASCAL} data = dto.toDomain();"
 fi
-render_template repository_impl_imports.dart.tpl FEATURE_SNAKE "$FEATURE_SNAKE" > "$STAGE_LIB/data/repositories/${FEATURE_SNAKE}_repository_impl.dart"
+render_job w "$STAGE_LIB/data/repositories/${FEATURE_SNAKE}_repository_impl.dart" repository_impl_imports.dart.tpl FEATURE_SNAKE "$FEATURE_SNAKE"
 if [ "$WITH_DTO" = true ]; then
-    render_template repository_impl_dto_import.dart.tpl FEATURE_SNAKE "$FEATURE_SNAKE" >> "$STAGE_LIB/data/repositories/${FEATURE_SNAKE}_repository_impl.dart"
+    render_job a "$STAGE_LIB/data/repositories/${FEATURE_SNAKE}_repository_impl.dart" repository_impl_dto_import.dart.tpl FEATURE_SNAKE "$FEATURE_SNAKE"
 fi
-render_template repository_impl_body.dart.tpl FEATURE_PASCAL "$FEATURE_PASCAL" REPO_BODY_LINES "$REPO_BODY_LINES" >> "$STAGE_LIB/data/repositories/${FEATURE_SNAKE}_repository_impl.dart"
+render_job a "$STAGE_LIB/data/repositories/${FEATURE_SNAKE}_repository_impl.dart" repository_impl_body.dart.tpl FEATURE_PASCAL "$FEATURE_PASCAL" REPO_BODY_LINES "$REPO_BODY_LINES"
 
 # --- 12. Presentation Layer: State ---
-render_template state.dart.tpl FEATURE_PASCAL "$FEATURE_PASCAL" FEATURE_SNAKE "$FEATURE_SNAKE" > "$STAGE_LIB/presentation/bloc/${FEATURE_SNAKE}_state.dart"
+render_job w "$STAGE_LIB/presentation/bloc/${FEATURE_SNAKE}_state.dart" state.dart.tpl FEATURE_PASCAL "$FEATURE_PASCAL" FEATURE_SNAKE "$FEATURE_SNAKE"
 
 # --- 13. Presentation Layer: Cubit ------------------------------------------------------
 # The cubit depends on the repository interface directly (lean default) or on
 # the domain service (--with-service) — never on another cubit.
-CUBIT_DEP_TYPE="I${FEATURE_PASCAL}Repository"
+CUBIT_DEP_TYPE="${FEATURE_PASCAL}Repository"
 CUBIT_DEP_IMPORT="'../../domain/repositories/${FEATURE_SNAKE}_repository.dart'"
 if [ "$WITH_SERVICE" = true ]; then
     CUBIT_DEP_TYPE="${FEATURE_PASCAL}Service"
     CUBIT_DEP_IMPORT="'../../domain/services/${FEATURE_SNAKE}_service.dart'"
 fi
-render_template cubit.dart.tpl CUBIT_DEP_IMPORT "$CUBIT_DEP_IMPORT" CUBIT_DEP_TYPE "$CUBIT_DEP_TYPE" FEATURE_PASCAL "$FEATURE_PASCAL" FEATURE_SNAKE "$FEATURE_SNAKE" > "$STAGE_LIB/presentation/bloc/${FEATURE_SNAKE}_cubit.dart"
+render_job w "$STAGE_LIB/presentation/bloc/${FEATURE_SNAKE}_cubit.dart" cubit.dart.tpl CUBIT_DEP_IMPORT "$CUBIT_DEP_IMPORT" CUBIT_DEP_TYPE "$CUBIT_DEP_TYPE" FEATURE_PASCAL "$FEATURE_PASCAL" FEATURE_SNAKE "$FEATURE_SNAKE"
+
+# --- 13b. Feature module: the feature's registrations and routes -----------------
+MODULE_SERVICE_IMPORT=""
+MODULE_SERVICE_REGISTRATION=""
+if [ "$WITH_SERVICE" = true ]; then
+    MODULE_SERVICE_IMPORT="import 'domain/services/${FEATURE_SNAKE}_service.dart';
+"
+    MODULE_SERVICE_REGISTRATION="  getIt.registerLazySingleton<${FEATURE_PASCAL}Service>(
+    () => ${FEATURE_PASCAL}Service(getIt<${FEATURE_PASCAL}Repository>()),
+  );
+"
+fi
+render_job w "$STAGE_LIB/${FEATURE_SNAKE}_module.dart" module.dart.tpl CUBIT_DEP_TYPE "$CUBIT_DEP_TYPE" FEATURE_CAMEL "$FEATURE_CAMEL" FEATURE_PASCAL "$FEATURE_PASCAL" FEATURE_SNAKE "$FEATURE_SNAKE" MODULE_SERVICE_IMPORT "$MODULE_SERVICE_IMPORT" MODULE_SERVICE_REGISTRATION "$MODULE_SERVICE_REGISTRATION"
 
 # --- 14. Presentation Layer: Screen ------------------------------------------------------
 # A single screen widget: it has one responsibility (render the load
 # lifecycle), so there is no Screen→View forwarding pair. The route provides
 # the cubit; the screen is a pure consumer.
-render_template screen.dart.tpl FEATURE_PASCAL "$FEATURE_PASCAL" FEATURE_SNAKE "$FEATURE_SNAKE" L10N_DATA_KEY "$L10N_DATA_KEY" L10N_TITLE_KEY "$L10N_TITLE_KEY" > "$STAGE_LIB/presentation/screens/${FEATURE_SNAKE}_screen.dart"
+render_job w "$STAGE_LIB/presentation/screens/${FEATURE_SNAKE}_screen.dart" screen.dart.tpl FEATURE_PASCAL "$FEATURE_PASCAL" FEATURE_SNAKE "$FEATURE_SNAKE" L10N_DATA_KEY "$L10N_DATA_KEY" L10N_TITLE_KEY "$L10N_TITLE_KEY"
 
 # --- 15. Test Layer: Repository Implementation Test (failure + mapping) -------------------
-render_template repository_test_imports.dart.tpl FEATURE_SNAKE "$FEATURE_SNAKE" PROJECT_NAME "$PROJECT_NAME" > "$STAGE_TEST/data/repositories/${FEATURE_SNAKE}_repository_impl_test.dart"
+render_job w "$STAGE_TEST/data/repositories/${FEATURE_SNAKE}_repository_impl_test.dart" repository_test_imports.dart.tpl FEATURE_SNAKE "$FEATURE_SNAKE" PROJECT_NAME "$PROJECT_NAME"
 if [ "$WITH_DTO" = true ]; then
-    render_template repository_test_dto_import.dart.tpl FEATURE_SNAKE "$FEATURE_SNAKE" PROJECT_NAME "$PROJECT_NAME" >> "$STAGE_TEST/data/repositories/${FEATURE_SNAKE}_repository_impl_test.dart"
+    render_job a "$STAGE_TEST/data/repositories/${FEATURE_SNAKE}_repository_impl_test.dart" repository_test_dto_import.dart.tpl FEATURE_SNAKE "$FEATURE_SNAKE" PROJECT_NAME "$PROJECT_NAME"
 fi
-render_template repository_test_setup.dart.tpl FEATURE_PASCAL "$FEATURE_PASCAL" >> "$STAGE_TEST/data/repositories/${FEATURE_SNAKE}_repository_impl_test.dart"
+render_job a "$STAGE_TEST/data/repositories/${FEATURE_SNAKE}_repository_impl_test.dart" repository_test_setup.dart.tpl FEATURE_PASCAL "$FEATURE_PASCAL"
 if [ "$WITH_DTO" = true ]; then
-    render_template repository_test_dto_result.dart.tpl FEATURE_PASCAL "$FEATURE_PASCAL" >> "$STAGE_TEST/data/repositories/${FEATURE_SNAKE}_repository_impl_test.dart"
+    render_job a "$STAGE_TEST/data/repositories/${FEATURE_SNAKE}_repository_impl_test.dart" repository_test_dto_result.dart.tpl FEATURE_PASCAL "$FEATURE_PASCAL"
 else
-    render_template repository_test_domain_result.dart.tpl FEATURE_PASCAL "$FEATURE_PASCAL" >> "$STAGE_TEST/data/repositories/${FEATURE_SNAKE}_repository_impl_test.dart"
+    render_job a "$STAGE_TEST/data/repositories/${FEATURE_SNAKE}_repository_impl_test.dart" repository_test_domain_result.dart.tpl FEATURE_PASCAL "$FEATURE_PASCAL"
 fi
-render_template repository_test_body.dart.tpl FEATURE_PASCAL "$FEATURE_PASCAL" >> "$STAGE_TEST/data/repositories/${FEATURE_SNAKE}_repository_impl_test.dart"
+render_job a "$STAGE_TEST/data/repositories/${FEATURE_SNAKE}_repository_impl_test.dart" repository_test_body.dart.tpl FEATURE_PASCAL "$FEATURE_PASCAL"
 
 # --- 16. Test Layer: DTO Mapping Test (only with --with-dto) -------------------------------
 if [ "$WITH_DTO" = true ]; then
-    render_template dto_test.dart.tpl FEATURE_PASCAL "$FEATURE_PASCAL" FEATURE_SNAKE "$FEATURE_SNAKE" PROJECT_NAME "$PROJECT_NAME" > "$STAGE_TEST/data/models/${FEATURE_SNAKE}_dto_test.dart"
+    render_job w "$STAGE_TEST/data/models/${FEATURE_SNAKE}_dto_test.dart" dto_test.dart.tpl FEATURE_PASCAL "$FEATURE_PASCAL" FEATURE_SNAKE "$FEATURE_SNAKE" PROJECT_NAME "$PROJECT_NAME"
 fi
 
 # --- 16b. Test Layer: Service Test (only with --with-service) ---------------------------
 if [ "$WITH_SERVICE" = true ]; then
-    render_template service_test.dart.tpl FEATURE_PASCAL "$FEATURE_PASCAL" FEATURE_SNAKE "$FEATURE_SNAKE" PROJECT_NAME "$PROJECT_NAME" > "$STAGE_TEST/domain/services/${FEATURE_SNAKE}_service_test.dart"
+    render_job w "$STAGE_TEST/domain/services/${FEATURE_SNAKE}_service_test.dart" service_test.dart.tpl FEATURE_PASCAL "$FEATURE_PASCAL" FEATURE_SNAKE "$FEATURE_SNAKE" PROJECT_NAME "$PROJECT_NAME"
 fi
 
 # --- 17. Test Layer: Cubit Test -------------------------------------------------------------
-CUBIT_TEST_MOCK_TYPE="I${FEATURE_PASCAL}Repository"
+CUBIT_TEST_MOCK_TYPE="${FEATURE_PASCAL}Repository"
 CUBIT_TEST_MOCK_IMPORT="package:$PROJECT_NAME/features/$FEATURE_SNAKE/domain/repositories/${FEATURE_SNAKE}_repository.dart"
 if [ "$WITH_SERVICE" = true ]; then
     CUBIT_TEST_MOCK_TYPE="${FEATURE_PASCAL}Service"
     CUBIT_TEST_MOCK_IMPORT="package:$PROJECT_NAME/features/$FEATURE_SNAKE/domain/services/${FEATURE_SNAKE}_service.dart"
 fi
-render_template cubit_test.dart.tpl CUBIT_TEST_MOCK_IMPORT "$CUBIT_TEST_MOCK_IMPORT" CUBIT_TEST_MOCK_TYPE "$CUBIT_TEST_MOCK_TYPE" FEATURE_PASCAL "$FEATURE_PASCAL" FEATURE_SNAKE "$FEATURE_SNAKE" PROJECT_NAME "$PROJECT_NAME" > "$STAGE_TEST/presentation/bloc/${FEATURE_SNAKE}_cubit_test.dart"
+render_job w "$STAGE_TEST/presentation/bloc/${FEATURE_SNAKE}_cubit_test.dart" cubit_test.dart.tpl CUBIT_TEST_MOCK_IMPORT "$CUBIT_TEST_MOCK_IMPORT" CUBIT_TEST_MOCK_TYPE "$CUBIT_TEST_MOCK_TYPE" FEATURE_PASCAL "$FEATURE_PASCAL" FEATURE_SNAKE "$FEATURE_SNAKE" PROJECT_NAME "$PROJECT_NAME"
 
 # --- 18. Test Layer: Screen Widget Test ---------------------------------------------------
-render_template screen_test.dart.tpl FEATURE_PASCAL "$FEATURE_PASCAL" FEATURE_SNAKE "$FEATURE_SNAKE" PROJECT_NAME "$PROJECT_NAME" > "$STAGE_TEST/presentation/screens/${FEATURE_SNAKE}_screen_test.dart"
+render_job w "$STAGE_TEST/presentation/screens/${FEATURE_SNAKE}_screen_test.dart" screen_test.dart.tpl FEATURE_PASCAL "$FEATURE_PASCAL" FEATURE_SNAKE "$FEATURE_SNAKE" PROJECT_NAME "$PROJECT_NAME"
+
+# --- 18b. Test Layer: Flow test through the module's real wiring -------------------
+FLOW_TEST_DATA_IMPORT="package:$PROJECT_NAME/features/$FEATURE_SNAKE/domain/models/${FEATURE_SNAKE}.dart"
+FLOW_TEST_DATA="const ${FEATURE_PASCAL}(id: '1', name: 'Flow')"
+if [ "$WITH_DTO" = true ]; then
+    FLOW_TEST_DATA_IMPORT="package:$PROJECT_NAME/features/$FEATURE_SNAKE/data/models/${FEATURE_SNAKE}_dto.dart"
+    FLOW_TEST_DATA="const ${FEATURE_PASCAL}Dto(id: '1', name: 'Flow')"
+fi
+render_job w "$STAGE_TEST/${FEATURE_SNAKE}_flow_test.dart" flow_test.dart.tpl DATA_SOURCE_RETURN_TYPE "$DATA_SOURCE_RETURN_TYPE" FEATURE_CAMEL "$FEATURE_CAMEL" FEATURE_PASCAL "$FEATURE_PASCAL" FEATURE_SNAKE "$FEATURE_SNAKE" FLOW_TEST_DATA "$FLOW_TEST_DATA" FLOW_TEST_DATA_IMPORT "$FLOW_TEST_DATA_IMPORT" PROJECT_NAME "$PROJECT_NAME"
+
+# --- 18c. Render every queued file in one process (nothing written on error) -------
+if ! uv run --no-project "$SCRIPT_DIR/render_feature.py" --batch "$STAGE_ROOT/render.jobs"; then
+    err "Rendering failed; nothing was published."
+    exit 1
+fi
 
 # --- 19. Publish -----------------------------------------------------------------
 
-echo -e "${GREEN}✓ Feature $FEATURE_SNAKE files rendered. Publishing...${NC}"
 mkdir -p "$APP_ROOT/lib/features" "$APP_ROOT/test/features"
 mv "$STAGE_LIB" "$LIB_FEATURE_DIR"
 mv "$STAGE_TEST" "$TEST_FEATURE_DIR"
 
-echo -e "${GREEN}✓ Feature $FEATURE_SNAKE files generated!${NC}"
 
 # --- 20. Localization keys (via fstr, with collision check) -------------------------
 
-L10N_FAILED=false
+# Tool output goes to a log and is shown only on failure: a successful run
+# prints a short summary (agents read every line of it).
+TOOL_LOG="$STAGE_ROOT/tools.log"
 FSTR="$APP_ROOT/scripts/fstr.sh"
 if [ -f "$FSTR" ]; then
-    echo -e "${BLUE}🌍 Adding localization keys ($L10N_TITLE_KEY, $L10N_DATA_KEY)...${NC}"
-    if ! bash "$FSTR" "$L10N_TITLE_KEY" "Exemple $FEATURE_PASCAL" "$FEATURE_PASCAL example" "$APP_ROOT"; then
-        L10N_FAILED=true
-    fi
-    if [ "$L10N_FAILED" = false ]; then
-        if ! bash "$FSTR" "$L10N_DATA_KEY" "Données : {name}" "Data: {name}" "$APP_ROOT"; then
-            L10N_FAILED=true
-        fi
-    fi
-    if [ "$L10N_FAILED" = true ]; then
+    echo "Adding localization keys ($L10N_TITLE_KEY, $L10N_DATA_KEY)..."
+    if ! bash "$FSTR" "$L10N_TITLE_KEY" "Exemple $FEATURE_PASCAL" "$FEATURE_PASCAL example" \
+        "$L10N_DATA_KEY" "Données : {name}" "Data: {name}" "$APP_ROOT" > "$TOOL_LOG" 2>&1; then
+        tail -n 30 "$TOOL_LOG" >&2
         err ""
         err "Localization failed (missing key, collision, or gen-l10n error). The new"
         err "feature '$FEATURE_SNAKE' was published but is INCOMPLETE: the screen"
         err "references the '$L10N_TITLE_KEY' and '$L10N_DATA_KEY' keys."
         err "Fix the error above, then re-run:"
-        err "  bash scripts/fstr.sh $L10N_TITLE_KEY \"Exemple $FEATURE_PASCAL\" \"$FEATURE_PASCAL example\""
-        err "  bash scripts/fstr.sh $L10N_DATA_KEY \"Données : {name}\" \"Data: {name}\""
+        err "  bash scripts/fstr.sh $L10N_TITLE_KEY \"Exemple $FEATURE_PASCAL\" \"$FEATURE_PASCAL example\" $L10N_DATA_KEY \"Données : {name}\" \"Data: {name}\""
         exit 1
     fi
 else
@@ -414,24 +451,24 @@ fi
 
 # --- 21. Auto-run Build Runner -----------------------------------------------------
 
-echo -e "${BLUE}🔧 Running build_runner to generate Freezed code...${NC}"
+echo "Running build_runner..."
 if command -v dart &> /dev/null; then
-    if ! (cd "$APP_ROOT" && dart run build_runner build --delete-conflicting-outputs); then
+    if ! (cd "$APP_ROOT" && dart run build_runner build --delete-conflicting-outputs) > "$TOOL_LOG" 2>&1; then
+        tail -n 40 "$TOOL_LOG" >&2
         err ""
         err "build_runner failed. The new feature '$FEATURE_SNAKE' was published but is INCOMPLETE."
         err "Published files: '$LIB_FEATURE_DIR' and '$TEST_FEATURE_DIR'."
         err "Fix the errors above, then re-run: dart run build_runner build --delete-conflicting-outputs"
         exit 1
     fi
-    echo -e "${GREEN}✓ Code generation complete. No more analyze errors!${NC}"
 
     # Format ONLY the files this script just generated. Line wrapping depends
     # on the feature-name length, so the source templates cannot be
     # formatter-exact for every name; this step makes them compliant for any
     # name. It never touches user files (fverify's format gate stays
     # non-mutating by construction).
-    echo -e "${BLUE}🎨 Formatting the generated files...${NC}"
-    if ! (cd "$APP_ROOT" && dart format "$LIB_FEATURE_DIR" "$TEST_FEATURE_DIR"); then
+    if ! (cd "$APP_ROOT" && dart format "$LIB_FEATURE_DIR" "$TEST_FEATURE_DIR") > "$TOOL_LOG" 2>&1; then
+        cat "$TOOL_LOG" >&2
         err "dart format failed on the generated files. The feature was published"
         err "but is INCOMPLETE. Fix the errors above, then re-run:"
         err "  dart format '$LIB_FEATURE_DIR' '$TEST_FEATURE_DIR'"
@@ -441,45 +478,34 @@ else
     echo -e "${RED}⚠️  Warning: 'dart' command not found. Run build_runner manually.${NC}" >&2
 fi
 
-# --- 22. Next steps (DI + route wiring, per layout) ----------------------------------
+# --- 22. Wire the module into DI, router, route constants and the DI test -----------
+
+WIRE_OUTPUT="$(uv run --no-project "$SCRIPT_DIR/fwire.py" apply "$APP_ROOT" "$FEATURE_SNAKE" "$FEATURE_PASCAL" "$FEATURE_CAMEL" "$PROJECT_NAME")" && WIRE_STATUS=0 || WIRE_STATUS=$?
+WIRED_FILES=()
+while IFS= read -r line; do
+    case "$line" in
+        wired:\ *) WIRED_FILES+=("$APP_ROOT/${line#wired: }") ;;
+    esac
+done <<< "$WIRE_OUTPUT"
+if [ ${#WIRED_FILES[@]} -gt 0 ] && command -v dart &> /dev/null; then
+    dart format "${WIRED_FILES[@]}" > /dev/null
+fi
 
 echo ""
-echo -e "${BLUE}Next steps:${NC}"
-echo -e "${BLUE}⚠️  IMPORTANT: a scaffold that passes its unit tests is NOT a routed feature.${NC}"
-echo -e "It only appears in the app once the DI and route steps below are applied —"
-echo -e "run ${GREEN}fverify${NC} after wiring to smoke-test it end to end."
-echo ""
-echo -e "1. Register dependencies in ${GREEN}lib/core/di/service_locator.dart${NC}:"
-echo -e "   getIt.registerLazySingleton<I${FEATURE_PASCAL}RemoteDataSource>(() => ${FEATURE_PASCAL}RemoteDataSource());"
-echo -e "   getIt.registerLazySingleton<I${FEATURE_PASCAL}Repository>(() => ${FEATURE_PASCAL}Repository(getIt<I${FEATURE_PASCAL}RemoteDataSource>()));"
-if [ "$WITH_SERVICE" = true ]; then
-    echo -e "   getIt.registerLazySingleton<${FEATURE_PASCAL}Service>(() => ${FEATURE_PASCAL}Service(getIt<I${FEATURE_PASCAL}Repository>()));"
-    echo -e "   (${FEATURE_PASCAL}Service is a PLACEHOLDER: grow it into real coordination logic or remove it)"
-    echo -e "   getIt.registerFactory<${FEATURE_PASCAL}Cubit>(() => ${FEATURE_PASCAL}Cubit(getIt<${FEATURE_PASCAL}Service>()));"
+if [ "$WIRE_STATUS" -eq 0 ]; then
+    echo -e "${GREEN}✓ Wired: registered in service_locator.dart, route /${FEATURE_SNAKE} added, DI smoke test updated.${NC}"
 else
-    echo -e "   getIt.registerFactory<${FEATURE_PASCAL}Cubit>(() => ${FEATURE_PASCAL}Cubit(getIt<I${FEATURE_PASCAL}Repository>()));"
+    err "Feature generated but NOT fully wired — see the manual edits above."
 fi
-echo -e "2. Add the route in ${GREEN}lib/core/router/app_router.dart${NC} — the route provides the cubit:"
-echo -e "   GoRoute("
-echo -e "     path: Routes.${FEATURE_CAMEL},"
-echo -e "     name: '${FEATURE_PASCAL}',"
-echo -e "     builder: (context, state) => BlocProvider<${FEATURE_PASCAL}Cubit>("
-echo -e "       create: (_) => getIt<${FEATURE_PASCAL}Cubit>()..loadData(),"
-echo -e "       child: const ${FEATURE_PASCAL}Screen(),"
-echo -e "     ),"
-echo -e "   )"
-echo -e "   ...and the constant in ${GREEN}lib/core/router/route_constants.dart${NC}:"
-echo -e "   static const String ${FEATURE_CAMEL} = '/${FEATURE_SNAKE}';"
-echo -e "3. Update ${GREEN}test/core/di/service_locator_test.dart${NC} with the new registrations."
-echo -e "4. Replace the placeholder data source in ${GREEN}lib/features/$FEATURE_SNAKE/data/datasources/${FEATURE_SNAKE}_remote_datasource.dart${NC} with real I/O."
-if [ "$WITH_DTO" = false ]; then
-    echo -e "   The lean layout has no transport schema; when a real one appears, hand-write"
-    echo -e "   the DTO + conversion (or use --with-dto on a scratch name as a reference)."
-fi
+echo "Next:"
+echo "  1. Replace the placeholder data source with real I/O:"
+echo "     lib/features/$FEATURE_SNAKE/data/datasources/${FEATURE_SNAKE}_remote_datasource.dart"
 if [ "$WITH_SERVICE" = true ]; then
-    echo -e "5. ${FEATURE_PASCAL}Service must gain actual rules/coordination or be removed — a forwarding service is not mandatory architecture."
-    echo -e "6. Run ${GREEN}fverify${NC} before finishing."
+    echo "  2. Give ${FEATURE_PASCAL}Service real rules, or delete it (a forwarding service is not required)."
+    echo "  3. ./scripts/fverify.sh --fix"
 else
-    echo -e "5. Run ${GREEN}fverify${NC} before finishing."
+    echo "  2. ./scripts/fverify.sh --fix"
 fi
-echo ""
+if [ "$WIRE_STATUS" -ne 0 ]; then
+    exit 1
+fi

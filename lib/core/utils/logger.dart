@@ -31,6 +31,11 @@ class AppLogger {
 
   static LogLevel minimumLevel = kDebugMode ? LogLevel.debug : LogLevel.warning;
 
+  /// Master switch. `test/flutter_test_config.dart` turns logging off so a
+  /// passing test run prints nothing; set it back to `true` inside a test
+  /// when debugging that test.
+  static bool enabled = true;
+
   // ── Per-level color schemes ────────────────────────────────────────────────
 
   static String _timeColor(LogLevel level) => switch (level) {
@@ -130,7 +135,7 @@ class AppLogger {
     Object? error,
     StackTrace? stackTrace,
   }) {
-    if (level.index < minimumLevel.index) return;
+    if (!enabled || level.index < minimumLevel.index) return;
 
     final String? callerInfo = _resolveCallerInfo();
 

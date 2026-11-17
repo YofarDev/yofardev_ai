@@ -1,8 +1,9 @@
 # Test Suite
 
-The quality gate is local — `./scripts/fverify.sh` (format check + analyze +
-the whole suite, including the architecture and DI smoke tests). Line coverage
-for the logic layers: `./scripts/fcoverage.sh` (see `scripts/README.md`).
+The quality gate is local — `./scripts/fverify.sh --fix` before finishing any
+change (dart fix + format, then format check + analyze + the whole suite,
+including the architecture and DI smoke tests). Line coverage for the logic
+layers: `./scripts/fcoverage.sh` (see `scripts/README.md`).
 
 ## Layout
 
@@ -32,6 +33,20 @@ only the I/O seams with fakes — the opposite of isolated unit tests, on purpos
 
 When you add a cross-layer test, extend a harness instead of rebuilding one.
 
+## Test behavior at boundaries, not plumbing
+
+Each test should fail only when something a user or another layer relies on
+breaks. Do not write:
+
+- tests of framework or config (theme brightness, "uses Material 3");
+- tests that a widget or provider exists ("renders XView", "provides XCubit") —
+  a behavior test already fails if it is missing;
+- forwarding tests ("service delegates to repository");
+- per-feature copies of shared mechanics. Request ordering and close safety
+  come from `LatestRequestWins` (`core/bloc/`), tested in
+  `core/bloc/latest_request_wins_test.dart`; failure copy comes from
+  `localizeFailure`, tested in `core/l10n/failure_localization_test.dart`.
+
 ## Conventions
 
 - `mocktail` (never mockito); `registerFallbackValue` for non-primitives used with `any()`.
@@ -39,3 +54,4 @@ When you add a cross-layer test, extend a harness instead of rebuilding one.
 - Cubit tests use `bloc_test`; widget tests use fake cubits pushed state via a test-only helper.
 - Rive widget tests call `serveFakeRiveAssets()` and `UiKitFile.resetForTest()` in `setUp`.
 - New test files mirror the lib path of the class under test.
+- `test/flutter_test_config.dart` turns `AppLogger` off during tests.

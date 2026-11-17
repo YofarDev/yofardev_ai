@@ -1,8 +1,6 @@
-import 'package:fpdart/fpdart.dart';
-
-import '../../../../core/models/failure.dart';
+import '../../../../core/models/result.dart';
 import '../models/{{FEATURE_SNAKE}}.dart';
 
-abstract class I{{FEATURE_PASCAL}}Repository {
-  Future<Either<Failure, {{FEATURE_PASCAL}}>> getData();
+abstract class {{FEATURE_PASCAL}}Repository {
+  Future<Result<{{FEATURE_PASCAL}}>> getData();
 }

@@ -50,6 +50,11 @@ list_dart_files() {
   find "$LIB_DIR" -type f -name "*.dart" ! -name ".gitkeep" 2>/dev/null | sort
 }
 
+# Feature modules: lib/features/<f>/<f>_module.dart (registrations + routes).
+module_files() {
+  dart_files | awk -F/ '{ n = NF; if ($(n) == $(n-1) "_module.dart" && $(n-2) == "features") print }'
+}
+
 dart_files() {
   while IFS= read -r f; do
     if ! is_ignored_file "$f"; then
@@ -289,8 +294,24 @@ scan_lines() {
   SL_FILE=$(dart_files | grep -E '/(service_locator|injection)\.dart$' | head -1 || true)
   if [[ -n "$SL_FILE" ]]; then
     rel="$(relpath "$SL_FILE")"
-    REG_COUNT=$(grep -Ec 'register(LazySingleton|Singleton|Factory|FactoryParam)' "$SL_FILE" 2>/dev/null || echo 0)
-    info "✅ \`$rel\` - $REG_COUNT registration(s)"
+    REG_COUNT=$(grep -Ec 'register(LazySingleton|Singleton|Factory|FactoryParam)' "$SL_FILE" 2>/dev/null || true)
+    info "✅ \`$rel\` - $REG_COUNT direct registration(s)"
+
+    MODULE_COUNT=0; MODULE_REGS=0; UNWIRED=""
+    while IFS= read -r m; do
+      [[ -z "$m" ]] && continue
+      MODULE_COUNT=$((MODULE_COUNT + 1))
+      n=$(grep -Ec 'register(LazySingleton|Singleton|Factory|FactoryParam)' "$m" 2>/dev/null || true)
+      MODULE_REGS=$((MODULE_REGS + ${n:-0}))
+      fn=$(grep -oE 'void register[A-Za-z0-9_]+Feature' "$m" | head -n 1 | sed 's/^void //' || true)
+      if [[ -z "$fn" ]] || ! grep -vE '^[[:space:]]*//' "$SL_FILE" | grep -q "${fn}("; then
+        UNWIRED="$UNWIRED \`$(relpath "$m")\`"
+      fi
+    done < <(module_files)
+    if [[ "$MODULE_COUNT" -gt 0 ]]; then
+      info "✅ $MODULE_COUNT feature module(s) - $MODULE_REGS registration(s)"
+      [[ -n "$UNWIRED" ]] && info "⚠️ Modules not called from \`$rel\`:$UNWIRED"
+    fi
 
     FOUND=0
     while IFS= read -r f; do
@@ -342,8 +363,19 @@ scan_lines() {
   ROUTER_FILE=$(dart_files | grep -E '/(app_router|router)\.dart$' | head -1 || true)
   if [[ -n "$ROUTER_FILE" ]]; then
     rel="$(relpath "$ROUTER_FILE")"
-    ROUTE_COUNT=$(grep -c 'path:' "$ROUTER_FILE" 2>/dev/null || echo 0)
-    info "✅ \`$rel\` - $ROUTE_COUNT route(s)"
+    ROUTE_COUNT=$(grep -c 'path:' "$ROUTER_FILE" 2>/dev/null || true)
+    MODULE_ROUTES=0; UNROUTED=""
+    while IFS= read -r m; do
+      [[ -z "$m" ]] && continue
+      n=$(grep -c 'path:' "$m" 2>/dev/null || true)
+      MODULE_ROUTES=$((MODULE_ROUTES + ${n:-0}))
+      fn=$(grep -oE '^List<RouteBase> [A-Za-z0-9_]+Routes' "$m" | head -n 1 | sed 's/^List<RouteBase> //' || true)
+      if [[ -n "$fn" ]] && ! grep -vE '^[[:space:]]*//' "$ROUTER_FILE" | grep -q "\.\.\.${fn}("; then
+        UNROUTED="$UNROUTED \`$(relpath "$m")\`"
+      fi
+    done < <(module_files)
+    info "✅ \`$rel\` - $(( ${ROUTE_COUNT:-0} + MODULE_ROUTES )) route(s) (router: ${ROUTE_COUNT:-0}, feature modules: $MODULE_ROUTES)"
+    [[ -n "$UNROUTED" ]] && info "⚠️ Module routes not spread into \`$rel\`:$UNROUTED"
 
     VALUE_COUNT=$(count_pattern_matches 'BlocProvider\.value')
     PUSH_COUNT=$(count_pattern_matches 'Navigator\.push')

@@ -30,7 +30,9 @@ import 'support/architecture_checker.dart';
 ///    A run with checker errors (syntax problems, unresolved imports) fails
 ///    the gate: the checker never passes code it could not analyze.
 ///    Rule-by-rule fixtures live in `test/architecture_checker_test.dart`
-///    and `test/architecture_checker_boundaries_test.dart`.
+///    and `test/architecture_checker_boundaries_test.dart`; a feature module
+///    (`lib/features/<f>/<f>_module.dart`) may also import get_it and
+///    register its own feature on the `GetIt` it receives.
 ///
 /// 2. **This file's scan rules** for conventions the analyzer cannot see:
 ///    no `fpdart` (banned; errors use `Result<T>`), raw colors and fonts

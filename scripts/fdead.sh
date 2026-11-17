@@ -57,6 +57,11 @@ done
 # -- Colours ------------------------------------------------------------------
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'
 CYAN='\033[0;36m'; BOLD='\033[1m'; DIM='\033[2m'; RESET='\033[0m'
+# Colours only on an interactive terminal: agents, pipes and CI get plain text
+# (ANSI escapes are pure noise in a captured log). NO_COLOR is honoured too.
+if [ ! -t 1 ] || [ -n "${NO_COLOR:-}" ]; then
+  RED=''; GREEN=''; YELLOW=''; CYAN=''; BOLD=''; DIM=''; RESET=''
+fi
 
 log()  { echo -e "${CYAN}[info]${RESET}  $*"; }
 ok()   { echo -e "${GREEN}[ ok ]${RESET}  $*"; }
@@ -106,53 +111,40 @@ ALL_REFERENCES=$(
     --include="*.dart" 2>/dev/null || true
 )
 
-# -- Step 3: collect all files exported via barrel files ----------------------
-# Portable collection loop (no `mapfile`) — see the Bash contract above.
-BARREL_EXPORTS=()
-while IFS= read -r export_path; do
-  BARREL_EXPORTS+=("$export_path")
-done < <(
+# -- Steps 3-4: one awk pass (no per-file processes) ---------------------------
+# A file is skipped when it is an entry point, generated, a feature barrel, or
+# re-exported by a barrel (by basename); otherwise it is reported when its
+# file name appears in no import/export/part line (substring match).
+EXPORTED_NAMES="$(
   grep -rh "^export ['\"]" "${SCAN_DIRS[@]}" --include="*.dart" 2>/dev/null \
     | grep -oE "['\"][^'\"]+\.dart['\"]" \
     | tr -d "'\"" \
+    | sed 's#.*/##' \
     || true
-)
+)"
 
-is_barrel_exported() {
-  local basename="$1"
-  for export in "${BARREL_EXPORTS[@]:-}"; do
-    [[ "$(basename "$export")" == "$basename" ]] && return 0
-  done
-  return 1
-}
-
-# -- Step 4: for each candidate file, check if it's referenced anywhere -------
 UNREFERENCED_FILES=()
 SKIPPED=0
-
-for filepath in ${ALL_DART_FILES[@]+"${ALL_DART_FILES[@]}"}; do
-  filename=$(basename "$filepath")
-  rel="${filepath#$PROJECT_ROOT/}"
-
-  # -- Exclusions -------------------------------------------------------------
-  if [[ "$filename" == "main.dart" ]] || \
-     [[ "$filename" == *_test.dart ]] || \
-     [[ "$filename" == *.g.dart ]] || \
-     [[ "$filename" == *.freezed.dart ]] || \
-     [[ "$filename" == *.gen.dart ]] || \
-     is_barrel_exported "$filename"; then
-
-    SKIPPED=$((SKIPPED + 1))
-    continue
-  fi
-
-  # -- Check if filename appears in any import/export/part --------------------
-  if echo "$ALL_REFERENCES" | grep -qF "$filename"; then
-    continue
-  fi
-
-  UNREFERENCED_FILES+=("$rel")
-done
+while IFS= read -r line; do
+  case "$line" in
+    SKIPPED\ *) SKIPPED="${line#SKIPPED }" ;;
+    *) UNREFERENCED_FILES+=("$line") ;;
+  esac
+done < <(
+  awk -v root="$PROJECT_ROOT/" '
+    FILENAME == ARGV[1] { refs = refs "\n" $0; next }
+    FILENAME == ARGV[2] { if ($0 != "") exported[$0] = 1; next }
+    {
+      rel = substr($0, 1, length(root)) == root ? substr($0, length(root) + 1) : $0
+      n = split($0, parts, "/"); name = parts[n]; stem = substr(name, 1, length(name) - 5)
+      if (name == "main.dart" || name ~ /_test\.dart$/ || name ~ /\.(g|freezed|gen)\.dart$/ ||
+          rel == "lib/features/" stem "/" name || (name in exported)) { skipped++; next }
+      if (index(refs, name) == 0) print rel
+    }
+    END { print "SKIPPED " skipped + 0 }
+  ' <(printf '%s\n' "$ALL_REFERENCES") <(printf '%s\n' "$EXPORTED_NAMES") \
+    <(printf '%s\n' ${ALL_DART_FILES[@]+"${ALL_DART_FILES[@]}"})
+)
 
 # -- Step 5: report (advisory only — nothing is ever deleted) ------------------
 echo ""
@@ -214,5 +206,5 @@ else
 fi
 
 echo ""
-echo -e "${DIM}  Scanned $CHECKED files  •  Skipped $SKIPPED (main/tests/generated/barrel-exported)  •  $EMPTY_COUNT empty dir(s)${RESET}"
+echo -e "${DIM}  Scanned $CHECKED files  •  Skipped $SKIPPED (main/tests/generated/barrels)  •  $EMPTY_COUNT empty dir(s)${RESET}"
 echo ""

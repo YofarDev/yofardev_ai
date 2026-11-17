@@ -1,18 +1,18 @@
 
-class {{FEATURE_PASCAL}}Repository implements I{{FEATURE_PASCAL}}Repository {
-  final I{{FEATURE_PASCAL}}RemoteDataSource _dataSource;
+class {{FEATURE_PASCAL}}RepositoryImpl implements {{FEATURE_PASCAL}}Repository {
+  final {{FEATURE_PASCAL}}RemoteDataSource _dataSource;
 
-  {{FEATURE_PASCAL}}Repository(this._dataSource);
+  {{FEATURE_PASCAL}}RepositoryImpl(this._dataSource);
 
   @override
-  Future<Either<Failure, {{FEATURE_PASCAL}}>> getData() async {
+  Future<Result<{{FEATURE_PASCAL}}>> getData() async {
     try {
 {{REPO_BODY_LINES}}
-      return Right<Failure, {{FEATURE_PASCAL}}>(data);
+      return Result<{{FEATURE_PASCAL}}>.ok(data);
     } catch (e, st) {
       // Logs the error and stack trace once, at the mapping boundary.
-      return Left<Failure, {{FEATURE_PASCAL}}>(
-        mapExceptionToFailure(e, stackTrace: st, tag: '{{FEATURE_PASCAL}}Repository'),
+      return Result<{{FEATURE_PASCAL}}>.err(
+        mapExceptionToFailure(e, stackTrace: st, tag: '{{FEATURE_PASCAL}}RepositoryImpl'),
       );
     }
   }

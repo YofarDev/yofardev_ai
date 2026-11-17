@@ -1,7 +1,10 @@
 #!/usr/bin/env bash
 
 # Add localized strings to Flutter .arb files and regenerate localization files
-# Usage: add-l10n-string <keyName> <frString> <enString> [projectPath]
+# Usage: fstr.sh <keyName> <frString> <enString> [<keyName> <fr> <en>]... [projectPath]
+#
+# Any number of key/FR/EN triples is validated together, written in one pass,
+# and followed by a single `flutter gen-l10n`.
 #
 # Validates that the FR and EN strings use the same {placeholders} before
 # touching either file (gen-l10n rejects mismatches), writes both arb files,
@@ -15,27 +18,38 @@ BLUE='\033[0;34m'
 RED='\033[0;31m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
-
-# Check arguments
-if [ $# -lt 3 ]; then
-    echo "Usage: add-l10n-string <keyName> <frString> <enString> [projectPath]"
-    echo ""
-    echo "Arguments:"
-    echo "  keyName     - The localization key (camelCase, e.g., dashboardWelcome)"
-    echo "  frString    - French translation (source of truth)"
-    echo "  enString    - English translation"
-    echo "  projectPath - Optional path to Flutter project (defaults to current directory)"
-    echo ""
-    echo "Example:"
-    echo "  add-l10n-string myNewKey \"Bonjour\" \"Hello\""
-    echo "  add-l10n-string myNewKey \"Bonjour\" \"Hello\" /path/to/project"
-    exit 1
+# Colours only on an interactive terminal: agents, pipes and CI get plain text
+# (ANSI escapes are pure noise in a captured log). NO_COLOR is honoured too.
+if [ ! -t 1 ] || [ -n "${NO_COLOR:-}" ]; then
+  GREEN=''; BLUE=''; RED=''; YELLOW=''; NC=''
 fi
 
-KEY_NAME="$1"
-FR_STRING="$2"
-EN_STRING="$3"
-PROJECT_PATH="${4:-.}"
+# Check arguments: triples, optionally followed by the project path.
+usage() {
+    echo "Usage: fstr.sh <keyName> <frString> <enString> [<keyName> <fr> <en>]... [projectPath]"
+    echo ""
+    echo "  keyName     - lowerCamelCase localization key (e.g. dashboardWelcome)"
+    echo "  frString    - French translation (source of truth)"
+    echo "  enString    - English translation"
+    echo "  projectPath - Flutter project (defaults to the current directory)"
+    echo ""
+    echo "Example:"
+    echo "  fstr.sh myNewKey \"Bonjour\" \"Hello\""
+    echo "  fstr.sh titleKey \"Titre\" \"Title\" bodyKey \"Corps\" \"Body\""
+}
+if [ $# -lt 3 ] || [ $(( $# % 3 )) -eq 2 ]; then
+    usage
+    exit 1
+fi
+PROJECT_PATH="."
+if [ $(( $# % 3 )) -eq 1 ]; then
+    PROJECT_PATH="${!#}"
+fi
+TRIPLES=()
+while [ $# -ge 3 ]; do
+    TRIPLES+=("$1" "$2" "$3")
+    shift 3
+done
 
 # Resolve to absolute path
 PROJECT_PATH=$(cd "$PROJECT_PATH" 2>/dev/null && pwd) || {
@@ -64,44 +78,39 @@ fi
 # FR/EN match. Each destination is then replaced from a staged temp file
 # beside it — the two replacements are not a single atomic transaction, but a
 # failure during preparation leaves both files untouched.
-export ARB_FR_FILE="$FR_FILE"
-export ARB_EN_FILE="$EN_FILE"
-export ARB_KEY="$KEY_NAME"
-export ARB_FR_VALUE="$FR_STRING"
-export ARB_EN_VALUE="$EN_STRING"
-
-echo -e "${BLUE}Validating and adding '$KEY_NAME'...${NC}"
-uv run python - <<'EOF'
+echo -e "${BLUE}Validating and adding $(( ${#TRIPLES[@]} / 3 )) key(s)...${NC}"
+uv run python - "$FR_FILE" "$EN_FILE" "${TRIPLES[@]}" <<'EOF'
 import json
 import os
 import re
 import sys
 import tempfile
 
-fr_file = os.environ['ARB_FR_FILE']
-en_file = os.environ['ARB_EN_FILE']
-key = os.environ['ARB_KEY']
-fr_value = os.environ['ARB_FR_VALUE']
-en_value = os.environ['ARB_EN_VALUE']
+fr_file, en_file = sys.argv[1], sys.argv[2]
+triples = [tuple(sys.argv[i:i + 3]) for i in range(3, len(sys.argv), 3)]
 
 def fail(msg):
-    print(f"\n\033[0;31m[!] {msg}\033[0m", file=sys.stderr)
+    print(f"\n[!] {msg}", file=sys.stderr)
     sys.exit(1)
 
 def placeholders(s):
     return sorted(set(re.findall(r"\{[a-zA-Z_][a-zA-Z0-9_]*\}", s)))
 
-# Key must be a valid Dart identifier (gen-l10n generates a getter from it)
-if not re.fullmatch(r"[a-z][a-zA-Z0-9]*", key):
-    fail(f"Key '{key}' must be lowerCamelCase (e.g., dashboardWelcome).")
-
-# FR and EN must use identical placeholders, or gen-l10n will fail later
-if placeholders(fr_value) != placeholders(en_value):
-    fail(
-        "Placeholder mismatch between FR and EN strings:\n"
-        f"    FR: {placeholders(fr_value) or 'none'}\n"
-        f"    EN: {placeholders(en_value) or 'none'}"
-    )
+seen = set()
+for key, fr_value, en_value in triples:
+    # Key must be a valid Dart identifier (gen-l10n generates a getter from it)
+    if not re.fullmatch(r"[a-z][a-zA-Z0-9]*", key):
+        fail(f"Key '{key}' must be lowerCamelCase (e.g., dashboardWelcome).")
+    if key in seen:
+        fail(f"Key '{key}' is given twice.")
+    seen.add(key)
+    # FR and EN must use identical placeholders, or gen-l10n will fail later
+    if placeholders(fr_value) != placeholders(en_value):
+        fail(
+            f"Placeholder mismatch between FR and EN strings for '{key}':\n"
+            f"    FR: {placeholders(fr_value) or 'none'}\n"
+            f"    EN: {placeholders(en_value) or 'none'}"
+        )
 
 class DuplicateKeyError(Exception):
     pass
@@ -155,15 +164,17 @@ for path, data in ((fr_file, fr_data), (en_file, en_data)):
     if not isinstance(data, dict):
         fail(f"Root of {path} is not a JSON object.")
 
-if key in fr_data:
-    fail(f"Key '{key}' already exists in {os.path.basename(fr_file)}.")
-if key in en_data:
-    fail(f"Key '{key}' already exists in {os.path.basename(en_file)}.")
+for key, fr_value, en_value in triples:
+    if key in fr_data:
+        fail(f"Key '{key}' already exists in {os.path.basename(fr_file)}.")
+    if key in en_data:
+        fail(f"Key '{key}' already exists in {os.path.basename(en_file)}.")
 
 # Insertion order: keep every existing entry (values and @key metadata) and
-# append the new key.
-fr_data[key] = fr_value
-en_data[key] = en_value
+# append the new keys.
+for key, fr_value, en_value in triples:
+    fr_data[key] = fr_value
+    en_data[key] = en_value
 
 fr_tmp = serialize(fr_file, fr_data)
 try:
@@ -176,8 +187,8 @@ except Exception:
 os.replace(fr_tmp, fr_file)
 os.replace(en_tmp, en_file)
 
-print(f"    FR: {fr_value}")
-print(f"    EN: {en_value}")
+for key, fr_value, en_value in triples:
+    print(f"    {key}: FR {fr_value!r} / EN {en_value!r}")
 EOF
 
 # Regenerate localization files
@@ -191,4 +202,4 @@ if ! flutter gen-l10n; then
     exit 1
 fi
 
-echo -e "${GREEN}✓ Successfully added localization key: $KEY_NAME${NC}"
+echo -e "${GREEN}✓ Added $(( ${#TRIPLES[@]} / 3 )) localization key(s).${NC}"
