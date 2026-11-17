@@ -1,7 +1,7 @@
 // ignore-l10n: debug — the UI lab is debug-only; its strings are hardcoded.
 import 'dart:math' as math;
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../../../../core/design/components/components.dart';
 import '../../../../core/design/design.dart';

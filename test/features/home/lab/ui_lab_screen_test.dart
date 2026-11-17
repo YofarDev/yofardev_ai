@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:yofardev_ai/core/design/design.dart';
@@ -14,6 +14,7 @@ import 'package:yofardev_ai/core/design/components/components.dart';
 import 'package:yofardev_ai/core/models/avatar_scene.dart';
 import 'package:yofardev_ai/features/avatar/avatar.dart';
 import 'package:yofardev_ai/features/talking/talking.dart';
+import 'package:yofardev_ai/core/l10n/app_localization_delegates.dart';
 
 /// Fake builder: no font is ever loaded.
 TextTheme _fakeTextTheme(LookFonts fonts, ColorScheme scheme) =>
@@ -31,6 +32,8 @@ Widget _fakeStage(
 final LabConfig _surfaces = LabConfig.initial.copyWith(tab: LabTab.surfaces);
 
 Widget _harness({LabConfig? initial, WorldStateService? world}) => MaterialApp(
+  localizationsDelegates: appLocalizationsDelegates,
+  supportedLocales: const <Locale>[Locale('en'), Locale('fr')],
   theme: AppTheme.dark,
   home: UiLabScreen(
     textThemeBuilder: _fakeTextTheme,

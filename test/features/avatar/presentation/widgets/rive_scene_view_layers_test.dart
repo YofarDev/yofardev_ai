@@ -1,9 +1,10 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:yofardev_ai/core/models/avatar_scene.dart';
 import 'package:yofardev_ai/features/avatar/presentation/widgets/rive/rive_scene_view.dart';
 
 import '../../../../helpers/rive_test_assets.dart';
+import 'package:yofardev_ai/core/l10n/app_localization_delegates.dart';
 
 /// Counts its own `State`s, so a remount shows.
 class _Middle extends StatefulWidget {
@@ -43,6 +44,8 @@ void main() {
     final ValueNotifier<double> rain = ValueNotifier<double>(1);
     addTearDown(rain.dispose);
     Widget stage(AvatarScene scene) => MaterialApp(
+      localizationsDelegates: appLocalizationsDelegates,
+      supportedLocales: const <Locale>[Locale('en'), Locale('fr')],
       home: Scaffold(
         body: RiveSceneView(
           scene: scene,
@@ -69,6 +72,8 @@ void main() {
   ) async {
     await tester.pumpWidget(
       const MaterialApp(
+        localizationsDelegates: appLocalizationsDelegates,
+        supportedLocales: <Locale>[Locale('en'), Locale('fr')],
         home: RiveSceneView(
           scene: AvatarScene.campfire,
           sceneEvent: (sceneEvent: SceneEvent.flare, seq: 0),

@@ -49,11 +49,13 @@ dependencies:
   sensors_plus: ^7.1.1
   sherpa_onnx: 1.13.3
   archive: ^4.6.0
+  cupertino_ui: ^1.1.0
+  material_ui: ^1.11.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  analyzer: ^13.0.0
+  analyzer: ^14.0.0
   build_runner: ^2.11.1
   json_serializable: ^6.13.0
   flutter_lints:

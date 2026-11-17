@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:yofardev_ai/core/models/avatar_mood.dart';
@@ -37,6 +37,7 @@ import 'package:yofardev_ai/core/models/llm_message.dart';
 import 'package:yofardev_ai/features/chat/presentation/bloc/chat_cubit.dart';
 import 'package:yofardev_ai/core/repositories/settings_repository.dart';
 import 'package:yofardev_ai/features/sound/domain/tts_queue_item.dart';
+import 'package:yofardev_ai/core/l10n/app_localization_delegates.dart';
 
 // Mock repositories
 class MockChatRepository extends Mock implements ChatRepository {}
@@ -294,6 +295,8 @@ void main() {
     /// Helper method to build the test widget
     Widget buildTestWidget() {
       return MaterialApp(
+        localizationsDelegates: appLocalizationsDelegates,
+        supportedLocales: const <Locale>[Locale('en'), Locale('fr')],
         home: MultiBlocProvider(
           providers: <SingleChildWidget>[
             BlocProvider<ChatCubit>.value(value: chatsCubit),

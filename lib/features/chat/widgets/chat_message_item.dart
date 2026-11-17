@@ -2,7 +2,7 @@ import 'dart:convert';
 import '../../../core/widgets/typing_indicator.dart';
 import 'dart:io';
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_parsed_text/flutter_parsed_text.dart';
 import 'package:go_router/go_router.dart';
 import 'package:audioplayers/audioplayers.dart';

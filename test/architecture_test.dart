@@ -197,7 +197,7 @@ void main() {
       isTrue,
     );
     expect(
-      directiveUsesRive("import 'package:flutter/material.dart';"),
+      directiveUsesRive("import 'package:material_ui/material_ui.dart';"),
       isFalse,
     );
     expect(directiveUsesRive('// see package:rive/rive.dart docs'), isFalse);

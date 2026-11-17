@@ -8,7 +8,8 @@
 #   2. flutter analyze
 #   3. flutter test   (includes the architecture boundary + DI smoke tests)
 #
-# --fix (opt-in, mutating): first runs `dart fix --apply` and `dart format .`,
+# --fix (opt-in, mutating): first runs `dart fix --apply` (refused when the
+# preview spans more than FVERIFY_FIX_MAX_FILES files) and `dart format .`,
 # then the same gate — preparation and verification in one command. CI and
 # the default invocation stay non-mutating.
 #
@@ -75,11 +76,33 @@ cd "$PROJECT_ROOT"
 START_TS=$SECONDS
 
 # -- 0. Optional preparation (--fix only; the only mutating path) ----------------
+# `dart fix` is previewed first: lint autofixes touch a few files, but after an
+# SDK upgrade it can also carry a sweeping migration (e.g. hundreds of files
+# moved to a new package plus new pubspec dependencies). Above
+# FVERIFY_FIX_MAX_FILES files (default 25) nothing is applied; run
+# `dart fix --apply` yourself once you have decided on that migration.
 if [ "$FIX" = true ]; then
-  step "dart fix --apply"
-  if ! dart fix --apply; then
-    fail "dart fix --apply failed."
+  MAX_FIX_FILES="${FVERIFY_FIX_MAX_FILES:-25}"
+  step "dart fix (preview)"
+  if ! FIX_PREVIEW="$(dart fix --dry-run 2>&1)"; then
+    echo "$FIX_PREVIEW"
+    fail "dart fix --dry-run failed."
     exit 1
+  fi
+  FIX_FILES="$(printf '%s\n' "$FIX_PREVIEW" | sed -nE 's/.*proposed fix(es)? in ([0-9]+) files?.*/\2/p' | head -n 1)"
+  if [ -z "$FIX_FILES" ] || [ "$FIX_FILES" -eq 0 ]; then
+    ok "nothing to fix"
+  elif [ "$FIX_FILES" -gt "$MAX_FIX_FILES" ]; then
+    printf '%s\n' "$FIX_PREVIEW" | head -n 20
+    fail "dart fix proposes changes in $FIX_FILES files (limit $MAX_FIX_FILES) — likely an SDK migration."
+    fail "Not applied. Review it, then run 'dart fix --apply' deliberately (or raise FVERIFY_FIX_MAX_FILES)."
+    exit 1
+  else
+    step "dart fix --apply ($FIX_FILES file(s))"
+    if ! dart fix --apply; then
+      fail "dart fix --apply failed."
+      exit 1
+    fi
   fi
   step "dart format ."
   if ! dart format .; then

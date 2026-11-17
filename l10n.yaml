@@ -22,10 +22,11 @@ nullable-getter: false
 # If false, only generate for locales explicitly listed
 generate-all: true
 
-# Header to add to generated files
-# header: |
-#   // Generated code - do not modify manually
-#   // See: https://docs.flutter.dev/ui/accessibility-and-internationalization/internationalization
+# Header added to generated files. Flutter 3.50's gen-l10n still emits the
+# GlobalMaterialLocalizations/GlobalCupertinoLocalizations delegates from
+# flutter_localizations, which are deprecated in favour of material_ui and
+# cupertino_ui; silence that in generated code only.
+header: "// ignore_for_file: deprecated_member_use"
 
 # Uncomment to enable detailed logging during generation
 # use-escaping: true

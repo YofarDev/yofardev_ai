@@ -1,6 +1,6 @@
 import 'dart:ui';
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../../../core/design/design.dart';
 import '../../../core/l10n/generated/app_localizations.dart';

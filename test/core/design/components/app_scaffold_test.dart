@@ -1,11 +1,12 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:yofardev_ai/core/design/components/components.dart';
 import 'package:yofardev_ai/core/design/design.dart';
+import 'package:yofardev_ai/core/l10n/app_localization_delegates.dart';
 import 'package:yofardev_ai/core/l10n/generated/app_localizations.dart';
 
 void main() {
@@ -13,7 +14,7 @@ void main() {
     return MaterialApp.router(
       theme: AppTheme.dark,
       routerConfig: router,
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      localizationsDelegates: appLocalizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
     );
   }
@@ -48,7 +49,16 @@ void main() {
       expect(find.text('Second page'), findsOneWidget);
       expect(find.text('second body'), findsOneWidget);
       expect(find.byKey(const Key('action')), findsOneWidget);
-      expect(find.byTooltip('Back'), findsOneWidget);
+      // Flutter 3.50 builds the tooltip lazily (offstage until shown), and
+      // flutter_test's byTooltip matches only the framework's Tooltip class,
+      // not material_ui's — match the widget directly.
+      expect(
+        find.byWidgetPredicate(
+          (Widget w) => w is Tooltip && w.message == 'Back',
+          skipOffstage: false,
+        ),
+        findsOneWidget,
+      );
 
       await tester.tap(find.byType(AppIconButton));
       await tester.pumpAndSettle();

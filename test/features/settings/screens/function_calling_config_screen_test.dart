@@ -1,8 +1,9 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:yofardev_ai/core/design/theme/app_theme.dart';
+import 'package:yofardev_ai/core/l10n/app_localization_delegates.dart';
 import 'package:yofardev_ai/core/l10n/generated/app_localizations.dart';
 import 'package:yofardev_ai/features/settings/presentation/bloc/settings_cubit.dart';
 import 'package:yofardev_ai/features/settings/presentation/bloc/settings_state.dart';
@@ -63,7 +64,7 @@ void main() {
       return MaterialApp(
         theme: AppTheme.dark,
         locale: const Locale('en'),
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        localizationsDelegates: appLocalizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: BlocProvider<SettingsCubit>.value(
           value: mockSettingsCubit,
@@ -76,7 +77,7 @@ void main() {
       return MaterialApp(
         theme: AppTheme.dark,
         locale: const Locale('en'),
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        localizationsDelegates: appLocalizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: Navigator(
           onGenerateInitialRoutes: (_, _) => <Route<dynamic>>[

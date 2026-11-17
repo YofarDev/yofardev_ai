@@ -1,9 +1,10 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:golden_toolkit/golden_toolkit.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'package:yofardev_ai/core/design/theme/app_theme.dart';
+import 'package:yofardev_ai/core/l10n/app_localization_delegates.dart';
 import 'package:yofardev_ai/core/l10n/generated/app_localizations.dart';
 
 /// Helper configuration for golden tests
@@ -40,7 +41,7 @@ class GoldenTestHelper {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.dark,
       locale: locale,
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      localizationsDelegates: appLocalizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       home: Material(child: child),
     );

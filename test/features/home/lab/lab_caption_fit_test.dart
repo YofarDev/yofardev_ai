@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -9,6 +9,7 @@ import 'package:yofardev_ai/features/home/widgets/lab/lab_config.dart';
 import 'package:yofardev_ai/features/home/widgets/lab/lab_stage_preview.dart';
 import 'package:yofardev_ai/features/avatar/avatar.dart';
 import 'package:yofardev_ai/features/talking/talking.dart';
+import 'package:yofardev_ai/core/l10n/app_localization_delegates.dart';
 
 /// The bundled app fonts (Storybook: Fraunces display, Manrope text), which
 /// are the shipping fonts: every look is measured with their real metrics, so
@@ -37,6 +38,8 @@ void main() {
         );
         await tester.pumpWidget(
           MaterialApp(
+            localizationsDelegates: appLocalizationsDelegates,
+            supportedLocales: const <Locale>[Locale('en'), Locale('fr')],
             theme: buildLookTheme(
               UiLooks.storybook,
               scene,

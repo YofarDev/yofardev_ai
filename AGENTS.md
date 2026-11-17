@@ -32,12 +32,13 @@ flutter test test/features/chat                            # focused: one direct
 flutter test --update-goldens test/features/avatar         # regenerate golden images (intentionally only)
 
 # Before finishing ANY change (quality gate):
-dart fix --apply
-dart format .
-./scripts/fverify.sh    # format check (non-mutating) + flutter analyze + flutter test
+./scripts/fverify.sh    # non-mutating gate (format check + analyze + test)
+./scripts/fverify.sh --fix  # dart fix --apply + dart format ., then the gate
 ```
 
-`./scripts/fverify.sh` does not fix or generate anything — resolve deps/codegen yourself first.
+`./scripts/fverify.sh` without `--fix` never rewrites source — resolve
+deps/codegen yourself first. `--fix` refuses `dart fix` when it would touch
+more than 25 files (an SDK migration — decide on it separately).
 
 ---
 
@@ -494,6 +495,8 @@ Each feature except `home` exposes a public API barrel at
 
 ---
 
-**Last Updated**: 2026-11-17 (FlutterForge template upgrade to 6053fbf; feature-module
-checker rule, fgen auto-wiring markers, fverify --fix, fmap) — analyzer-based architecture gate from
+**Last Updated**: 2026-11-17 (second FlutterForge upgrade to 8a48cd4: Flutter 3.50 +
+material_ui localization delegates, analyzer ^14, fgen/fwire real-app fixes; first
+upgrade 6053fbf: feature-module checker rule, fgen auto-wiring markers, fverify
+--fix, fmap) — analyzer-based architecture gate from
 FlutterForge, shared repository contracts in `core/repositories/`)

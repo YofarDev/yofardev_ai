@@ -1,6 +1,6 @@
 // ignore-l10n: debug — /rive-lab is a debug-only screen (route registered
 // behind kDebugMode), so its strings are intentionally hardcoded.
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:rive/rive.dart';
 
 import '../../../../core/design/rive/rive_vm_binding.dart';

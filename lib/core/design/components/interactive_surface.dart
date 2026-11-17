@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Interaction flags handed to [InteractiveSurface.builder]. They are always
 /// all false while the surface is disabled.

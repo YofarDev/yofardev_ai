@@ -129,7 +129,7 @@ class AlphaDto {
       await expectViolation(
         fixtureWith(<String, String>{
           'lib/features/alpha/domain/models/alpha_model.dart': '''
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 class AlphaModel {
   const AlphaModel(this.id);
@@ -641,7 +641,7 @@ class MirrorCubit extends Cubit<AlphaState3> {
       await expectViolation(
         fixtureWith(<String, String>{
           'lib/features/alpha/presentation/screens/alpha_screen.dart': '''
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/di/service_locator.dart';
@@ -744,7 +744,7 @@ class AlphaService {
       await expectViolation(
         fixtureWith(<String, String>{
           'lib/main.dart': '''
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import 'app.dart';
 import 'core/di/service_locator.dart';
@@ -809,7 +809,7 @@ class AlphaService {
       await expectViolation(
         fixtureWith(<String, String>{
           'lib/features/alpha/presentation/screens/alpha_screen.dart': '''
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import
@@ -928,7 +928,7 @@ class FreezedJunk {
 }
 ''',
           'lib/core/l10n/generated/app_localizations.dart': '''
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import '../../features/alpha/data/datasources/alpha_remote_datasource.dart';
 class AppLocalizations {}
 ''',

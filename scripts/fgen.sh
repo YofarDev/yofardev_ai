@@ -397,7 +397,7 @@ fi
 render_job w "$STAGE_TEST/presentation/bloc/${FEATURE_SNAKE}_cubit_test.dart" cubit_test.dart.tpl CUBIT_TEST_MOCK_IMPORT "$CUBIT_TEST_MOCK_IMPORT" CUBIT_TEST_MOCK_TYPE "$CUBIT_TEST_MOCK_TYPE" FEATURE_PASCAL "$FEATURE_PASCAL" FEATURE_SNAKE "$FEATURE_SNAKE" PROJECT_NAME "$PROJECT_NAME"
 
 # --- 18. Test Layer: Screen Widget Test ---------------------------------------------------
-render_job w "$STAGE_TEST/presentation/screens/${FEATURE_SNAKE}_screen_test.dart" screen_test.dart.tpl FEATURE_PASCAL "$FEATURE_PASCAL" FEATURE_SNAKE "$FEATURE_SNAKE" PROJECT_NAME "$PROJECT_NAME"
+render_job w "$STAGE_TEST/presentation/screens/${FEATURE_SNAKE}_screen_test.dart" screen_test.dart.tpl FEATURE_PASCAL "$FEATURE_PASCAL" FEATURE_SNAKE "$FEATURE_SNAKE" L10N_DATA_KEY "$L10N_DATA_KEY" PROJECT_NAME "$PROJECT_NAME"
 
 # --- 18b. Test Layer: Flow test through the module's real wiring -------------------
 FLOW_TEST_DATA_IMPORT="package:$PROJECT_NAME/features/$FEATURE_SNAKE/domain/models/${FEATURE_SNAKE}.dart"
@@ -406,7 +406,7 @@ if [ "$WITH_DTO" = true ]; then
     FLOW_TEST_DATA_IMPORT="package:$PROJECT_NAME/features/$FEATURE_SNAKE/data/models/${FEATURE_SNAKE}_dto.dart"
     FLOW_TEST_DATA="const ${FEATURE_PASCAL}Dto(id: '1', name: 'Flow')"
 fi
-render_job w "$STAGE_TEST/${FEATURE_SNAKE}_flow_test.dart" flow_test.dart.tpl DATA_SOURCE_RETURN_TYPE "$DATA_SOURCE_RETURN_TYPE" FEATURE_CAMEL "$FEATURE_CAMEL" FEATURE_PASCAL "$FEATURE_PASCAL" FEATURE_SNAKE "$FEATURE_SNAKE" FLOW_TEST_DATA "$FLOW_TEST_DATA" FLOW_TEST_DATA_IMPORT "$FLOW_TEST_DATA_IMPORT" PROJECT_NAME "$PROJECT_NAME"
+render_job w "$STAGE_TEST/${FEATURE_SNAKE}_flow_test.dart" flow_test.dart.tpl DATA_SOURCE_RETURN_TYPE "$DATA_SOURCE_RETURN_TYPE" FEATURE_CAMEL "$FEATURE_CAMEL" FEATURE_PASCAL "$FEATURE_PASCAL" FEATURE_SNAKE "$FEATURE_SNAKE" FLOW_TEST_DATA "$FLOW_TEST_DATA" FLOW_TEST_DATA_IMPORT "$FLOW_TEST_DATA_IMPORT" L10N_DATA_KEY "$L10N_DATA_KEY" PROJECT_NAME "$PROJECT_NAME"
 
 # --- 18c. Render every queued file in one process (nothing written on error) -------
 if ! uv run --no-project "$SCRIPT_DIR/render_feature.py" --batch "$STAGE_ROOT/render.jobs"; then
