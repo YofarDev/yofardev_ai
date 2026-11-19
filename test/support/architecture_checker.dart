@@ -54,6 +54,15 @@ import 'package:analyzer/dart/ast/visitor.dart';
 import 'package:analyzer/dart/element/element.dart';
 import 'package:analyzer/dart/element/type.dart';
 import 'package:analyzer/diagnostic/diagnostic.dart';
+// The persistent analysis cache (see [_persistentByteStore]) is only reachable
+// through the analyzer's implementation classes; analyzer is pinned to one
+// major version (packages_to_add.json), and these have been stable for years.
+// ignore: implementation_imports
+import 'package:analyzer/src/dart/analysis/analysis_context_collection.dart';
+// ignore: implementation_imports
+import 'package:analyzer/src/dart/analysis/byte_store.dart';
+// ignore: implementation_imports
+import 'package:analyzer/src/dart/analysis/file_byte_store.dart';
 
 /// Package name used for fixture projects.
 ///
@@ -100,6 +109,30 @@ const String serviceLocatorPath = 'lib/core/di/service_locator.dart';
 /// public barrel crosses feature boundaries).
 bool isFeatureModule(String appRelativePath) =>
     RegExp(r'^lib/features/([^/]+)/\1_module\.dart$').hasMatch(appRelativePath);
+
+/// Files allowed to import a feature module (`lib/features/<f>/<f>_module.dart`):
+/// the app-wide composition roots that call `register<F>Feature` and spread
+/// `<f>Routes`. Anything else importing a module could reach its locator.
+const List<String> featureModuleImportAllowlist = <String>[
+  'lib/core/di/service_locator.dart',
+  'lib/core/router/app_router.dart',
+];
+
+/// App-wide state shared by several features (e.g. a wallet or session cubit
+/// used by many screens). It sits above the features: it may import `core/`
+/// and feature PUBLIC barrels (domain contracts) only, and only presentation
+/// code, other app-state files and the composition roots may import it —
+/// never domain, data or core.
+const String appStatePrefix = 'lib/app_state/';
+
+/// Non-presentation files that may import app state: the composition roots
+/// that construct and provide it.
+const List<String> appStateImportAllowlist = <String>[
+  'lib/app.dart',
+  'lib/main.dart',
+  'lib/core/di/service_locator.dart',
+  'lib/core/router/app_router.dart',
+];
 
 /// Files that may use get_it directly: the [locatorAllowlist] plus feature
 /// modules.
@@ -238,6 +271,10 @@ class _AnalyzerRun {
   final Map<String, Map<String, _FeatureEdge>> _featureGraph =
       <String, Map<String, _FeatureEdge>>{};
 
+  /// `part-location` findings already reported, keyed `library|part`, so the
+  /// library-side `part` and the part-side `part of` report a pair once.
+  final Set<String> _reportedPartLocations = <String>{};
+
   late final String rootPath;
   late final String packageName;
   late final AnalysisSession _session;
@@ -264,9 +301,10 @@ class _AnalyzerRun {
       return;
     }
 
-    final AnalysisContextCollection collection = AnalysisContextCollection(
+    final AnalysisContextCollection collection = AnalysisContextCollectionImpl(
       includedPaths: <String>[rootPath],
       sdkPath: _dartSdkPath(),
+      byteStore: _persistentByteStore(),
     );
     try {
       final AnalysisSession session = collection
@@ -457,6 +495,24 @@ class _AnalyzerRun {
     final ResolvedUnitResult result = _resolved[path]!;
     final _FileClassification importer = _classifyFile(_relative(path));
 
+    // Rule: every handwritten file under lib/features/ has a role. A file
+    // outside a feature's barrel, module and data/domain/presentation layers
+    // would have no layer rules, so one re-export through it could launder any
+    // dependency.
+    final String? unclassified = _unclassifiedFeatureFileReason(importer);
+    if (unclassified != null) {
+      violations.add(
+        ArchitectureViolation(
+          ruleId: 'unclassified-location',
+          path: importer.path,
+          line: 1,
+          explanation: unclassified,
+        ),
+      );
+    }
+
+    _rejectFileUris(path, result);
+
     // Directive checks: import/export/part (incl. conditional
     // configurations). `part`/`part of` are dependencies like any import —
     // the included file participates in this library's layer.
@@ -518,14 +574,81 @@ class _AnalyzerRun {
               path: importer.path,
               line: line,
               explanation:
-                  'domain depends on Flutter UI library $uri — keep domain '
-                  'free of UI (package:flutter/foundation.dart excepted)',
+                  'domain depends on Flutter UI/state library $uri — keep '
+                  'domain free of UI, dart:ui, flutter_bloc/bloc and '
+                  'go_router (package:flutter/foundation.dart excepted)',
             ),
           );
         }
         continue;
       }
       _checkDependency(importer, line, uri, targetPath);
+      if (directive is PartDirective) {
+        _checkPartLocation(
+          library: importer,
+          part: _classifyFile(_relative(targetPath)),
+          line: line,
+        );
+      }
+    }
+  }
+
+  /// Rule `part-location`: a `part` file must live in the same feature and
+  /// layer as the library that includes it. A part is compiled into its
+  /// library, so a part in another layer or feature would carry that
+  /// library's code (and imports) outside the layer rules that apply to its
+  /// own path.
+  void _checkPartLocation({
+    required _FileClassification library,
+    required _FileClassification part,
+    required int line,
+  }) {
+    if (library.feature == part.feature &&
+        library.layer == part.layer &&
+        library.isPublicBarrel == part.isPublicBarrel &&
+        library.isCoreLike == part.isCoreLike) {
+      return;
+    }
+    if (!_reportedPartLocations.add('${library.path}|${part.path}')) {
+      return;
+    }
+    violations.add(
+      ArchitectureViolation(
+        ruleId: 'part-location',
+        path: library.path,
+        line: line,
+        explanation:
+            '${library.path} includes part ${part.path} from another '
+            'feature or layer — a part file must live in the same feature '
+            'and layer as its library',
+      ),
+    );
+  }
+
+  /// Fails closed on `file:` URIs: an absolute file URI is not resolved
+  /// against the app tree, so it would bypass every layer rule. Reported as a
+  /// checker error (never a silent pass).
+  void _rejectFileUris(String path, ResolvedUnitResult result) {
+    for (final Directive directive in result.unit.directives) {
+      final List<String> uris = <String>[
+        if (directive is UriBasedDirective) ..._directiveUris(directive),
+        if (directive is PartOfDirective && directive.uri?.stringValue != null)
+          directive.uri!.stringValue!,
+      ];
+      for (final String uri in uris) {
+        final Uri? parsed = Uri.tryParse(uri);
+        if (parsed != null && parsed.scheme == 'file') {
+          errors.add(
+            CheckerError(
+              path: _relative(path),
+              message:
+                  "line ${_lineOf(result, directive.offset)}: 'file:' URI "
+                  "'$uri' cannot be checked — use a relative or package: URI "
+                  'so the layer rules can see the dependency',
+            ),
+          );
+        }
+      }
     }
   }
 
@@ -554,6 +677,62 @@ class _AnalyzerRun {
               'imports $serviceLocatorPath — the service locator is only '
               'imported by ${serviceLocatorImportAllowlist.join(', ')}; '
               'features receive dependencies through constructors',
+        ),
+      );
+    }
+
+    // Rule: app state (lib/app_state/) sits above the features. It reads
+    // features through their public barrels only, and only presentation code,
+    // other app state and the composition roots may depend on it.
+    if (target.isAppState &&
+        !importer.isAppState &&
+        importer.layer != _Layer.presentation &&
+        !isFeatureModule(importer.path) &&
+        !appStateImportAllowlist.contains(importer.path)) {
+      violations.add(
+        ArchitectureViolation(
+          ruleId: 'app-state-access',
+          path: importer.path,
+          line: line,
+          explanation:
+              'imports app state ${_relative(targetPath)} — only presentation '
+              'code, lib/app_state/ and the composition roots may depend on '
+              'app-wide state; domain, data and core never do',
+        ),
+      );
+    }
+    if (importer.isAppState && target.feature != null) {
+      final String publicBarrel =
+          'lib/features/${target.feature}/${target.feature}.dart';
+      if (_relative(targetPath) != publicBarrel) {
+        violations.add(
+          ArchitectureViolation(
+            ruleId: 'app-state-imports-internals',
+            path: importer.path,
+            line: line,
+            explanation:
+                'app state imports ${_relative(targetPath)} — it may read a '
+                'feature only through its public barrel $publicBarrel',
+          ),
+        );
+      }
+    }
+
+    // Rule: feature modules are imported only by the app-wide composition
+    // roots. (Another feature importing a module is already reported as
+    // cross-feature-internals.)
+    if (isFeatureModule(_relative(targetPath)) &&
+        !featureModuleImportAllowlist.contains(importer.path) &&
+        (importer.feature == null || importer.feature == target.feature)) {
+      violations.add(
+        ArchitectureViolation(
+          ruleId: 'module-import',
+          path: importer.path,
+          line: line,
+          explanation:
+              'imports feature module ${_relative(targetPath)} — modules are '
+              'imported only by ${featureModuleImportAllowlist.join(' and ')}; '
+              'feature code receives dependencies through constructors',
         ),
       );
     }
@@ -744,6 +923,7 @@ class _AnalyzerRun {
       return null;
     }
     _resolved[path] = result;
+    _rejectFileUris(path, result);
     for (final Diagnostic diagnostic in result.diagnostics) {
       if (diagnostic.severity == Severity.error) {
         errors.add(
@@ -797,6 +977,11 @@ class _AnalyzerRun {
     final _FileClassification library = _classifyFile(_relative(libraryPath));
     final int line = _lineOf(_resolved[partPath]!, directive.offset);
     _checkDependency(library, line, uri, partPath);
+    _checkPartLocation(
+      library: library,
+      part: _classifyFile(_relative(partPath)),
+      line: line,
+    );
   }
 
   /// The base URI of [directive] plus the URI of every conditional
@@ -837,6 +1022,12 @@ class _AnalyzerRun {
     if (uri.isEmpty || uri.startsWith('dart:')) {
       return null;
     }
+    // Any other scheme (`file:` is rejected as a checker error by
+    // [_rejectFileUris]; `http:` etc. cannot be app files) is external.
+    final Uri? parsed = Uri.tryParse(uri);
+    if (parsed != null && parsed.hasScheme && parsed.scheme != 'package') {
+      return null;
+    }
     String resolved;
     if (uri.startsWith('package:')) {
       final int slash = uri.indexOf('/');
@@ -860,6 +1051,25 @@ class _AnalyzerRun {
   }
 }
 
+/// Finds identifiers under an expression that the locator-access rule reports.
+class _LocatorReferenceFinder extends RecursiveAstVisitor<void> {
+  _LocatorReferenceFinder(this._visitor);
+
+  final _RuleVisitor _visitor;
+  bool found = false;
+
+  @override
+  void visitSimpleIdentifier(SimpleIdentifier node) {
+    final Element? element = node.element;
+    if (element != null &&
+        (_visitor._isGetItElement(element) ||
+            _visitor._isDiFileVariableElement(element))) {
+      found = true;
+    }
+    super.visitSimpleIdentifier(node);
+  }
+}
+
 /// AST visitor enforcing usage rules (locator access, registration ownership,
 /// stored cubit/bloc fields).
 class _RuleVisitor extends RecursiveAstVisitor<void> {
@@ -872,7 +1082,9 @@ class _RuleVisitor extends RecursiveAstVisitor<void> {
   @override
   void visitSimpleIdentifier(SimpleIdentifier node) {
     final Element? element = node.element;
-    if (element != null && !_mayUseLocator(_importer.path)) {
+    if (element != null &&
+        !_mayUseLocator(_importer.path) &&
+        !_isReportedLocatorMethodName(node)) {
       final bool isGetItReference =
           _isGetItElement(element) || _isDiFileVariableElement(element);
       if (isGetItReference) {
@@ -890,6 +1102,21 @@ class _RuleVisitor extends RecursiveAstVisitor<void> {
       }
     }
     super.visitSimpleIdentifier(node);
+  }
+
+  /// True for the method-name identifier of an invocation such as
+  /// `getIt.registerFactory(...)` whose target already references the locator
+  /// (and is reported on its own) — the method name is not a second finding.
+  bool _isReportedLocatorMethodName(SimpleIdentifier node) {
+    final AstNode? parent = node.parent;
+    if (parent is! MethodInvocation ||
+        parent.methodName != node ||
+        parent.target == null) {
+      return false;
+    }
+    final _LocatorReferenceFinder finder = _LocatorReferenceFinder(this);
+    parent.target!.accept(finder);
+    return finder.found;
   }
 
   @override
@@ -917,7 +1144,12 @@ class _RuleVisitor extends RecursiveAstVisitor<void> {
 
   @override
   void visitFieldDeclaration(FieldDeclaration node) {
-    _checkStoredCubit(node.fields);
+    // Widgets and their State objects receive a cubit (or a cubit factory)
+    // through their constructor and wrap it in BlocProvider.value — the
+    // dialog/pushed-screen pattern — so they may store one.
+    if (!_isWidgetOrStateClass(node.thisOrAncestorOfType<ClassDeclaration>())) {
+      _checkStoredCubit(node.fields);
+    }
     super.visitFieldDeclaration(node);
   }
 
@@ -925,6 +1157,73 @@ class _RuleVisitor extends RecursiveAstVisitor<void> {
   void visitTopLevelVariableDeclaration(TopLevelVariableDeclaration node) {
     _checkStoredCubit(node.variables);
     super.visitTopLevelVariableDeclaration(node);
+  }
+
+  /// A `@freezed` class keeps its fields in the excluded `*.freezed.dart`, so
+  /// the handwritten redirecting factory constructor's parameters are the
+  /// stored state: a cubit-typed parameter there is a stored cubit.
+  @override
+  void visitClassDeclaration(ClassDeclaration node) {
+    final ClassBody body = node.body;
+    if (body is BlockClassBody && _isFreezedClass(node)) {
+      for (final ClassMember member in body.members) {
+        if (member is! ConstructorDeclaration ||
+            member.factoryKeyword == null ||
+            member.redirectedConstructor == null) {
+          continue;
+        }
+        for (final FormalParameter parameter in member.parameters.parameters) {
+          final DartType? type = parameter.declaredFragment?.element.type;
+          if (type != null && _isCubitType(type, <DartType>{})) {
+            _reportStoredCubit(
+              parameter,
+              parameter.name?.lexeme ?? '?',
+              type,
+              'freezed factory parameter',
+            );
+          }
+        }
+      }
+    }
+    super.visitClassDeclaration(node);
+  }
+
+  bool _isFreezedClass(ClassDeclaration node) {
+    for (final Annotation annotation in node.metadata) {
+      final Element? element = annotation.element;
+      final String? name = element is ConstructorElement
+          ? element.enclosingElement.name
+          : element?.name;
+      if ((name == 'freezed' || name == 'Freezed') &&
+          (element?.library?.identifier.startsWith(
+                'package:freezed_annotation/',
+              ) ??
+              false)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /// True when [declaration] is a class extending a Flutter `Widget` or
+  /// `State` (any subtype).
+  bool _isWidgetOrStateClass(AstNode? declaration) {
+    if (declaration is! ClassDeclaration) {
+      return false;
+    }
+    final InterfaceElement? element = declaration.declaredFragment?.element;
+    if (element == null) {
+      return false;
+    }
+    for (final InterfaceType supertype in element.allSupertypes) {
+      final InterfaceElement supertypeElement = supertype.element;
+      if ((supertypeElement.name == 'Widget' ||
+              supertypeElement.name == 'State') &&
+          supertypeElement.library.identifier.startsWith('package:flutter/')) {
+        return true;
+      }
+    }
+    return false;
   }
 
   void _checkStoredCubit(VariableDeclarationList fields) {
@@ -936,37 +1235,54 @@ class _RuleVisitor extends RecursiveAstVisitor<void> {
         continue;
       }
       if (_isCubitType(type, <DartType>{})) {
-        _run.violations.add(
-          ArchitectureViolation(
-            ruleId: 'stored-cubit',
-            path: _importer.path,
-            line: _line(variable),
-            explanation:
-                "stores a Cubit/Bloc-typed dependency "
-                "('${variable.name.lexeme}' of type "
-                '${type.getDisplayString()}) — cubits must not depend on other '
-                'cubits or be stored by services; extract a domain service',
-          ),
-        );
+        _reportStoredCubit(variable, variable.name.lexeme, type, 'field');
       }
     }
   }
 
-  /// True when [type] is, contains (as a type argument — containers,
-  /// generics, futures), or derives from (inherited cubit subclasses) a
-  /// `Cubit`/`Bloc` from package:flutter_bloc. Type aliases are already
-  /// resolved into their aliased type; nullability is irrelevant.
+  void _reportStoredCubit(
+    AstNode node,
+    String name,
+    DartType type,
+    String what,
+  ) {
+    _run.violations.add(
+      ArchitectureViolation(
+        ruleId: 'stored-cubit',
+        path: _importer.path,
+        line: _line(node),
+        explanation:
+            "stores a Cubit/Bloc-typed dependency as $what "
+            "('$name' of type ${type.getDisplayString()}) — cubits must not "
+            'depend on other cubits or be stored by services; extract a '
+            'domain service (only widgets and State objects may receive a '
+            'cubit through their constructor)',
+      ),
+    );
+  }
+
+  /// True when [type] is, contains, or derives from a bloc-family type:
+  /// `Cubit`, `Bloc`, `BlocBase` (so every subtype), `StateStreamable`,
+  /// `StateStreamableSource` or `Emittable`. "Contains" covers type
+  /// arguments (containers, generics, futures), record fields, the return
+  /// type of a function type (a stored cubit factory) and the erasure of an
+  /// extension type. Type aliases are already resolved into their aliased
+  /// type; nullability is irrelevant.
   bool _isCubitType(DartType type, Set<DartType> visited) {
     if (!visited.add(type)) {
       return false;
     }
+    final DartType erased = type.extensionTypeErasure;
+    if (erased != type && _isCubitType(erased, visited)) {
+      return true;
+    }
     if (type is InterfaceType) {
       final InterfaceElement element = type.element;
-      if (_isFlutterBlocCubitElement(element)) {
+      if (_isBlocFamilyElement(element)) {
         return true;
       }
       for (final InterfaceType supertype in type.allSupertypes) {
-        if (_isFlutterBlocCubitElement(supertype.element)) {
+        if (_isBlocFamilyElement(supertype.element)) {
           return true;
         }
       }
@@ -978,14 +1294,38 @@ class _RuleVisitor extends RecursiveAstVisitor<void> {
         }
       }
     }
+    if (type is RecordType) {
+      for (final RecordTypePositionalField field in type.positionalFields) {
+        if (_isCubitType(field.type, visited)) {
+          return true;
+        }
+      }
+      for (final RecordTypeNamedField field in type.namedFields) {
+        if (_isCubitType(field.type, visited)) {
+          return true;
+        }
+      }
+    }
+    if (type is FunctionType && _isCubitType(type.returnType, visited)) {
+      return true;
+    }
     return false;
   }
 
-  bool _isFlutterBlocCubitElement(InterfaceElement element) {
-    if (element.name != 'Cubit' && element.name != 'Bloc') {
+  static const Set<String> _blocFamilyNames = <String>{
+    'Cubit',
+    'Bloc',
+    'BlocBase',
+    'StateStreamable',
+    'StateStreamableSource',
+    'Emittable',
+  };
+
+  bool _isBlocFamilyElement(InterfaceElement element) {
+    if (!_blocFamilyNames.contains(element.name)) {
       return false;
     }
-    // Cubit/Bloc live in package:bloc and are re-exported by flutter_bloc.
+    // These live in package:bloc and are re-exported by flutter_bloc.
     return element.library.identifier.startsWith('package:bloc/') ||
         element.library.identifier.startsWith('package:flutter_bloc/');
   }
@@ -1052,6 +1392,7 @@ final class _FileClassification {
     required this.feature,
     required this.isPublicBarrel,
     required this.isCoreLike,
+    this.isAppState = false,
   });
 
   /// App-relative normalized path (`lib/...`).
@@ -1062,9 +1403,14 @@ final class _FileClassification {
   final String? feature;
   final bool isPublicBarrel;
 
-  /// True for `lib/core/**` and root-level `lib/*.dart` infrastructure files
-  /// (excluding `lib/app.dart`, `lib/main.dart` and the DI composition root).
+  /// True for every file in `lib/` outside `lib/features/` — `lib/core/**`,
+  /// root-level `lib/*.dart` and any other folder such as `lib/shared/` —
+  /// excluding `lib/app.dart`, `lib/main.dart` and the DI composition root.
   final bool isCoreLike;
+
+  /// True for app-wide state under [appStatePrefix] (not core: it may read
+  /// feature barrels).
+  final bool isAppState;
 
   /// Domain files share the purity rules. Public feature barrels do NOT
   /// (project adaptation 1: they are whole-feature APIs here).
@@ -1095,9 +1441,16 @@ _FileClassification _classifyFile(String appRelativePath) {
     }
   }
 
+  // Everything in lib/ outside lib/features/ is infrastructure: lib/core/,
+  // root-level files and any other folder (lib/shared/, lib/utils/, ...), so
+  // a differently named folder cannot escape the core rules.
+  // App state (lib/app_state/) is the one folder outside features that is not
+  // core: it may read feature barrels (see [appStatePrefix]).
+  final bool isAppState = path.startsWith(appStatePrefix);
   final bool isCoreLike =
-      (path.startsWith('lib/core/') ||
-          RegExp(r'^lib/[^/]+\.dart$').hasMatch(path)) &&
+      path.startsWith('lib/') &&
+      !path.startsWith('lib/features/') &&
+      !isAppState &&
       path != 'lib/app.dart' &&
       path != 'lib/main.dart' &&
       path != serviceLocatorPath;
@@ -1108,7 +1461,55 @@ _FileClassification _classifyFile(String appRelativePath) {
     feature: feature,
     isPublicBarrel: isBarrel,
     isCoreLike: isCoreLike,
+    isAppState: isAppState,
   );
+}
+
+/// Why a handwritten file under `lib/features/` has no architectural role, or
+/// null when it has one (public barrel, feature module, or a file inside the
+/// feature's `data/`, `domain/` or `presentation/` layer).
+String? _unclassifiedFeatureFileReason(_FileClassification file) {
+  if (!file.path.startsWith('lib/features/')) {
+    return null;
+  }
+  if (file.feature == null) {
+    return '${file.path} sits directly in lib/features/, which holds only '
+        'feature directories — move it into a feature layer or lib/core/';
+  }
+  if (file.isPublicBarrel ||
+      isFeatureModule(file.path) ||
+      file.layer != _Layer.none) {
+    return null;
+  }
+  return '${file.path} is outside the ${file.feature} feature\'s layers — '
+      'only lib/features/${file.feature}/${file.feature}.dart (barrel), '
+      '${file.feature}_module.dart and files under data/, domain/ or '
+      'presentation/ are allowed, so the layer rules apply to every file';
+}
+
+/// Analysis cache shared by every checker run in this app (the gate and any
+/// fixture run), in `.dart_tool/flutterforge_checker_cache` of the package
+/// the tests run from (capped at 512 MB, oldest entries evicted).
+///
+/// Without it every run re-parses and re-links the Flutter SDK and all
+/// dependencies from source: on a ~370-file app the gate took 18 s and
+/// 1.7 GB; with a warm cache 9.5 s and 0.8 GB. The store is safe for
+/// concurrent processes (atomic renames). Falls back to an in-memory store
+/// when the directory cannot be created.
+ByteStore _persistentByteStore() {
+  const int memoryCacheBytes = 64 * 1024 * 1024;
+  const int diskCacheBytes = 512 * 1024 * 1024;
+  try {
+    final Directory cache = Directory(
+      '${Directory.current.path}/.dart_tool/flutterforge_checker_cache',
+    )..createSync(recursive: true);
+    return MemoryCachingByteStore(
+      EvictingFileByteStore(cache.path, diskCacheBytes),
+      memoryCacheBytes,
+    );
+  } on FileSystemException {
+    return MemoryByteStore();
+  }
 }
 
 /// Generated-file policy: machine-owned declarations are exempt from standalone
@@ -1121,12 +1522,19 @@ bool _isGeneratedFile(String path) {
       normalized.contains('/l10n/generated/');
 }
 
-/// Whether [uri] is a Flutter UI library forbidden in domain.
+/// Whether [uri] is a Flutter UI / Flutter-dependent library forbidden in
+/// domain and public barrels: the Flutter UI libraries, `dart:ui`, and the
+/// presentation-state and navigation packages (`flutter_bloc`, `bloc`,
+/// `go_router`). `package:flutter/foundation.dart` is the one exception.
 bool _isFlutterUiImport(String uri) {
   if (uri == 'package:flutter/foundation.dart') {
     return false;
   }
-  return uri.startsWith('package:flutter/') ||
+  return uri == 'dart:ui' ||
+      uri.startsWith('package:flutter_bloc/') ||
+      uri.startsWith('package:bloc/') ||
+      uri.startsWith('package:go_router/') ||
+      uri.startsWith('package:flutter/') ||
       uri.startsWith('package:flutter_localizations/') ||
       uri.startsWith('package:material_ui/') ||
       uri.startsWith('package:cupertino_ui/');
@@ -1177,8 +1585,10 @@ String? _dartSdkPath() {
   final String executable = _normalizePath(Platform.resolvedExecutable);
 
   // Plain Dart VM: resolvedExecutable ends with <sdk>/bin/dart or <sdk>/bin/dart.exe.
-  final String binDirectory = File(executable).parent.path;
-  final String vmCandidate = _normalizePath('$binDirectory/..');
+  // `parent.parent` is already normalized (the analyzer rejects `<sdk>/bin/..`).
+  final String vmCandidate = _normalizePath(
+    File(executable).parent.parent.path,
+  );
   if (Directory('$vmCandidate/lib/_internal').existsSync()) {
     return vmCandidate;
   }

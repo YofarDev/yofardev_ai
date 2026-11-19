@@ -8,9 +8,9 @@ living-room accent); there are no light-theme or dark-mode variants.
 ## Run
 
 ```bash
-flutter test test/features/chat/widgets/modern_chat_bubble_golden_test.dart
-flutter test test/features/chat/widgets/modern_chat_bubble_edge_cases_golden_test.dart
-flutter test test/features/chat/widgets/shimmer_loading_golden_test.dart
+flutter test test/features/chat/presentation/widgets/modern_chat_bubble_golden_test.dart
+flutter test test/features/chat/presentation/widgets/modern_chat_bubble_edge_cases_golden_test.dart
+flutter test test/features/chat/presentation/widgets/shimmer_loading_golden_test.dart
 flutter test test/features/screens/chat_screen_golden_test.dart
 flutter test test/core/design/components   # design component kit
 ```

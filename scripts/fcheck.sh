@@ -52,11 +52,12 @@ if [ ! -z "$1" ]; then
     echo "🔍 Checking if '$PACKAGE_NAME' is used in lib/..."
     echo ""
 
-    if grep -r "import 'package:$PACKAGE_NAME" lib/ > /dev/null 2>&1; then
+    PKG_RE="^[[:space:]]*(import|export)[[:space:]]+['\"]package:$PACKAGE_NAME/"
+    if grep -rE "$PKG_RE" lib/ > /dev/null 2>&1; then
         echo "✅ Package '$PACKAGE_NAME' IS used"
         echo ""
         echo "Found in:"
-        grep -rn "import 'package:$PACKAGE_NAME" lib/ | sed 's/:/ - line /'
+        grep -rnE "$PKG_RE" lib/ | sed 's/:/ - line /'
     else
         echo "❌ Package '$PACKAGE_NAME' is NOT directly imported in lib/"
         echo ""
@@ -83,7 +84,7 @@ DECLARED=$(awk '
 ' pubspec.yaml | tr -d ':' | grep -vE "^(flutter|cupertino_icons)$")
 
 # Get actually imported packages from lib/
-IMPORTED=$(grep -rh "import 'package:" lib/ 2>/dev/null | grep -o "package:[^/]*" | sed 's/package://g' | sort -u)
+IMPORTED=$(grep -rhE "^[[:space:]]*(import|export)[[:space:]]+['\"]package:" lib/ 2>/dev/null | grep -oE "package:[^/'\"]*" | sed 's/package://g' | sort -u || true)
 
 UNUSED_COUNT=0
 USED_COUNT=0

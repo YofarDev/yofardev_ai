@@ -1,5 +1,5 @@
 import 'dart:io';
-import 'dart:ui';
+import 'package:yofardev_ai/core/models/geometry.dart';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:yofardev_ai/core/models/avatar_scene.dart';
@@ -27,43 +27,43 @@ Duration _settle(
 
 void main() {
   group('pull (the cord)', () {
-    final Rect rect = SceneDrags.of(AvatarScene.livingRoom)!.rect;
-    final Offset grab = Offset(rect.center.dx, rect.top + 20);
+    final Box2 rect = SceneDrags.of(AvatarScene.livingRoom)!.rect;
+    final Vec2 grab = Vec2(rect.center.x, rect.top + 20);
 
     test('follows the finger down, 0..1 over the travel, never up', () {
       final PropDragPhysics p = _physics(AvatarScene.livingRoom);
       p.start(grab, Duration.zero);
       expect(p.takeCues(), <DragCue>[DragCue.start]);
-      p.move(grab + const Offset(0, 50), _ms(16));
+      p.move(grab + const Vec2(0, 50), _ms(16));
       expect(p.values['cord'], closeTo(0.5, 1e-9));
-      p.move(grab + const Offset(0, -40), _ms(32));
+      p.move(grab + const Vec2(0, -40), _ms(32));
       expect(p.values['cord'], 0);
-      p.move(grab + const Offset(0, 400), _ms(48));
+      p.move(grab + const Vec2(0, 400), _ms(48));
       expect(p.values['cord'], 1);
     });
 
     test('past 0.6 fires once per pull, and again on the next pull', () {
       final PropDragPhysics p = _physics(AvatarScene.livingRoom);
       p.start(grab, Duration.zero);
-      p.move(grab + const Offset(0, 59), _ms(16));
+      p.move(grab + const Vec2(0, 59), _ms(16));
       expect(p.takeCues(), <DragCue>[DragCue.start]);
-      p.move(grab + const Offset(0, 61), _ms(32));
+      p.move(grab + const Vec2(0, 61), _ms(32));
       expect(p.takeCues(), <DragCue>[DragCue.pullFired]);
       // up and down again within the same pull: nothing more
       p.move(grab, _ms(48));
-      p.move(grab + const Offset(0, 90), _ms(64));
+      p.move(grab + const Vec2(0, 90), _ms(64));
       expect(p.takeCues(), isEmpty);
       p.end(_ms(80));
       _settle(p, _ms(80));
       p.start(grab, _ms(2000));
-      p.move(grab + const Offset(0, 70), _ms(2016));
+      p.move(grab + const Vec2(0, 70), _ms(2016));
       expect(p.takeCues(), <DragCue>[DragCue.start, DragCue.pullFired]);
     });
 
     test('springs back on release, no overshoot, and rests at exactly 0', () {
       final PropDragPhysics p = _physics(AvatarScene.livingRoom);
       p.start(grab, Duration.zero);
-      p.move(grab + const Offset(0, 100), _ms(16));
+      p.move(grab + const Vec2(0, 100), _ms(16));
       p.end(_ms(32));
       expect(p.animating, isTrue);
       double last = 1;
@@ -83,14 +83,14 @@ void main() {
     test('regrabbed mid-spring: no jump', () {
       final PropDragPhysics p = _physics(AvatarScene.livingRoom);
       p.start(grab, Duration.zero);
-      p.move(grab + const Offset(0, 100), _ms(16));
+      p.move(grab + const Vec2(0, 100), _ms(16));
       p.end(_ms(32));
       p.tick(_ms(100));
       final double mid = p.values['cord']!;
       expect(mid, inExclusiveRange(0, 1));
-      p.start(grab + const Offset(0, 30), _ms(110));
+      p.start(grab + const Vec2(0, 30), _ms(110));
       expect(p.animating, isFalse);
-      p.move(grab + const Offset(0, 30), _ms(126));
+      p.move(grab + const Vec2(0, 30), _ms(126));
       expect(p.values['cord'], closeTo(mid, 1e-9));
     });
 
@@ -99,9 +99,9 @@ void main() {
         AvatarScene.mountainHut,
         reduceMotion: true,
       );
-      final Rect rope = SceneDrags.of(AvatarScene.mountainHut)!.rect;
+      final Box2 rope = SceneDrags.of(AvatarScene.mountainHut)!.rect;
       p.start(rope.center, Duration.zero);
-      p.move(rope.center + const Offset(0, 80), _ms(16));
+      p.move(rope.center + const Vec2(0, 80), _ms(16));
       expect(p.values['rope'], closeTo(0.8, 1e-9));
       expect(p.takeCues(), <DragCue>[DragCue.start, DragCue.pullFired]);
       p.end(_ms(32));
@@ -112,7 +112,7 @@ void main() {
     test('halt stops the spring where it is', () {
       final PropDragPhysics p = _physics(AvatarScene.livingRoom);
       p.start(grab, Duration.zero);
-      p.move(grab + const Offset(0, 100), _ms(16));
+      p.move(grab + const Vec2(0, 100), _ms(16));
       p.end(_ms(32));
       p.halt();
       expect(p.animating, isFalse);
@@ -121,37 +121,37 @@ void main() {
   });
 
   group('poke (the campfire)', () {
-    final Rect box = SceneDrags.of(AvatarScene.campfire)!.rect;
+    final Box2 box = SceneDrags.of(AvatarScene.campfire)!.rect;
 
     test('the tip sits under the finger, clamped to the tip box', () {
       final PropDragPhysics p = _physics(AvatarScene.campfire);
       // the tip box (88, 1050, 304, 1210): POKE_TIP (196, 1130) +- (108, 80)
-      p.start(const Offset(196, 1130), Duration.zero);
+      p.start(const Vec2(196, 1130), Duration.zero);
       expect(p.values['pokeX'], 0);
       expect(p.values['pokeY'], 0);
-      p.move(const Offset(142, 1170), _ms(16));
+      p.move(const Vec2(142, 1170), _ms(16));
       expect(p.values['pokeX'], closeTo(-0.5, 1e-9));
       expect(p.values['pokeY'], closeTo(0.5, 1e-9));
-      p.move(const Offset(304, 1050), _ms(32));
+      p.move(const Vec2(304, 1050), _ms(32));
       expect(p.values['pokeX'], closeTo(1, 1e-9));
       expect(p.values['pokeY'], closeTo(-1, 1e-9));
       // anywhere outside the box: its edge
-      p.move(box.bottomLeft + const Offset(5, -5), _ms(48));
+      p.move(box.bottomLeft + const Vec2(5, -5), _ms(48));
       expect(p.values['pokeX'], -1);
       expect(p.values['pokeY'], 1);
-      p.move(const Offset(900, 600), _ms(64));
+      p.move(const Vec2(900, 600), _ms(64));
       expect(p.values['pokeX'], 1);
       expect(p.values['pokeY'], -1);
     });
 
     test('the tip box equals the campfire art (gen_scenes.py)', () {
       final String src = File('rive/tools/gen_scenes.py').readAsStringSync();
-      Offset pair(String name) {
+      Vec2 pair(String name) {
         final RegExpMatch m = RegExp(
           '^$name = \\(([-\\d.]+), ([-\\d.]+)\\)',
           multiLine: true,
         ).firstMatch(src)!;
-        return Offset(double.parse(m.group(1)!), double.parse(m.group(2)!));
+        return Vec2(double.parse(m.group(1)!), double.parse(m.group(2)!));
       }
 
       expect(PropDragPhysics.pokeTip, pair('POKE_TIP'));
@@ -161,17 +161,17 @@ void main() {
     test('the pan accept and its first update in one instant: no flare, '
         'the tip moves with the finger only', () {
       final PropDragPhysics p = _physics(AvatarScene.campfire);
-      const Offset a = Offset(196, 1130);
+      const Vec2 a = Vec2(196, 1130);
       // the arena: onStart(down) then onUpdate(the slop it waited for), the
       // same instant; even a full 36 px touch slop (~82 artboard px)
       p.start(a, Duration.zero);
-      p.move(a + const Offset(82, 0), Duration.zero);
+      p.move(a + const Vec2(82, 0), Duration.zero);
       expect(p.takeCues(), <DragCue>[DragCue.start]);
       // then a slow stir: 4 px per 16 ms (250 px/s)
       Duration t = Duration.zero;
       for (int i = 1; i <= 30; i++) {
         t += _ms(16);
-        p.move(a + Offset(82 - 4.0 * (i % 10), 0), t);
+        p.move(a + Vec2(82 - 4.0 * (i % 10), 0), t);
       }
       expect(p.takeCues(), isNot(contains(DragCue.flare)));
     });
@@ -185,7 +185,7 @@ void main() {
       p.tick(_ms(120));
       expect(p.values['poke'], 1);
       expect(p.animating, isFalse);
-      p.move(box.center + const Offset(40, 0), _ms(500));
+      p.move(box.center + const Vec2(40, 0), _ms(500));
       p.end(_ms(1000));
       p.tick(_ms(1100));
       final double early = p.values['poke']!;
@@ -201,11 +201,11 @@ void main() {
       p.takeCues();
       // slow: 10 px per 16 ms = 625 px/s
       Duration t = Duration.zero;
-      double x = box.center.dx;
+      double x = box.center.x;
       for (int i = 0; i < 10; i++) {
         t += _ms(16);
         x += 10;
-        p.move(Offset(x, box.center.dy), t);
+        p.move(Vec2(x, box.center.y), t);
       }
       expect(p.takeCues(), isNot(contains(DragCue.flare)));
       // fast: 20 px per 16 ms = 1250 px/s, stirring back and forth
@@ -213,7 +213,7 @@ void main() {
         for (int i = 0; i < frames; i++) {
           t += _ms(16);
           x += (i ~/ 5).isEven ? -20 : 20;
-          p.move(Offset(x, box.center.dy), t);
+          p.move(Vec2(x, box.center.y), t);
         }
         return p.takeCues();
       }
@@ -230,12 +230,12 @@ void main() {
     test('one tick per stir reversal, none for jitter', () {
       final PropDragPhysics p = _physics(AvatarScene.campfire);
       Duration t = Duration.zero;
-      final Offset c = box.center;
+      final Vec2 c = box.center;
       p.start(c, t);
       p.takeCues();
       void to(double dx) {
         t += _ms(80);
-        p.move(c + Offset(dx, 0), t);
+        p.move(c + Vec2(dx, 0), t);
       }
 
       to(30);
@@ -263,31 +263,31 @@ void main() {
   });
 
   group('trail (sand, wipe)', () {
-    final Rect sand = SceneDrags.of(AvatarScene.beach)!.rect;
+    final Box2 sand = SceneDrags.of(AvatarScene.beach)!.rect;
 
     test('dots 22 px apart, evenly, however far the finger jumps', () {
       final PropDragPhysics p = _physics(AvatarScene.beach);
-      final Offset a = sand.center;
+      final Vec2 a = sand.center;
       p.start(a, Duration.zero);
       expect(p.values['trailN'], 1);
       expect(p.values['trailFade'], 0);
-      expect(p.values['trailX0'], a.dx);
-      p.move(a + const Offset(21, 0), _ms(16));
+      expect(p.values['trailX0'], a.x);
+      p.move(a + const Vec2(21, 0), _ms(16));
       expect(p.values['trailN'], 1);
-      p.move(a + const Offset(70, 0), _ms(32));
+      p.move(a + const Vec2(70, 0), _ms(32));
       expect(p.values['trailN'], 4);
-      expect(p.values['trailX1'], closeTo(a.dx + 22, 1e-9));
-      expect(p.values['trailX2'], closeTo(a.dx + 44, 1e-9));
-      expect(p.values['trailX3'], closeTo(a.dx + 66, 1e-9));
+      expect(p.values['trailX1'], closeTo(a.x + 22, 1e-9));
+      expect(p.values['trailX2'], closeTo(a.x + 44, 1e-9));
+      expect(p.values['trailX3'], closeTo(a.x + 66, 1e-9));
     });
 
     test('16 dots, the oldest recycled; a tick per 4 dots', () {
       final PropDragPhysics p = _physics(AvatarScene.beach);
-      final Offset a = sand.topCenter + const Offset(0, 10);
+      final Vec2 a = sand.topCenter + const Vec2(0, 10);
       p.start(a, Duration.zero);
       expect(p.takeCues(), <DragCue>[DragCue.start]);
       for (int i = 1; i <= 19; i++) {
-        p.move(a + Offset(0, 22.0 * i), _ms(16 * i));
+        p.move(a + Vec2(0, 22.0 * i), _ms(16 * i));
       }
       // 20 dots laid: 5 ticks; 16 shown; dots 16..19 replaced slots 0..3
       expect(
@@ -295,15 +295,15 @@ void main() {
         hasLength(5),
       );
       expect(p.values['trailN'], 16);
-      expect(p.values['trailY0'], closeTo(a.dy + 22 * 16, 1e-9));
-      expect(p.values['trailY3'], closeTo(a.dy + 22 * 19, 1e-9));
-      expect(p.values['trailY4'], closeTo(a.dy + 22 * 4, 1e-9));
+      expect(p.values['trailY0'], closeTo(a.y + 22 * 16, 1e-9));
+      expect(p.values['trailY3'], closeTo(a.y + 22 * 19, 1e-9));
+      expect(p.values['trailY4'], closeTo(a.y + 22 * 4, 1e-9));
     });
 
     test('dots stay inside the handle', () {
       final PropDragPhysics p = _physics(AvatarScene.beach);
-      p.start(sand.bottomRight - const Offset(5, 5), Duration.zero);
-      p.move(sand.bottomRight + const Offset(200, 200), _ms(16));
+      p.start(sand.bottomRight - const Vec2(5, 5), Duration.zero);
+      p.move(sand.bottomRight + const Vec2(200, 200), _ms(16));
       for (int i = 0; i < 16; i++) {
         if (i < p.values['trailN']!) {
           expect(p.values['trailX$i'], lessThanOrEqualTo(sand.right));
@@ -315,7 +315,7 @@ void main() {
     test('the beach holds its drawing until a bigWave washes it away', () {
       final PropDragPhysics p = _physics(AvatarScene.beach);
       p.start(sand.center, Duration.zero);
-      p.move(sand.center + const Offset(100, 0), _ms(16));
+      p.move(sand.center + const Vec2(100, 0), _ms(16));
       p.end(_ms(32));
       expect(p.animating, isFalse);
       expect(p.values['trailFade'], 0);
@@ -329,15 +329,15 @@ void main() {
 
     test('the cafe mists back over 20 s after the last wipe', () {
       final PropDragPhysics p = _physics(AvatarScene.cafe);
-      final Rect window = SceneDrags.of(AvatarScene.cafe)!.rect;
+      final Box2 window = SceneDrags.of(AvatarScene.cafe)!.rect;
       p.start(window.center, Duration.zero);
-      p.move(window.center + const Offset(60, 0), _ms(16));
+      p.move(window.center + const Vec2(60, 0), _ms(16));
       p.end(_ms(1000));
       expect(p.animating, isTrue);
       p.tick(_ms(11000));
       expect(p.values['trailFade'], closeTo(0.5, 1e-9));
       // a new wipe clears it back (over 150 ms), keeping the old spots
-      p.start(window.center + const Offset(0, 100), _ms(11000));
+      p.start(window.center + const Vec2(0, 100), _ms(11000));
       expect(p.values['trailN'], 4);
       p.tick(_ms(11075));
       expect(p.values['trailFade'], closeTo(0.25, 1e-9));
@@ -350,12 +350,12 @@ void main() {
 
     test('a nearly misted trail is dropped by a new wipe', () {
       final PropDragPhysics p = _physics(AvatarScene.cafe);
-      final Rect window = SceneDrags.of(AvatarScene.cafe)!.rect;
+      final Box2 window = SceneDrags.of(AvatarScene.cafe)!.rect;
       p.start(window.center, Duration.zero);
-      p.move(window.center + const Offset(60, 0), _ms(16));
+      p.move(window.center + const Vec2(60, 0), _ms(16));
       p.end(_ms(20));
       p.tick(_ms(20 + 19000));
-      p.start(window.topLeft + const Offset(10, 10), _ms(19020));
+      p.start(window.topLeft + const Vec2(10, 10), _ms(19020));
       expect(p.values['trailN'], 1);
       expect(p.values['trailFade'], 0);
     });
@@ -372,20 +372,20 @@ void main() {
   });
 
   group('spin (the planet)', () {
-    final Rect disc = SceneDrags.of(AvatarScene.deepSpace)!.rect;
+    final Box2 disc = SceneDrags.of(AvatarScene.deepSpace)!.rect;
 
     test('a horizontal drag turns; it wraps; a tick per 1/8 turn', () {
       final PropDragPhysics p = _physics(AvatarScene.deepSpace);
-      final Offset a = disc.centerLeft;
+      final Vec2 a = disc.centerLeft;
       p.start(a, Duration.zero);
       p.takeCues();
-      p.move(a + const Offset(PropDragPhysics.spinPxPerTurn / 4, 0), _ms(500));
+      p.move(a + const Vec2(PropDragPhysics.spinPxPerTurn / 4, 0), _ms(500));
       expect(p.values['spin'], closeTo(0.25, 1e-9));
       // one click per move that crosses a step (two in one frame could not
       // be felt apart: the haptics are >= 60 ms apart anyway)
       expect(p.takeCues(), <DragCue>[DragCue.tick]);
       // left past zero: wraps to 0.75
-      p.move(a - const Offset(PropDragPhysics.spinPxPerTurn / 4, 0), _ms(1500));
+      p.move(a - const Vec2(PropDragPhysics.spinPxPerTurn / 4, 0), _ms(1500));
       expect(p.values['spin'], closeTo(0.75, 1e-9));
       // 1/4 -> -1/4 in one move: one click
       expect(p.takeCues(), <DragCue>[DragCue.tick]);
@@ -393,7 +393,7 @@ void main() {
       for (int i = 1; i <= 4; i++) {
         p.move(
           a -
-              Offset(
+              Vec2(
                 PropDragPhysics.spinPxPerTurn / 4 +
                     PropDragPhysics.spinPxPerTurn / 8 * i,
                 0,
@@ -409,10 +409,10 @@ void main() {
 
     test('a fling keeps turning and decays within 1.2 s', () {
       final PropDragPhysics p = _physics(AvatarScene.deepSpace);
-      final Offset a = disc.centerLeft;
+      final Vec2 a = disc.centerLeft;
       p.start(a, Duration.zero);
       for (int i = 1; i <= 6; i++) {
-        p.move(a + Offset(30.0 * i, 0), _ms(16 * i));
+        p.move(a + Vec2(30.0 * i, 0), _ms(16 * i));
       }
       final double atRelease = p.values['spin']!;
       p.end(_ms(96));
@@ -432,10 +432,10 @@ void main() {
         AvatarScene.deepSpace,
         reduceMotion: true,
       );
-      final Offset a = disc.centerLeft;
+      final Vec2 a = disc.centerLeft;
       p.start(a, Duration.zero);
       for (int i = 1; i <= 6; i++) {
-        p.move(a + Offset(30.0 * i, 0), _ms(16 * i));
+        p.move(a + Vec2(30.0 * i, 0), _ms(16 * i));
       }
       p.end(_ms(96));
       expect(p.animating, isFalse);
@@ -443,30 +443,30 @@ void main() {
   });
 
   group('aim (the telescope)', () {
-    final Rect stand = SceneDrags.of(AvatarScene.rooftop)!.rect;
+    final Box2 stand = SceneDrags.of(AvatarScene.rooftop)!.rect;
 
     test('a horizontal drag swivels -1..1 and holds; a tick per 0.1', () {
       final PropDragPhysics p = _physics(AvatarScene.rooftop);
-      final Offset a = stand.center;
+      final Vec2 a = stand.center;
       p.start(a, Duration.zero);
       p.takeCues();
       for (int i = 1; i <= 7; i++) {
-        p.move(a + Offset(stand.width * 0.05 * i, 0), _ms(16 * i));
+        p.move(a + Vec2(stand.width * 0.05 * i, 0), _ms(16 * i));
       }
       expect(p.values['aim'], closeTo(0.35, 1e-9));
       // 0.1, 0.2, 0.3 crossed
       expect(p.takeCues(), hasLength(3));
-      p.move(a + Offset(stand.width * 3, 0), _ms(32));
+      p.move(a + Vec2(stand.width * 3, 0), _ms(32));
       expect(p.values['aim'], 1);
       // the way back answers at once (no dead travel past the stop)
-      p.move(a + Offset(stand.width * 2.9, 0), _ms(48));
+      p.move(a + Vec2(stand.width * 2.9, 0), _ms(48));
       expect(p.values['aim'], closeTo(0.9, 1e-9));
       p.end(_ms(64));
       expect(p.animating, isFalse);
       expect(p.values['aim'], closeTo(0.9, 1e-9));
       // a later drag continues from where it held
       p.start(a, _ms(1000));
-      p.move(a - Offset(stand.width * 2.5, 0), _ms(1016));
+      p.move(a - Vec2(stand.width * 2.5, 0), _ms(1016));
       expect(p.values['aim'], -1);
     });
   });
@@ -474,20 +474,20 @@ void main() {
   group('the v14 handles (M11 ruling 8: existing kinds)', () {
     test('the pinwheel spins like the planet: wraps, a tick per 1/8 turn, '
         'inertia', () {
-      final Rect post = SceneDrags.of(AvatarScene.forestCabin)!.rect;
+      final Box2 post = SceneDrags.of(AvatarScene.forestCabin)!.rect;
       final PropDragPhysics p = _physics(AvatarScene.forestCabin);
-      final Offset a = post.centerLeft;
+      final Vec2 a = post.centerLeft;
       p.start(a, Duration.zero);
       expect(p.takeCues(), <DragCue>[DragCue.start]);
-      p.move(a + const Offset(PropDragPhysics.spinPxPerTurn / 8, 0), _ms(500));
+      p.move(a + const Vec2(PropDragPhysics.spinPxPerTurn / 8, 0), _ms(500));
       expect(p.values['pinwheel'], closeTo(0.125, 1e-9));
       expect(p.takeCues(), <DragCue>[DragCue.tick]);
-      p.move(a - const Offset(PropDragPhysics.spinPxPerTurn / 8, 0), _ms(900));
+      p.move(a - const Vec2(PropDragPhysics.spinPxPerTurn / 8, 0), _ms(900));
       expect(p.values['pinwheel'], closeTo(0.875, 1e-9));
       // a fling keeps turning
       p.start(a, _ms(2000));
       for (int i = 1; i <= 6; i++) {
-        p.move(a + Offset(30.0 * i, 0), _ms(2000 + 16 * i));
+        p.move(a + Vec2(30.0 * i, 0), _ms(2000 + 16 * i));
       }
       p.end(_ms(2096));
       expect(p.animating, isTrue);
@@ -496,15 +496,15 @@ void main() {
     });
 
     test('the chain pulls like the cord: 0.6 fires once, springs back', () {
-      final Rect chain = SceneDrags.of(AvatarScene.trainCompartment)!.rect;
+      final Box2 chain = SceneDrags.of(AvatarScene.trainCompartment)!.rect;
       final PropDragPhysics p = _physics(AvatarScene.trainCompartment);
-      final Offset grab = Offset(chain.center.dx, chain.top + 20);
+      final Vec2 grab = Vec2(chain.center.x, chain.top + 20);
       p.start(grab, Duration.zero);
-      p.move(grab + const Offset(0, 59), _ms(16));
+      p.move(grab + const Vec2(0, 59), _ms(16));
       expect(p.takeCues(), <DragCue>[DragCue.start]);
-      p.move(grab + const Offset(0, 61), _ms(32));
+      p.move(grab + const Vec2(0, 61), _ms(32));
       expect(p.takeCues(), <DragCue>[DragCue.pullFired]);
-      p.move(grab + const Offset(0, 95), _ms(48));
+      p.move(grab + const Vec2(0, 95), _ms(48));
       expect(p.takeCues(), isEmpty);
       p.end(_ms(64));
       _settle(p, _ms(64));
@@ -512,31 +512,31 @@ void main() {
     });
 
     test('the chain under reduce motion returns in one frame', () {
-      final Rect chain = SceneDrags.of(AvatarScene.trainCompartment)!.rect;
+      final Box2 chain = SceneDrags.of(AvatarScene.trainCompartment)!.rect;
       final PropDragPhysics p = _physics(
         AvatarScene.trainCompartment,
         reduceMotion: true,
       );
       p.start(chain.center, Duration.zero);
-      p.move(chain.center + const Offset(0, 80), _ms(16));
+      p.move(chain.center + const Vec2(0, 80), _ms(16));
       p.end(_ms(32));
       expect(p.values['chain'], 0);
       expect(p.animating, isFalse);
     });
 
     test('the ladder aims -1..1 along its rail and holds; a tick per 0.1', () {
-      final Rect rail = SceneDrags.of(AvatarScene.library)!.rect;
+      final Box2 rail = SceneDrags.of(AvatarScene.library)!.rect;
       final PropDragPhysics p = _physics(AvatarScene.library);
-      final Offset a = rail.center;
+      final Vec2 a = rail.center;
       p.start(a, Duration.zero);
       p.takeCues();
       for (int i = 1; i <= 5; i++) {
-        p.move(a - Offset(rail.width * 0.05 * i, 0), _ms(16 * i));
+        p.move(a - Vec2(rail.width * 0.05 * i, 0), _ms(16 * i));
       }
       expect(p.values['ladder'], closeTo(-0.25, 1e-9));
       // 0, -0.1 and -0.2 crossed
       expect(p.takeCues(), hasLength(3));
-      p.move(a + Offset(rail.width * 3, 0), _ms(160));
+      p.move(a + Vec2(rail.width * 3, 0), _ms(160));
       expect(p.values['ladder'], 1);
       p.end(_ms(176));
       expect(p.animating, isFalse);

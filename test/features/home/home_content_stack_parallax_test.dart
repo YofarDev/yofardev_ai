@@ -9,7 +9,7 @@ import 'package:yofardev_ai/core/models/avatar_scene.dart';
 import 'package:yofardev_ai/core/services/motion/parallax_source.dart';
 import 'package:yofardev_ai/core/services/power/power_saver_source.dart';
 import 'package:yofardev_ai/features/avatar/presentation/widgets/rive/rive_scene_view.dart';
-import 'package:yofardev_ai/features/home/widgets/home_content_stack.dart';
+import 'package:yofardev_ai/features/home/presentation/widgets/home_content_stack.dart';
 
 import '../../helpers/rive_test_assets.dart';
 import 'stage_harness.dart';

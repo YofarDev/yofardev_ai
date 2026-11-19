@@ -11,10 +11,10 @@ import 'package:yofardev_ai/core/models/chat.dart';
 import 'package:yofardev_ai/core/models/demo_script.dart';
 import 'package:yofardev_ai/core/services/presence/composer_activity_service.dart';
 import 'package:yofardev_ai/features/chat/chat.dart';
-import 'package:yofardev_ai/features/home/screens/home_screen.dart';
-import 'package:yofardev_ai/features/home/widgets/stage/stage_caption.dart';
-import 'package:yofardev_ai/features/home/widgets/stage/stage_composer.dart';
-import 'package:yofardev_ai/features/home/widgets/stage/stage_tool_chip.dart';
+import 'package:yofardev_ai/features/home/presentation/screens/home_screen.dart';
+import 'package:yofardev_ai/features/home/presentation/widgets/stage/stage_caption.dart';
+import 'package:yofardev_ai/features/home/presentation/widgets/stage/stage_composer.dart';
+import 'package:yofardev_ai/features/home/presentation/widgets/stage/stage_tool_chip.dart';
 import 'package:yofardev_ai/features/talking/talking.dart';
 
 import '../../helpers/rive_test_assets.dart';

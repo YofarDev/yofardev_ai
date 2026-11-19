@@ -69,7 +69,8 @@ def add_imports(text: str, imports: list[str]) -> str:
                 n += 1  # multi-line directive: run to its closing `;`
             last = n
         n += 1
-    lines[last + 1:last + 1] = missing
+    cr = "\r" if "\r\n" in text else ""  # keep the file's own line endings
+    lines[last + 1:last + 1] = [m + cr for m in missing]
     return "\n".join(lines)
 
 
@@ -83,7 +84,7 @@ def main(argv: list[str]) -> int:
 
     constants = app / "lib/core/router/route_constants.dart"
     if constants.exists() and re.search(
-        rf"\bstatic const String {re.escape(camel)}\b", constants.read_text()
+        rf"\bstatic const String {re.escape(camel)}\b", constants.read_text(newline="")
     ):
         print(f"Route constant 'Routes.{camel}' already exists in {constants}.", file=sys.stderr)
         return 1
@@ -93,8 +94,9 @@ def main(argv: list[str]) -> int:
     manual: list[str] = []
     for step in steps:
         path = app / step["path"]
-        text = path.read_text() if path.exists() else ""
-        marker_line = next((ln for ln in text.split("\n") if ln.strip() == step["marker"]), None)
+        text = path.read_text(newline="") if path.exists() else ""
+        eol = "\r\n" if "\r\n" in text else "\n"
+        marker_line = next((ln.rstrip("\r") for ln in text.split("\n") if ln.strip() == step["marker"]), None)
         if marker_line is None:
             manual.append(
                 f"  {step['path']}: no '{step['marker']}' marker. Add"
@@ -103,8 +105,8 @@ def main(argv: list[str]) -> int:
             )
             continue
         indent = marker_line[: len(marker_line) - len(marker_line.lstrip())]
-        text = text.replace(marker_line, f"{indent}{step['line']}\n{marker_line}", 1)
-        path.write_text(add_imports(text, step["imports"]))
+        text = text.replace(marker_line, f"{indent}{step['line']}{eol}{marker_line}", 1)
+        path.write_text(add_imports(text, step["imports"]), newline="")
         print(f"wired: {step['path']}")
     if manual:
         print("Wire these by hand (markers missing):", file=sys.stderr)

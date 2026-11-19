@@ -17,7 +17,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:yofardev_ai/core/design/rive/ui_kit_file.dart';
 import 'package:yofardev_ai/core/models/avatar_scene.dart';
 import 'package:yofardev_ai/core/services/app_lifecycle_service.dart';
-import 'package:yofardev_ai/features/home/widgets/home_content_stack.dart';
+import 'package:yofardev_ai/features/home/presentation/widgets/home_content_stack.dart';
 
 import '../test/features/home/stage_harness.dart';
 import '../test/helpers/rive_test_assets.dart';

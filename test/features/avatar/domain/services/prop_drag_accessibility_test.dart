@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:yofardev_ai/core/models/avatar_scene.dart';
+import 'package:yofardev_ai/core/models/geometry.dart';
 import 'package:yofardev_ai/features/avatar/domain/models/scene_drag.dart';
 import 'package:yofardev_ai/features/avatar/domain/services/prop_drag_physics.dart';
 
@@ -110,10 +111,7 @@ void main() {
         expect(p.values['trailN'], PropDragPhysics.accessibleTrailDots);
         expect(p.values['trailFade'], 0);
         for (int i = 0; i < PropDragPhysics.accessibleTrailDots; i++) {
-          final Offset dot = Offset(
-            p.values['trailX$i']!,
-            p.values['trailY$i']!,
-          );
+          final Vec2 dot = Vec2(p.values['trailX$i']!, p.values['trailY$i']!);
           expect(p.handle.rect.inflate(1e-6).contains(dot), isTrue);
         }
         expect(p.takeCues(), <DragCue>[DragCue.start, DragCue.tick]);
@@ -149,7 +147,7 @@ void main() {
 
   test('ignored while a finger holds the handle', () {
     final PropDragPhysics p = _physics(AvatarScene.livingRoom);
-    final Offset grab = p.handle.rect.topCenter;
+    final Vec2 grab = p.handle.rect.topCenter;
     p.start(grab, Duration.zero);
     p.takeCues();
     p.accessibilityAction(_ms(16));

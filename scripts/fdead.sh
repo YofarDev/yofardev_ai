@@ -137,7 +137,7 @@ done < <(
     {
       rel = substr($0, 1, length(root)) == root ? substr($0, length(root) + 1) : $0
       n = split($0, parts, "/"); name = parts[n]; stem = substr(name, 1, length(name) - 5)
-      if (name == "main.dart" || name ~ /_test\.dart$/ || name ~ /\.(g|freezed|gen)\.dart$/ ||
+      if (name == "main.dart" || rel ~ /^lib\/main_[^\/]*\.dart$/ || rel == "test/flutter_test_config.dart" || name ~ /_test\.dart$/ || name ~ /\.(g|freezed|gen)\.dart$/ ||
           rel == "lib/features/" stem "/" name || (name in exported)) { skipped++; next }
       if (index(refs, name) == 0) print rel
     }
@@ -172,7 +172,7 @@ else
 
   echo ""
   warn "This scan is textual and advisory: conditional directives, custom entry"
-  warn "points, and filename collisions can affect findings. Nothing was deleted;"
+  warn "points (lib/main*.dart flavors, test/flutter_test_config.dart), and filename collisions can affect findings. Nothing was deleted;"
   warn "review each file manually before removing anything yourself."
 fi
 

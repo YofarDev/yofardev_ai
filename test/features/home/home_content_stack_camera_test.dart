@@ -3,8 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:yofardev_ai/core/design/rive/ui_kit_file.dart';
 import 'package:yofardev_ai/core/models/performance/shot.dart';
 import 'package:yofardev_ai/features/avatar/avatar.dart';
-import 'package:yofardev_ai/features/home/widgets/home_content_stack.dart';
-import 'package:yofardev_ai/features/home/widgets/stage/stage_composer.dart';
+import 'package:yofardev_ai/features/home/presentation/widgets/home_content_stack.dart';
+import 'package:yofardev_ai/features/home/presentation/widgets/stage/stage_composer.dart';
 import 'package:yofardev_ai/features/talking/talking.dart';
 
 import '../../helpers/rive_test_assets.dart';

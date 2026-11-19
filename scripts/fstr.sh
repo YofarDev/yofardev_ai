@@ -79,7 +79,12 @@ fi
 # beside it — the two replacements are not a single atomic transaction, but a
 # failure during preparation leaves both files untouched.
 echo -e "${BLUE}Validating and adding $(( ${#TRIPLES[@]} / 3 )) key(s)...${NC}"
-uv run python - "$FR_FILE" "$EN_FILE" "${TRIPLES[@]}" <<'EOF'
+# Exact previous bytes, so a failing gen-l10n can be rolled back.
+BACKUP_DIR="$(mktemp -d)"
+trap 'rm -rf "$BACKUP_DIR"' EXIT
+cp -p "$FR_FILE" "$BACKUP_DIR/fr.arb"
+cp -p "$EN_FILE" "$BACKUP_DIR/en.arb"
+uv run --no-project python - "$FR_FILE" "$EN_FILE" "${TRIPLES[@]}" <<'EOF'
 import json
 import os
 import re
@@ -96,6 +101,16 @@ def fail(msg):
 def placeholders(s):
     return sorted(set(re.findall(r"\{[a-zA-Z_][a-zA-Z0-9_]*\}", s)))
 
+# Dart reserved words, Object members, and members of the generated
+# AppLocalizations class: a getter with one of these names breaks compilation.
+RESERVED_KEYS = set("""
+assert break case catch class const continue default do else enum extends false
+final finally for if in is new null rethrow return super switch this throw true
+try var void while with
+hashCode runtimeType toString noSuchMethod
+localeName of delegate supportedLocales localizationsDelegates
+""".split())
+
 seen = set()
 for key, fr_value, en_value in triples:
     # Key must be a valid Dart identifier (gen-l10n generates a getter from it)
@@ -104,6 +119,9 @@ for key, fr_value, en_value in triples:
     if key in seen:
         fail(f"Key '{key}' is given twice.")
     seen.add(key)
+    if key in RESERVED_KEYS:
+        fail(f"Key '{key}' is a Dart reserved word or a member of the generated "
+             f"AppLocalizations class; choose another name.")
     # FR and EN must use identical placeholders, or gen-l10n will fail later
     if placeholders(fr_value) != placeholders(en_value):
         fail(
@@ -196,9 +214,10 @@ echo -e "${BLUE}Regenerating localization files...${NC}"
 cd "$PROJECT_PATH"
 if ! flutter gen-l10n; then
     echo ""
-    echo -e "${YELLOW}⚠️  ARB files were updated but 'flutter gen-l10n' FAILED.${NC}"
-    echo -e "${YELLOW}    Fix the error above, then re-run 'flutter gen-l10n' — the code will${NC}"
-    echo -e "${YELLOW}    not compile with the new key until generation succeeds.${NC}"
+    cp -p "$BACKUP_DIR/fr.arb" "$FR_FILE"
+    cp -p "$BACKUP_DIR/en.arb" "$EN_FILE"
+    echo -e "${RED}Error: 'flutter gen-l10n' FAILED (check the message syntax, e.g. ICU plural/select).${NC}"
+    echo -e "${YELLOW}    Both ARB files were restored to their previous content; nothing was added.${NC}"
     exit 1
 fi
 

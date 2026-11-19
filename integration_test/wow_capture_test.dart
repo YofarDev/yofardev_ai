@@ -24,6 +24,7 @@ import 'package:yofardev_ai/core/models/llm_config.dart';
 import 'package:yofardev_ai/core/models/performance/performance.dart';
 import 'package:yofardev_ai/core/models/seasonal_wardrobe.dart';
 import 'package:yofardev_ai/core/models/weather_report.dart';
+import 'package:yofardev_ai/core/models/geometry.dart';
 import 'package:yofardev_ai/core/services/agent/agent_tool.dart';
 import 'package:yofardev_ai/core/services/agent/avatar_tool.dart';
 import 'package:yofardev_ai/core/services/app_lifecycle_service.dart';
@@ -37,9 +38,9 @@ import 'package:yofardev_ai/features/avatar/domain/services/head_target_mapper.d
 import 'package:yofardev_ai/features/avatar/presentation/rive/avatar_tint_writer.dart';
 import 'package:yofardev_ai/features/avatar/presentation/widgets/rive/scene_drag_surface.dart';
 import 'package:yofardev_ai/features/chat/chat.dart';
-import 'package:yofardev_ai/features/home/widgets/home_content_stack.dart';
-import 'package:yofardev_ai/features/home/widgets/stage/stage_caption.dart';
-import 'package:yofardev_ai/features/home/widgets/stage/stage_caption_bubble.dart';
+import 'package:yofardev_ai/features/home/presentation/widgets/home_content_stack.dart';
+import 'package:yofardev_ai/features/home/presentation/widgets/stage/stage_caption.dart';
+import 'package:yofardev_ai/features/home/presentation/widgets/stage/stage_caption_bubble.dart';
 import 'dart:typed_data';
 
 import 'package:yofardev_ai/features/sound/sound.dart';
@@ -978,6 +979,10 @@ class _LoggingHaptics implements HapticsSink {
 String _primary(SceneDragHandle handle) =>
     handle.kind == DragKind.trail ? 'trailN' : handle.numbers.first.name;
 
+Size2 _sz(Size s) => Size2(s.width, s.height);
+
+Vec2 _vec(Offset o) => Vec2(o.dx, o.dy);
+
 /// The finger's path for [handle]'s kind, in artboard px relative to the
 /// start point, one point per ~16 ms step.
 List<Offset> _dragPath(SceneDragHandle handle) {
@@ -1005,7 +1010,7 @@ List<Offset> _dragPath(SceneDragHandle handle) {
         path.add(path.last + Offset(k.isEven ? 34 : -34, 0));
       }
     case DragKind.trail:
-      final Rect r = handle.rect;
+      final Box2 r = handle.rect;
       // zig-zag across the rect (start: its upper left quarter)
       final double w = r.width * 0.6;
       final double h = r.height * 0.5;
@@ -1015,8 +1020,9 @@ List<Offset> _dragPath(SceneDragHandle handle) {
     case DragKind.spin:
       // a fling toward the frame's centre (M11: the pinwheel sits by the
       // right edge, so it is flung left)
-      final double toward =
-          handle.rect.center.dx > SceneDrags.artboard.width / 2 ? -1 : 1;
+      final double toward = handle.rect.center.x > SceneDrags.artboard.width / 2
+          ? -1
+          : 1;
       line(Offset(300 * toward, 0), 12);
     case DragKind.aim:
       // a slow swing to the left, then held
@@ -1035,9 +1041,10 @@ Offset _dragStart(SceneDragHandle handle) => switch (handle.kind) {
   ),
   DragKind.aim => Offset(
     handle.rect.left + handle.rect.width * 0.7,
-    handle.rect.center.dy,
+    handle.rect.center.y,
   ),
-  DragKind.pull || DragKind.spin => handle.rect.center,
+  DragKind.pull ||
+  DragKind.spin => Offset(handle.rect.center.x, handle.rect.center.y),
 };
 
 void main() {
@@ -1855,12 +1862,14 @@ Future<Map<String, Object?>> _performDrag(
     matching: find.byType(Listener),
   );
   final RenderBox box = tester.renderObject<RenderBox>(surface.first);
-  Offset toGlobal(Offset art) => box.localToGlobal(
-    SceneDrags.toLocal(
-      art + SceneDrags.planeOffset(handle.plane, drags.parallax()),
-      box.size,
-    ),
-  );
+  Offset toGlobal(Offset art) {
+    final Vec2 local = SceneDrags.toLocal(
+      _vec(art) + SceneDrags.planeOffset(handle.plane, _vec(drags.parallax())),
+      _sz(box.size),
+    );
+    return box.localToGlobal(Offset(local.x, local.y));
+  }
+
   bool hits(Offset art) {
     final Offset global = toGlobal(art);
     final Size window = tester.view.physicalSize / tester.view.devicePixelRatio;
@@ -1878,7 +1887,7 @@ Future<Map<String, Object?>> _performDrag(
   // that the surface hears (the chrome may cover a part of it)
   Offset start = _dragStart(handle);
   if (!hits(start)) {
-    final Rect r = handle.rect.deflate(handle.rect.shortestSide * 0.1);
+    final Box2 r = handle.rect.deflate(handle.rect.shortestSide * 0.1);
     Offset? found;
     for (int j = 0; j < 7 && found == null; j++) {
       for (int i = 0; i < 7 && found == null; i++) {

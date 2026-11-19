@@ -4,6 +4,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:rive/rive.dart' show RiveHitTestBehavior;
 import 'package:yofardev_ai/core/models/avatar_scene.dart';
+import 'package:yofardev_ai/core/models/geometry.dart';
 import 'package:yofardev_ai/core/services/audio/foley_service.dart';
 import 'package:yofardev_ai/core/models/performance/shot.dart';
 import 'package:yofardev_ai/features/avatar/domain/models/scene_drag.dart';
@@ -18,6 +19,11 @@ import '../../../../helpers/rive_test_assets.dart';
 import 'package:yofardev_ai/core/l10n/app_localization_delegates.dart';
 
 const Size _phone = Size(390, 844);
+const Size2 _phoneArt = Size2(390, 844);
+
+Offset _off(Vec2 v) => Offset(v.x, v.y);
+
+Vec2 _vec(Offset o) => Vec2(o.dx, o.dy);
 
 /// The avatar as the real one hit-tests (a transparent Rive widget inside an
 /// `AvatarZoneHitGate`): only its own zones claim a pointer; elsewhere it
@@ -96,10 +102,10 @@ void main() {
 
   /// The cord's rect on the scene widget (wide shot, parallax 0).
   Rect cordLocal() {
-    final Rect r = SceneDrags.of(AvatarScene.livingRoom)!.rect;
+    final Box2 r = SceneDrags.of(AvatarScene.livingRoom)!.rect;
     return Rect.fromPoints(
-      SceneDrags.toLocal(r.topLeft, _phone),
-      SceneDrags.toLocal(r.bottomRight, _phone),
+      _off(SceneDrags.toLocal(r.topLeft, _phoneArt)),
+      _off(SceneDrags.toLocal(r.bottomRight, _phoneArt)),
     );
   }
 
@@ -112,7 +118,10 @@ void main() {
     await g.moveBy(const Offset(0, 20));
     await tester.pump();
     // 40 local px / 0.4396 = 91 artboard px of a 100 px pull
-    expect(vm['cord'], closeTo(40 / SceneDrags.coverScale(_phone) / 100, 0.01));
+    expect(
+      vm['cord'],
+      closeTo(40 / SceneDrags.coverScale(_phoneArt) / 100, 0.01),
+    );
     await g.up();
     await tester.pumpAndSettle();
     expect(vm['cord'], 0);
@@ -192,7 +201,7 @@ void main() {
       // 40 screen px at zoom 2 are 20 local px
       expect(
         vm['cord'],
-        closeTo(40 / f.zoom / SceneDrags.coverScale(_phone) / 100, 0.01),
+        closeTo(40 / f.zoom / SceneDrags.coverScale(_phoneArt) / 100, 0.01),
       );
       await g.up();
       await tester.pumpAndSettle();
@@ -247,7 +256,9 @@ void main() {
       );
       // on the tip, then back and forth at 4 px per 16 ms (~570 artboard
       // px/s), past the accept distance from the first move
-      final Offset tip = SceneDrags.toLocal(const Offset(196, 1130), _phone);
+      final Offset tip = _off(
+        SceneDrags.toLocal(const Vec2(196, 1130), _phoneArt),
+      );
       final TestGesture g = await tester.startGesture(tip);
       double previousX = 0;
       for (int i = 1; i <= 60; i++) {
@@ -263,7 +274,11 @@ void main() {
       expect(
         vm['pokeX']!,
         closeTo(
-          (SceneDrags.toArtboard(tip + Offset(previousX, 0), _phone).dx - 196) /
+          (SceneDrags.toArtboard(
+                    _vec(tip + Offset(previousX, 0)),
+                    _phoneArt,
+                  ).x -
+                  196) /
               108,
           0.02,
         ),

@@ -3,13 +3,15 @@
 # fverify.sh — one-command quality gate to run before finishing a change.
 #
 # Runs, in order:
-#   1. dart format --output=none --set-exit-if-changed .   (CHECK only —
+#   1. dart format --output=none --set-exit-if-changed <source dirs>  (CHECK only —
 #      without --fix this script never rewrites files)
 #   2. flutter analyze
-#   3. flutter test   (includes the architecture boundary + DI smoke tests)
+#   3. flutter test via scripts/ftest.sh (one aggregated entrypoint; the
+#      architecture gate runs whenever lib/ changed since its last green run)
 #
 # --fix (opt-in, mutating): first runs `dart fix --apply` (refused when the
-# preview spans more than FVERIFY_FIX_MAX_FILES files) and `dart format .`,
+# preview spans more than FVERIFY_FIX_MAX_FILES files) and `dart format` on the
+# source dirs,
 # then the same gate — preparation and verification in one command. CI and
 # the default invocation stay non-mutating.
 #
@@ -27,12 +29,22 @@
 # Exits non-zero if any step fails. Arguments other than --fix are forwarded
 # to `flutter test` (e.g. `fverify.sh --coverage`).
 #
+# Machine-wide queue: the gate waits for a free slot shared by every
+# FlutterForge app on this machine (scripts/fqueue.sh), so parallel agents in
+# several projects take turns instead of freezing the machine, and analysis
+# and tests run at lower CPU priority. FORGE_QUEUE=0 disables it (CI);
+# FORGE_QUEUE_SLOTS, FORGE_NICE and FORGE_TEST_CONCURRENCY tune it.
+#
 # Usage:
 #   ./scripts/fverify.sh          # check only
 #   ./scripts/fverify.sh --fix    # dart fix + dart format, then check
 # =============================================================================
 
 set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=fqueue.sh
+. "$SCRIPT_DIR/fqueue.sh"
 
 # -- Colours ------------------------------------------------------------------
 GREEN='\033[0;32m'; RED='\033[0;31m'; CYAN='\033[0;36m'; BOLD='\033[1m'; RESET='\033[0m'
@@ -73,7 +85,18 @@ done
 [[ -z "$PROJECT_ROOT" ]] && fail "Could not find pubspec.yaml." && exit 1
 cd "$PROJECT_ROOT"
 
+fqueue_acquire "fverify"
 START_TS=$SECONDS
+
+# Formatting covers the Dart source roots only. A bare `dart format .` also
+# walks gitignored trees such as build/ (Swift Package Manager checkouts,
+# vendored plugin code) and fails or rewrites code the app does not own.
+FORMAT_DIRS=""
+for candidate in lib test bin tool integration_test test_driver; do
+  [ -d "$candidate" ] && FORMAT_DIRS="$FORMAT_DIRS $candidate"
+done
+FORMAT_DIRS="${FORMAT_DIRS# }"
+[ -n "$FORMAT_DIRS" ] || FORMAT_DIRS="lib"
 
 # -- 0. Optional preparation (--fix only; the only mutating path) ----------------
 # `dart fix` is previewed first: lint autofixes touch a few files, but after an
@@ -84,7 +107,7 @@ START_TS=$SECONDS
 if [ "$FIX" = true ]; then
   MAX_FIX_FILES="${FVERIFY_FIX_MAX_FILES:-25}"
   step "dart fix (preview)"
-  if ! FIX_PREVIEW="$(dart fix --dry-run 2>&1)"; then
+  if ! FIX_PREVIEW="$(fqueue_nice dart fix --dry-run 2>&1)"; then
     echo "$FIX_PREVIEW"
     fail "dart fix --dry-run failed."
     exit 1
@@ -99,13 +122,14 @@ if [ "$FIX" = true ]; then
     exit 1
   else
     step "dart fix --apply ($FIX_FILES file(s))"
-    if ! dart fix --apply; then
+    if ! fqueue_nice dart fix --apply; then
       fail "dart fix --apply failed."
       exit 1
     fi
   fi
-  step "dart format ."
-  if ! dart format .; then
+  step "dart format $FORMAT_DIRS"
+  # shellcheck disable=SC2086 # word-split on purpose: plain directory names
+  if ! dart format $FORMAT_DIRS; then
     fail "dart format failed (syntax error?) — see above."
     exit 1
   fi
@@ -114,17 +138,18 @@ fi
 # -- 1. Format check (non-mutating) ---------------------------------------------
 FORMAT_OK=true
 step "dart format check"
-if dart format --output=none --set-exit-if-changed .; then
+# shellcheck disable=SC2086
+if dart format --output=none --set-exit-if-changed $FORMAT_DIRS; then
   ok "formatting compliant"
 else
   FORMAT_OK=false
   fail "dart format would change the files listed above."
-  fail "Run 'dart format .' (or './scripts/fverify.sh --fix'). Continuing with analysis and tests."
+  fail "Run 'dart format $FORMAT_DIRS' (or './scripts/fverify.sh --fix'). Continuing with analysis and tests."
 fi
 
 # -- 2. Static analysis ---------------------------------------------------------
 step "flutter analyze"
-if flutter analyze --no-pub; then
+if fqueue_nice flutter analyze --no-pub; then
   ok "analyze clean"
 else
   fail "flutter analyze reported issues — fix them before finishing."
@@ -132,8 +157,11 @@ else
 fi
 
 # -- 3. Tests -------------------------------------------------------------------
-step "flutter test $*"
-if flutter test "$@"; then
+# Tests run through ftest.sh (same queue slot — this script already holds it):
+# a full run compiles test files into a few parallel shards, skips an unchanged
+# architecture gate, and prints each compile error once.
+step "flutter test $* (via scripts/ftest.sh)"
+if bash "$SCRIPT_DIR/ftest.sh" "$@"; then
   ok "all tests passed"
 else
   fail "flutter test failed — fix failing tests before finishing."

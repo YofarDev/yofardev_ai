@@ -184,10 +184,15 @@ def main(args: list[str]) -> int:
         print('Preview only — nothing will be written. Pass --apply to apply.')
     initial = analyze(root)
     missing = re.compile(r"(?:Target of URI doesn't exist|URI target doesn't exist): '([^']+\.dart)'")
-    location = re.compile(r'((?:lib|test)/[^:\n]+\.dart):\d+:\d+')
+    location = re.compile(r'((?:lib|test)/.+\.dart):\d+:\d+')
+    line_start = re.compile(r'\s*((?:lib|test)/[^:\n]+\.dart):\d+:\d+')
     diagnostics: dict[tuple[str, str], None] = {}
     for line in initial.stdout.splitlines():
-        uri, importer = missing.search(line), location.search(line)
+        uri = missing.search(line)
+        # The location is its own ' • '-separated field; a URI field may itself
+        # contain 'test/...' or 'lib/...' text, so never search the whole line.
+        importer = (next((m for field in line.split(' • ') if (m := location.fullmatch(field.strip()))), None)
+                    or line_start.match(line))
         if uri and importer:
             diagnostics[(importer[1], uri[1])] = None
     if initial.returncode and not diagnostics:

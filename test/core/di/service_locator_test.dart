@@ -1,3 +1,4 @@
+// ftest:isolate
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:yofardev_ai/core/di/service_locator.dart';
@@ -102,7 +103,9 @@ void main() {
     expect(getIt<GlobalMemoryLocalDatasource>(), isNotNull);
     expect(getIt<TtsDatasource>(), isNotNull);
 
-    // Every cubit (registerFactory) constructs
+    // A lifetime contract, not plumbing: a singleton cubit would be reused
+    // (already closed) after its route was popped. Every cubit
+    // (registerFactory) constructs
     expect(getIt<ChatCubit>(), isNotNull);
     expect(getIt<ChatTtsCubit>(), isNotNull);
     expect(getIt<SettingsCubit>(), isNotNull);

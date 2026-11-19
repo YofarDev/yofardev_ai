@@ -1,3 +1,4 @@
+// ftest:isolate
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:golden_toolkit/golden_toolkit.dart';
@@ -5,7 +6,7 @@ import 'package:golden_toolkit/golden_toolkit.dart';
 import 'package:yofardev_ai/core/design/rive/ui_kit_file.dart';
 import 'package:yofardev_ai/core/models/avatar_scene.dart';
 import 'package:yofardev_ai/features/chat/chat.dart';
-import 'package:yofardev_ai/features/home/screens/home_screen.dart';
+import 'package:yofardev_ai/features/home/presentation/screens/home_screen.dart';
 import 'package:yofardev_ai/features/talking/talking.dart';
 
 import '../../helpers/golden_test_helper.dart';

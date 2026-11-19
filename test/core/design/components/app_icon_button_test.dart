@@ -1,3 +1,4 @@
+// ftest:isolate
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter/semantics.dart';
 import 'package:flutter/services.dart';

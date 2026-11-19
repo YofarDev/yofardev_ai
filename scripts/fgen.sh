@@ -14,8 +14,11 @@
 #     is found; there is no fallback project name.
 #   - <feature_name> is snake_case or camelCase. It is normalized to
 #     snake_case, then validated as a Dart identifier (rejects empty values,
-#     separators, '..', punctuation, invalid starting characters and Dart
-#     reserved identifiers).
+#     separators, '..', punctuation, invalid starting characters,
+#     leading/trailing/doubled underscores and Dart reserved identifiers).
+#     Names whose generated classes clash with a type the feature imports
+#     (image, page, form, failure, string, ...) are refused before writing,
+#     via an analyzer probe.
 #   - The LEAN DEFAULT generates only the layers a simple feature needs: domain
 #     model (no JSON serialization), repository interface, placeholder data
 #     source (returning the domain model directly), repository implementation
@@ -33,9 +36,11 @@
 #     if the feature's lib/ or test/ directory already exists (symlinks
 #     included) — it never partially overwrites an existing feature.
 #   - Files are rendered into an owned temporary directory and published only
-#     afterwards. If localization or build_runner then fails, the published
-#     feature is kept, the incomplete state is reported, and the script exits
-#     non-zero — user changes elsewhere in the app are never touched.
+#     afterwards, then wired. If localization or build_runner then fails, the
+#     published, wired feature is kept, the incomplete state is reported, and
+#     the script exits non-zero — user changes elsewhere in the app are never
+#     touched. The new feature and wired files are analyzed last; analyzer
+#     errors exit non-zero instead of reporting success.
 #   - Screen localization keys are added through scripts/fstr.sh. Key
 #     collisions are refused BEFORE anything is written (the ARB files are
 #     checked up front; fstr's own collision check remains as a backstop).
@@ -149,11 +154,15 @@ to_camel() {
 # Convert feature name to snake_case (preserves existing snake_case, normalizes camelCase)
 FEATURE_SNAKE="$(printf '%s' "$FEATURE_NAME" | sed -E 's/([a-z0-9])([A-Z])/\1_\2/g' | tr '[:upper:]' '[:lower:]')"
 
-if ! printf '%s' "$FEATURE_SNAKE" | grep -Eq '^[a-z][a-z0-9_]*$'; then
+# Underscores only BETWEEN words: a leading, trailing or doubled underscore
+# would vanish from the camelCase/PascalCase identifiers (e.g. 'new_' becomes
+# the reserved word 'new' in route_constants.dart).
+if ! printf '%s' "$FEATURE_SNAKE" | grep -Eq '^[a-z][a-z0-9]*(_[a-z0-9]+)*$'; then
     err "'$FEATURE_NAME' is not a valid feature name (normalized: '$FEATURE_SNAKE')."
-    err "Use snake_case or camelCase: lowercase letters, digits and underscores,"
-    err "starting with a letter. Empty names, path separators, '..', punctuation"
-    err "and invalid starting characters are rejected."
+    err "Use snake_case or camelCase: lowercase letters, digits and single"
+    err "underscores between words, starting with a letter. Empty names, path"
+    err "separators, '..', punctuation, invalid starting characters and"
+    err "leading/trailing/doubled underscores are rejected."
     exit 1
 fi
 
@@ -209,12 +218,71 @@ for arb in "$APP_ROOT/lib/core/l10n/app_localizations_en.arb" \
     done
 done
 
+# --- 4c. Refuse names whose generated classes clash with imported types ------------
+# The feature declares `<Pascal>`, `<Pascal>Cubit`, `<Pascal>Screen`, ... next
+# to imports of dart:core, material_ui, flutter_bloc, fpdart, the test packages
+# and the app's core. A name such as `image`, `page`, `form` or `failure` would
+# produce an ambiguous or shadowed type and a feature that does not compile.
+# A probe library with the same imports asks the analyzer which of those names
+# already resolve; any that do means a clash. Fails open (skipped) when the
+# analyzer cannot run — the post-generation analysis below still guards.
+GENERATED_TYPES="$FEATURE_PASCAL ${FEATURE_PASCAL}Cubit ${FEATURE_PASCAL}State ${FEATURE_PASCAL}Screen ${FEATURE_PASCAL}Repository I${FEATURE_PASCAL}Repository ${FEATURE_PASCAL}RemoteDataSource I${FEATURE_PASCAL}RemoteDataSource ${FEATURE_PASCAL}Dto ${FEATURE_PASCAL}Service"
+PROBE_FILE=""
+if command -v dart &> /dev/null; then
+    PROBE_FILE="$APP_ROOT/lib/fgen_name_probe_$$.dart"
+    trap 'rm -f "$PROBE_FILE"' EXIT
+    {
+        echo "// ignore_for_file: type=lint, unused_import, depend_on_referenced_packages"
+        for uri in dart:async package:bloc_test/bloc_test.dart package:flutter/widgets.dart \
+            package:flutter_bloc/flutter_bloc.dart package:flutter_test/flutter_test.dart \
+            package:fpdart/fpdart.dart package:freezed_annotation/freezed_annotation.dart \
+            package:get_it/get_it.dart package:go_router/go_router.dart \
+            package:material_ui/material_ui.dart package:mocktail/mocktail.dart; do
+            echo "import '$uri';"
+        done
+        for core in core/bloc/latest_request_wins.dart core/errors/exception_mapper.dart \
+            core/l10n/app_localization_delegates.dart core/l10n/failure_localization.dart \
+            core/l10n/generated/app_localizations.dart core/models/failure.dart \
+            core/router/route_constants.dart; do
+            if [ -f "$APP_ROOT/lib/$core" ]; then
+                echo "import 'package:$PROJECT_NAME/$core';"
+            fi
+        done
+        echo "void fgenNameProbe() {"
+        for type_name in $GENERATED_TYPES; do
+            echo "  $type_name;"
+        done
+        echo "}"
+    } > "$PROBE_FILE"
+    PROBE_OUTPUT="$( (cd "$APP_ROOT" && dart analyze --format=machine "$PROBE_FILE") 2>&1 || true)"
+    rm -f "$PROBE_FILE"
+    CLASHES=""
+    # Only trust the probe when the analyzer actually ran on it: every
+    # non-clashing name is reported as an undefined identifier.
+    UNDEFINED_LINES="$(grep "UNDEFINED_IDENTIFIER" <<< "$PROBE_OUTPUT" || true)"
+    if [ -n "$UNDEFINED_LINES" ]; then
+        for type_name in $GENERATED_TYPES; do
+            if ! grep -q "'$type_name'" <<< "$UNDEFINED_LINES"; then
+                CLASHES="$CLASHES $type_name"
+            fi
+        done
+    fi
+    if [ -n "$CLASHES" ]; then
+        err "Refusing to generate '$FEATURE_SNAKE': these generated class names already"
+        err "exist in libraries the feature imports (Dart SDK, Flutter, packages or core):"
+        err " $CLASHES"
+        err "The feature would not compile. Choose a more specific name"
+        err "(e.g. '${FEATURE_SNAKE}_item' or 'user_$FEATURE_SNAKE')."
+        exit 1
+    fi
+fi
+
 echo "Generating feature $FEATURE_SNAKE (lean$( [ "$WITH_SERVICE" = true ] && printf ' + service' )$( [ "$WITH_DTO" = true ] && printf ' + dto' )) in $PROJECT_NAME..."
 
 # Templates are explicit shipped assets; render data without shell evaluation.
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TEMPLATE_DIR="$SCRIPT_DIR/feature_templates"
-for template in barrel.dart.tpl module.dart.tpl flow_test.dart.tpl domain_model.dart.tpl repository_contract.dart.tpl domain_service.dart.tpl remote_datasource.dart.tpl dto.dart.tpl repository_impl_imports.dart.tpl repository_impl_dto_import.dart.tpl repository_impl_body.dart.tpl state.dart.tpl cubit.dart.tpl screen.dart.tpl repository_test_imports.dart.tpl repository_test_dto_import.dart.tpl repository_test_setup.dart.tpl repository_test_dto_result.dart.tpl repository_test_domain_result.dart.tpl repository_test_body.dart.tpl dto_test.dart.tpl service_test.dart.tpl cubit_test.dart.tpl screen_test.dart.tpl; do
+for template in barrel.dart.tpl module.dart.tpl flow_test.dart.tpl domain_model.dart.tpl repository_contract.dart.tpl domain_service.dart.tpl remote_datasource.dart.tpl dto.dart.tpl repository_impl_imports.dart.tpl repository_impl_dto_import.dart.tpl repository_impl_body.dart.tpl state.dart.tpl cubit.dart.tpl screen.dart.tpl dto_test.dart.tpl; do
     if [ ! -f "$TEMPLATE_DIR/$template" ]; then
         err "Required feature template missing: $template"
         exit 1
@@ -258,14 +326,12 @@ mkdir -p \
     "$STAGE_LIB/domain/repositories" \
     "$STAGE_LIB/presentation/bloc" \
     "$STAGE_LIB/presentation/screens" \
-    "$STAGE_TEST/data/repositories" \
-    "$STAGE_TEST/presentation/bloc" \
-    "$STAGE_TEST/presentation/screens"
+    "$STAGE_TEST"
 if [ "$WITH_DTO" = true ]; then
     mkdir -p "$STAGE_LIB/data/models" "$STAGE_TEST/data/models"
 fi
 if [ "$WITH_SERVICE" = true ]; then
-    mkdir -p "$STAGE_LIB/domain/services" "$STAGE_TEST/domain/services"
+    mkdir -p "$STAGE_LIB/domain/services"
 fi
 
 # --- 6. Domain Layer: Model (Freezed, lean: no JSON serialization) -------------------
@@ -364,42 +430,20 @@ render_job w "$STAGE_LIB/${FEATURE_SNAKE}_module.dart" module.dart.tpl CUBIT_DEP
 # the cubit; the screen is a pure consumer.
 render_job w "$STAGE_LIB/presentation/screens/${FEATURE_SNAKE}_screen.dart" screen.dart.tpl FEATURE_PASCAL "$FEATURE_PASCAL" FEATURE_SNAKE "$FEATURE_SNAKE" L10N_DATA_KEY "$L10N_DATA_KEY" L10N_TITLE_KEY "$L10N_TITLE_KEY"
 
-# --- 15. Test Layer: Repository Implementation Test (failure + mapping) -------------------
-render_job w "$STAGE_TEST/data/repositories/${FEATURE_SNAKE}_repository_impl_test.dart" repository_test_imports.dart.tpl FEATURE_SNAKE "$FEATURE_SNAKE" PROJECT_NAME "$PROJECT_NAME"
-if [ "$WITH_DTO" = true ]; then
-    render_job a "$STAGE_TEST/data/repositories/${FEATURE_SNAKE}_repository_impl_test.dart" repository_test_dto_import.dart.tpl FEATURE_SNAKE "$FEATURE_SNAKE" PROJECT_NAME "$PROJECT_NAME"
-fi
-render_job a "$STAGE_TEST/data/repositories/${FEATURE_SNAKE}_repository_impl_test.dart" repository_test_setup.dart.tpl FEATURE_PASCAL "$FEATURE_PASCAL"
-if [ "$WITH_DTO" = true ]; then
-    render_job a "$STAGE_TEST/data/repositories/${FEATURE_SNAKE}_repository_impl_test.dart" repository_test_dto_result.dart.tpl FEATURE_PASCAL "$FEATURE_PASCAL"
-else
-    render_job a "$STAGE_TEST/data/repositories/${FEATURE_SNAKE}_repository_impl_test.dart" repository_test_domain_result.dart.tpl FEATURE_PASCAL "$FEATURE_PASCAL"
-fi
-render_job a "$STAGE_TEST/data/repositories/${FEATURE_SNAKE}_repository_impl_test.dart" repository_test_body.dart.tpl FEATURE_PASCAL "$FEATURE_PASCAL"
+# --- 15. Tests: one flow test per feature (see 18b), plus the DTO mapping test
+# with --with-dto. No repository/cubit/screen/service tests are generated: on a
+# placeholder feature they would re-test the same success and failure paths the
+# flow test covers, and the shared exception mapper and LatestRequestWins are
+# tested once in core. Add them when real mapping, rules or interactions land.
 
 # --- 16. Test Layer: DTO Mapping Test (only with --with-dto) -------------------------------
 if [ "$WITH_DTO" = true ]; then
     render_job w "$STAGE_TEST/data/models/${FEATURE_SNAKE}_dto_test.dart" dto_test.dart.tpl FEATURE_PASCAL "$FEATURE_PASCAL" FEATURE_SNAKE "$FEATURE_SNAKE" PROJECT_NAME "$PROJECT_NAME"
 fi
 
-# --- 16b. Test Layer: Service Test (only with --with-service) ---------------------------
-if [ "$WITH_SERVICE" = true ]; then
-    render_job w "$STAGE_TEST/domain/services/${FEATURE_SNAKE}_service_test.dart" service_test.dart.tpl FEATURE_PASCAL "$FEATURE_PASCAL" FEATURE_SNAKE "$FEATURE_SNAKE" PROJECT_NAME "$PROJECT_NAME"
-fi
-
-# --- 17. Test Layer: Cubit Test -------------------------------------------------------------
-CUBIT_TEST_MOCK_TYPE="${FEATURE_PASCAL}Repository"
-CUBIT_TEST_MOCK_IMPORT="package:$PROJECT_NAME/features/$FEATURE_SNAKE/domain/repositories/${FEATURE_SNAKE}_repository.dart"
-if [ "$WITH_SERVICE" = true ]; then
-    CUBIT_TEST_MOCK_TYPE="${FEATURE_PASCAL}Service"
-    CUBIT_TEST_MOCK_IMPORT="package:$PROJECT_NAME/features/$FEATURE_SNAKE/domain/services/${FEATURE_SNAKE}_service.dart"
-fi
-render_job w "$STAGE_TEST/presentation/bloc/${FEATURE_SNAKE}_cubit_test.dart" cubit_test.dart.tpl CUBIT_TEST_MOCK_IMPORT "$CUBIT_TEST_MOCK_IMPORT" CUBIT_TEST_MOCK_TYPE "$CUBIT_TEST_MOCK_TYPE" FEATURE_PASCAL "$FEATURE_PASCAL" FEATURE_SNAKE "$FEATURE_SNAKE" PROJECT_NAME "$PROJECT_NAME"
-
-# --- 18. Test Layer: Screen Widget Test ---------------------------------------------------
-render_job w "$STAGE_TEST/presentation/screens/${FEATURE_SNAKE}_screen_test.dart" screen_test.dart.tpl FEATURE_PASCAL "$FEATURE_PASCAL" FEATURE_SNAKE "$FEATURE_SNAKE" L10N_DATA_KEY "$L10N_DATA_KEY" PROJECT_NAME "$PROJECT_NAME"
-
-# --- 18b. Test Layer: Flow test through the module's real wiring -------------------
+# --- 18b. Test Layer: Flow test through the module's real wiring ----------------
+# Success, a data-source timeout localized as a network failure, and retry —
+# through the real registrations, route, repository, cubit and screen.
 FLOW_TEST_DATA_IMPORT="package:$PROJECT_NAME/features/$FEATURE_SNAKE/domain/models/${FEATURE_SNAKE}.dart"
 FLOW_TEST_DATA="const ${FEATURE_PASCAL}(id: '1', name: 'Flow')"
 if [ "$WITH_DTO" = true ]; then
@@ -419,6 +463,23 @@ fi
 mkdir -p "$APP_ROOT/lib/features" "$APP_ROOT/test/features"
 mv "$STAGE_LIB" "$LIB_FEATURE_DIR"
 mv "$STAGE_TEST" "$TEST_FEATURE_DIR"
+
+# --- 19b. Wire the module into DI, router, route constants and the DI test ---------
+# Right after publishing: wiring needs no codegen, so a later localization or
+# build_runner failure leaves the feature wired rather than silently orphaned.
+
+WIRE_OUTPUT="$(uv run --no-project "$SCRIPT_DIR/fwire.py" apply "$APP_ROOT" "$FEATURE_SNAKE" "$FEATURE_PASCAL" "$FEATURE_CAMEL" "$PROJECT_NAME")" && WIRE_STATUS=0 || WIRE_STATUS=$?
+WIRED_FILES=()
+while IFS= read -r line; do
+    case "$line" in
+        wired:\ *) WIRED_FILES+=("$APP_ROOT/${line#wired: }") ;;
+    esac
+done <<< "$WIRE_OUTPUT"
+if [ ${#WIRED_FILES[@]} -gt 0 ] && command -v dart &> /dev/null; then
+    # Non-fatal: a formatter failure must not hide the wiring status; the
+    # analysis step below reports any real problem in these files.
+    dart format "${WIRED_FILES[@]}" > /dev/null 2>&1 || true
+fi
 
 
 # --- 20. Localization keys (via fstr, with collision check) -------------------------
@@ -453,6 +514,9 @@ fi
 
 echo "Running build_runner..."
 if command -v dart &> /dev/null; then
+    # Full build, never --build-filter: build_runner deletes every previous
+    # output outside the filter (other features' .freezed/.g files). The
+    # app's build.yaml keeps the full build cheap instead.
     if ! (cd "$APP_ROOT" && dart run build_runner build --delete-conflicting-outputs) > "$TOOL_LOG" 2>&1; then
         tail -n 40 "$TOOL_LOG" >&2
         err ""
@@ -478,20 +542,32 @@ else
     echo -e "${RED}⚠️  Warning: 'dart' command not found. Run build_runner manually.${NC}" >&2
 fi
 
-# --- 22. Wire the module into DI, router, route constants and the DI test -----------
+# --- 22. Analyze the new feature: never report success for code that does not compile
 
-WIRE_OUTPUT="$(uv run --no-project "$SCRIPT_DIR/fwire.py" apply "$APP_ROOT" "$FEATURE_SNAKE" "$FEATURE_PASCAL" "$FEATURE_CAMEL" "$PROJECT_NAME")" && WIRE_STATUS=0 || WIRE_STATUS=$?
-WIRED_FILES=()
-while IFS= read -r line; do
-    case "$line" in
-        wired:\ *) WIRED_FILES+=("$APP_ROOT/${line#wired: }") ;;
-    esac
-done <<< "$WIRE_OUTPUT"
-if [ ${#WIRED_FILES[@]} -gt 0 ] && command -v dart &> /dev/null; then
-    dart format "${WIRED_FILES[@]}" > /dev/null
+ANALYZE_STATUS=0
+if command -v dart &> /dev/null; then
+    echo "Analyzing the generated feature..."
+    ANALYZE_TARGETS=("$LIB_FEATURE_DIR" "$TEST_FEATURE_DIR")
+    if [ ${#WIRED_FILES[@]} -gt 0 ]; then
+        ANALYZE_TARGETS+=("${WIRED_FILES[@]}")
+    fi
+    if ! (cd "$APP_ROOT" && dart analyze --no-fatal-warnings "${ANALYZE_TARGETS[@]}") > "$TOOL_LOG" 2>&1; then
+        grep -E "^[[:space:]]*error " "$TOOL_LOG" | head -n 30 >&2 || tail -n 30 "$TOOL_LOG" >&2
+        ANALYZE_STATUS=1
+    fi
 fi
 
 echo ""
+if [ "$ANALYZE_STATUS" -ne 0 ]; then
+    err "Feature '$FEATURE_SNAKE' was generated and wired, but the analyzer reports"
+    err "ERRORS (above) in it or in the files it was wired into: the app does not compile."
+    err "- Errors in pre-existing files: fix them, then run ./scripts/fverify.sh --fix."
+    err "- Errors in the new feature (usually a name clash): delete"
+    err "  lib/features/$FEATURE_SNAKE and test/features/$FEATURE_SNAKE, revert its lines in"
+    err "  service_locator.dart, app_router.dart, route_constants.dart and"
+    err "  test/core/di/service_locator_test.dart, then re-run with another name."
+    exit 1
+fi
 if [ "$WIRE_STATUS" -eq 0 ]; then
     echo -e "${GREEN}✓ Wired: registered in service_locator.dart, route /${FEATURE_SNAKE} added, DI smoke test updated.${NC}"
 else

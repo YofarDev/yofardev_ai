@@ -14,9 +14,15 @@
 #   ~/.agents/skills/  (with --user)
 #   ~/.claude/skills/  (with --user)
 #
-# Only top-level *.md files are copied (SKILL.md and companions such as
-# examples.md). Nothing is ever deleted from the targets, so per-target
-# extras survive.
+# Every file of a skill is compared and copied (SKILL.md, companions such as
+# examples.md, helper scripts such as flutterforge-upgrade/prepare_upgrade.py),
+# keeping its permission bits. Nothing is ever deleted from the targets, so
+# per-target extras survive.
+#
+# A target skill directory that is a symlink into ANOTHER checkout's canonical
+# .agents/skills/ (e.g. ~/.agents/skills/x -> <template>/.agents/skills/x) is
+# never written: running this from an older app would otherwise overwrite
+# the template's canonical skills with the app's older copies.
 #
 # Usage:
 #   ./scripts/sync_skills.sh            # sync project-local targets
@@ -67,6 +73,9 @@ fi
 DRIFT=0
 SYNCED=0
 
+REAL_HOME="$(cd "$HOME" && pwd -P)"
+SYNCED_REAL_DIRS=" "
+
 for target in "${TARGETS[@]}"; do
   echo -e "\n${CYAN}== ${target/#$HOME/~} ${RESET}"
   if [[ ! -d "$target" ]]; then
@@ -80,21 +89,43 @@ for target in "${TARGETS[@]}"; do
       skip "$skill (not present in target — skipped)"
       continue
     fi
-    for md in "$src_dir"/*.md; do
-      [[ -e "$md" ]] || continue
-      name="$(basename "$md")"
-      dst="$dst_dir/$name"
-      if [[ ! -f "$dst" ]] || ! cmp -s "$md" "$dst"; then
+    real_src="$(cd "$src_dir" && pwd -P)"
+    real_dst="$(cd "$dst_dir" && pwd -P)"
+    if [[ "$real_dst" == "$real_src" ]]; then
+      skip "$skill (same directory as the canonical source)"
+      continue
+    fi
+    case "$SYNCED_REAL_DIRS" in
+      *" $real_dst "*)
+        skip "$skill (same directory as a target already handled)"
+        continue ;;
+    esac
+    if [[ -L "$dst_dir" ]]; then
+      owner_root="$(dirname "$(dirname "$(dirname "$real_dst")")")"
+      case "$real_dst" in
+        */.agents/skills/"$skill")
+          if [[ "$owner_root" != "$REAL_HOME" ]]; then
+            skip "$skill → $real_dst is another checkout's canonical source — not written (sync from that checkout instead)"
+            continue
+          fi ;;
+      esac
+    fi
+    SYNCED_REAL_DIRS="$SYNCED_REAL_DIRS$real_dst "
+    while IFS= read -r rel; do
+      src="$src_dir/$rel"
+      dst="$dst_dir/$rel"
+      if [[ ! -f "$dst" ]] || ! cmp -s "$src" "$dst"; then
         if [[ "$CHECK_ONLY" == true ]]; then
-          diff_ "$skill/$name differs"
+          diff_ "$skill/$rel differs"
           DRIFT=$((DRIFT + 1))
         else
-          cp "$md" "$dst"
-          ok "$skill/$name synced"
+          mkdir -p "$(dirname "$dst")"
+          cp -p "$src" "$dst"
+          ok "$skill/$rel synced"
           SYNCED=$((SYNCED + 1))
         fi
       fi
-    done
+    done < <(cd "$src_dir" && find . -type f ! -name '.DS_Store' ! -path '*/__pycache__/*' | sed 's|^\./||' | sort)
   done
 done
 
