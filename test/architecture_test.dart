@@ -29,8 +29,9 @@ import 'support/architecture_checker.dart';
 ///
 ///    A run with checker errors (syntax problems, unresolved imports) fails
 ///    the gate: the checker never passes code it could not analyze.
-///    Rule-by-rule fixtures live in `test/architecture_checker_test.dart`
-///    and `test/architecture_checker_boundaries_test.dart`; a feature module
+///    The checker's rule-by-rule regression fixtures live in the FlutterForge
+///    template repository under `tools/checker_tests/` (not in this app);
+///    a feature module
 ///    (`lib/features/<f>/<f>_module.dart`) may also import get_it and
 ///    register its own feature on the `GetIt` it receives.
 ///
@@ -41,7 +42,8 @@ import 'support/architecture_checker.dart';
 ///    the removed look-gate tokens stay removed.
 ///
 /// When you add a rule to the flutter-architecture skill, add it to the
-/// checker and give it fixtures in `architecture_checker_test.dart`.
+/// checker together with a negative test proving a violation is reported
+/// (in the template repository: `tools/checker_tests/`).
 
 /// Whether the file at [path] may import `package:rive/`: only the avatar
 /// presentation layer and the UI-kit Rive widgets (`core/design/rive/`).

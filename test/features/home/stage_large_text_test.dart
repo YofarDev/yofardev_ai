@@ -5,12 +5,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:yofardev_ai/core/design/rive/ui_kit_file.dart';
 import 'package:yofardev_ai/core/models/avatar_scene.dart';
 import 'package:yofardev_ai/core/services/app_lifecycle_service.dart';
-import 'package:yofardev_ai/features/home/widgets/home_content_stack.dart';
-import 'package:yofardev_ai/features/home/widgets/stage/scene_picker_sheet.dart';
-import 'package:yofardev_ai/features/home/widgets/stage/stage_composer.dart';
-import 'package:yofardev_ai/features/home/widgets/stage/stage_menu.dart';
-import 'package:yofardev_ai/features/home/widgets/stage/stage_tool_chip.dart';
-import 'package:yofardev_ai/features/home/widgets/stage/stage_top_bar.dart';
+import 'package:yofardev_ai/features/home/presentation/widgets/home_content_stack.dart';
+import 'package:yofardev_ai/features/home/presentation/widgets/stage/scene_picker_sheet.dart';
+import 'package:yofardev_ai/features/home/presentation/widgets/stage/stage_composer.dart';
+import 'package:yofardev_ai/features/home/presentation/widgets/stage/stage_menu.dart';
+import 'package:yofardev_ai/features/home/presentation/widgets/stage/stage_tool_chip.dart';
+import 'package:yofardev_ai/features/home/presentation/widgets/stage/stage_top_bar.dart';
 
 import '../../helpers/rive_test_assets.dart';
 import 'stage_harness.dart';

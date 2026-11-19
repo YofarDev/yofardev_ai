@@ -2,11 +2,12 @@
 
 The following utility scripts are included in this app. Run them from the app
 root. Bash and Flutter/Dart must be on `PATH`; `fgen`, `fstr`, `fl10n`,
-`fimp`, and `frive` also require [uv](https://docs.astral.sh/uv/).
+`fimp`, `frive`, and `ftest.sh --slowest` also require [uv](https://docs.astral.sh/uv/).
 
 | Script | Purpose |
 |--------|---------|
-| `./scripts/fverify.sh` | **Quality Gate** (non-mutating): `dart format` check (never rewrites files — run `dart format .` yourself first), then `flutter analyze` + `flutter test` in one command. Run before finishing any change. |
+| `./scripts/fverify.sh [--fix]` | **Quality Gate**: `dart format` check, then `flutter analyze` + tests through `ftest.sh` (failures-only reporter). Non-mutating by default; `--fix` first runs `dart fix --apply` and `dart format` on the source dirs (`lib`, `test`, `tool`, `integration_test` — never `build/`). Run before finishing any change. |
+| `./scripts/ftest.sh [paths] [--slowest[=N]]` | **Run Tests** (use instead of a bare `flutter test`): waits for a slot in a machine-wide queue shared by every project (scoped runs use a light lane), runs niced, prints each compile error once. A full run (no paths) compiles the suite into parallel shards (files in a shard share an isolate; a file that passes alone but fails in a full run can keep its own isolate with a `// ftest:isolate` line) and skips the architecture gate when `lib/` is unchanged since its last green run. `--slowest` prints the slowest files/tests before optimizing. `FORGE_QUEUE=0` disables the queue. |
 | `./scripts/fgen.sh "name" [--with-service] [--with-dto]` | **Generate New Feature**: Creates Clean Architecture boilerplate (lean by default; optional layers via flags) and runs code generation. Refuses to overwrite an existing feature; snake_case or camelCase names. |
 | `./scripts/fstr.sh "key" "FR" "EN" [project_path]` | **Add Localization**: Adds a new key to both French and English `.arb` files, then regenerates localization. Requires a new lowerCamelCase key, valid ARB JSON, and matching placeholders. Defaults to the current project. |
 | `./scripts/fl10n.sh` | **Find Unlocalized Strings**: Scans `lib/` for hardcoded user-facing strings that should use `AppLocalizations`. |

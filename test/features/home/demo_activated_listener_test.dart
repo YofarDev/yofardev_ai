@@ -13,7 +13,7 @@ import 'package:yofardev_ai/core/design/theme/app_theme.dart';
 import 'package:yofardev_ai/core/l10n/generated/app_localizations.dart';
 import 'package:yofardev_ai/features/demo/demo.dart';
 import 'package:yofardev_ai/features/demo/domain/services/demo_controller.dart';
-import 'package:yofardev_ai/features/home/widgets/demo_activated_listener.dart';
+import 'package:yofardev_ai/features/home/presentation/widgets/demo_activated_listener.dart';
 
 class MockDemoCubit extends MockCubit<DemoState> implements DemoCubit {}
 

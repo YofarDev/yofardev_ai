@@ -5,6 +5,7 @@ import 'package:flutter/gestures.dart' show kTouchSlop;
 import 'package:flutter/scheduler.dart';
 
 import '../../../../core/models/avatar_scene.dart';
+import '../../../../core/models/geometry.dart';
 import '../../../../core/services/audio/foley_service.dart' show DragHaptic;
 import '../../domain/models/scene_drag.dart';
 import '../../domain/services/prop_drag_physics.dart';
@@ -165,9 +166,9 @@ class PropDragController {
   }
 
   /// [local] (in a scene widget [box] big) in the handle's rest frame.
-  Offset _toHandle(SceneDragHandle handle, Offset local, Size box) =>
-      SceneDrags.toArtboard(local, box) -
-      SceneDrags.planeOffset(handle.plane, parallax());
+  Vec2 _toHandle(SceneDragHandle handle, Offset local, Size box) =>
+      SceneDrags.toArtboard(_vec(local), _size(box)) -
+      SceneDrags.planeOffset(handle.plane, _vec(parallax()));
 
   /// Whether a pointer down at [local] lands on the handle.
   bool canStart(Offset local, Size box) {
@@ -177,8 +178,8 @@ class PropDragController {
     }
     return SceneDrags.hits(
       handle,
-      SceneDrags.toArtboard(local, box),
-      parallax(),
+      SceneDrags.toArtboard(_vec(local), _size(box)),
+      _vec(parallax()),
     );
   }
 
@@ -278,9 +279,12 @@ class PropDragController {
     if (handle == null) {
       return null;
     }
-    return SceneDrags.toLocal(
-      handle.rect.center + SceneDrags.planeOffset(handle.plane, parallax()),
-      box,
+    return _offset(
+      SceneDrags.toLocal(
+        handle.rect.center +
+            SceneDrags.planeOffset(handle.plane, _vec(parallax())),
+        _size(box),
+      ),
     );
   }
 
@@ -371,6 +375,12 @@ class PropDragController {
   }
 
   static Offset _noParallax() => Offset.zero;
+
+  static Vec2 _vec(Offset offset) => Vec2(offset.dx, offset.dy);
+
+  static Offset _offset(Vec2 vector) => Offset(vector.x, vector.y);
+
+  static Size2 _size(Size size) => Size2(size.width, size.height);
 
   static Duration Function() _stopwatchClock() {
     final Stopwatch stopwatch = Stopwatch()..start();

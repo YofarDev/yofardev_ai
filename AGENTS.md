@@ -27,16 +27,20 @@
 flutter pub get                                            # install dependencies
 dart run build_runner build --delete-conflicting-outputs   # regen freezed/json code (after model changes)
 flutter gen-l10n                                           # regen localizations (after .arb edits)
-flutter test                                               # all tests (includes architecture_test.dart)
-flutter test test/features/chat                            # focused: one directory
+./scripts/ftest.sh                                         # all tests (includes architecture_test.dart)
+./scripts/ftest.sh test/features/chat                      # focused: one directory
 flutter test --update-goldens test/features/avatar         # regenerate golden images (intentionally only)
 
 # Before finishing ANY change (quality gate):
 ./scripts/fverify.sh    # non-mutating gate (format check + analyze + test)
-./scripts/fverify.sh --fix  # dart fix --apply + dart format ., then the gate
+./scripts/fverify.sh --fix  # dart fix --apply + dart format on source dirs, then the gate
 ```
 
-`./scripts/fverify.sh` without `--fix` never rewrites source — resolve
+Run tests through `./scripts/ftest.sh` (never a bare `flutter test`): it waits
+for a slot in a machine-wide queue shared with every project on this machine,
+compiles full runs into parallel shards instead of per-file isolates, and a
+file that only passes alone can keep its own isolate with a `// ftest:isolate`
+line. `./scripts/fverify.sh` without `--fix` never rewrites source — resolve
 deps/codegen yourself first. `--fix` refuses `dart fix` when it would touch
 more than 25 files (an SDK migration — decide on it separately).
 
@@ -46,7 +50,8 @@ more than 25 files (an SDK migration — decide on it separately).
 
 | Script | Purpose |
 |--------|---------|
-| `./scripts/fverify.sh` | Quality gate — run before finishing any change |
+| `./scripts/fverify.sh` | Quality gate — run before finishing any change (tests through `ftest.sh`) |
+| `./scripts/ftest.sh [paths]` | Run tests (queued machine-wide, sharded full runs); use instead of bare `flutter test` |
 | `./scripts/fmap.sh` | Read-only project map: one line per feature (routes, wiring, layers, barrel dependencies) |
 | `./scripts/fgen.sh "name" [--with-service] [--with-dto]` | Scaffold a new Clean Architecture feature (module, barrel, tests, translations) and wire it at the `// fgen:` markers; refuses existing feature directories |
 | `./scripts/fstr.sh "key" "FR" "EN" [key "FR" "EN"]...` | Add l10n keys to both ARB files (several triples in one call), then regenerate once |
@@ -119,12 +124,12 @@ imports and the design-layer rules, so `flutter test` fails on violation.
 - **Scene accent**: livingRoom `#F4B860`, campfire `#FF8552`, beach `#FF9478`, deepSpace `#B79CFF`, cafe `#E8956B`, rooftop `#7CB8FF`, mountainHut `#86D4C4`; `ScenePalette.fromAccent` is the single derivation rule (onAccent, glow); check pairs with `contrastRatio` (`tokens/contrast.dart`). Roles: error `#FF6B6B`, tertiary `#B79CFF`, success `#7BD88F`, warning `#F4B860`
 - **UI kit** lives in `lib/core/design/components/` with its own barrel `components.dart` (not re-exported by `design.dart`): `AppIconButton` (48 dp hit area), `GlassPanel` (optional `shape:`), `AppPill`, `AppScaffold`, `SpeechBubbleBorder`. Glass is the only surface style. The legacy `lib/core/widgets/app_icon_button.dart` must not be used in new code (M3 replaces it)
 - **UI kit Rive widgets** (`lib/core/design/rive/ui_kit.dart`): `ComposerOrb`, `StatusGlow`, `ToolIcon`, `RiveToggle`, `MarkSting`, all drawn from the shared `assets/rive/ui/ui_kit.riv` and each with a Flutter fallback (shown while loading, and when the file or artboard is missing). Properties go through `RiveVmBinding` (`rive_vm_binding.dart`: typed, skips unchanged values; colours are VM writes, so a scene change never recreates a controller). Widget tests that mount them call `serveFakeRiveAssets()` (`test/helpers/rive_test_assets.dart`) and `UiKitFile.resetForTest()` in `setUp`; the real file is covered by `integration_test/ui_kit_rive_test.dart` (`-d macos`)
-- **Home = the Stage** (`lib/features/home/widgets/stage/`, assembled by `widgets/home_content_stack.dart`): top chips (History, More menu), live caption (`CaptionCubit`, talking barrel: the playing TTS sentence; `enabled` is persisted), running-tool chip (`ChatState.activeTool`), `StatusGlow`, and `StageComposer` (orb = mic/send/stop). Keep the Rive scene/avatar layer free of MediaQuery and theme reads
+- **Home = the Stage** (`lib/features/home/presentation/widgets/stage/`, assembled by `widgets/home_content_stack.dart`): top chips (History, More menu), live caption (`CaptionCubit`, talking barrel: the playing TTS sentence; `enabled` is persisted), running-tool chip (`ChatState.activeTool`), `StatusGlow`, and `StageComposer` (orb = mic/send/stop). Keep the Rive scene/avatar layer free of MediaQuery and theme reads
 - **Speech input**: `SpeechInputService` (`lib/core/services/speech/`) asks for the microphone on the first mic tap, never at launch; a denied or unavailable mic shows a toast, and where STT is unsupported (`isSupported` false) the idle orb focuses the text field instead. Home gets it by constructor from `app_router.dart`
 
 ### Gotchas
 
-- Changing a freezed model or ARB file **requires regeneration** (`build_runner` / `gen-l10n`) or analysis and tests fail
+- Changing a freezed model or ARB file **requires regeneration** (`build_runner` / `gen-l10n`) or analysis and tests fail. Codegen is scoped by `build.yaml`: `@freezed` classes must live in a `models/` or `bloc/` folder (this app additionally keeps freezed JSON models in `core/services/stream_processor/`, `core/services/llm/` and `features/sound/domain/`, all listed there) — a class anywhere else gets no generated part; move it or extend `build.yaml`
 - Golden tests store reference images under `test/**/goldens/` — only regenerate (`--update-goldens`) when a visual change is intentional
 - Widget tests that need app styling use `AppTheme.dark`; goldens go through `GoldenTestHelper.init()` + `makeTestableWidget` + `matchGolden`
 - Fonts are bundled in `assets/fonts/google_fonts/` (Fraunces 400/500/600, Manrope 400/500) and runtime fetching is off — a new font weight needs a new TTF there
@@ -495,7 +500,10 @@ Each feature except `home` exposes a public API barrel at
 
 ---
 
-**Last Updated**: 2026-11-17 (second FlutterForge upgrade to 8a48cd4: Flutter 3.50 +
+**Last Updated**: 2026-11-19 (third FlutterForge upgrade to 6b03f63: ftest.sh +
+machine-wide test queue wired into fverify, scoped `build.yaml` codegen,
+leaner fgen output — flow test only —, checker self-tests moved to the template
+repo, checker learns the app-state layer; second upgrade 8a48cd4: Flutter 3.50 +
 material_ui localization delegates, analyzer ^14, fgen/fwire real-app fixes; first
 upgrade 6053fbf: feature-module checker rule, fgen auto-wiring markers, fverify
 --fix, fmap) — analyzer-based architecture gate from

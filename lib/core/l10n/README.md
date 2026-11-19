@@ -45,6 +45,14 @@ The generated file is located at:
 
 ### 1. Adding New Translations
 
+Prefer the project tool, which edits both ARB files and regenerates once:
+
+```bash
+./scripts/fstr.sh myNewKey "Bonjour le monde" "Hello World"
+```
+
+By hand:
+
 1. Add your new translation key to the template `.arb` file (English) with metadata:
 
 ```json
@@ -86,7 +94,7 @@ class MyWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
+    final AppLocalizations l10n = AppLocalizations.of(context);
     return Text(l10n.myNewKey);
   }
 }
@@ -101,17 +109,9 @@ class MyWidget extends StatelessWidget {
 
 2. Copy all keys from the template file and translate the values.
 
-3. Add the locale to your app's `supportedLocales` in `main.dart`:
-
-```dart
-supportedLocales: const <Locale>[
-  Locale('en'), // English
-  Locale('fr'), // French
-  Locale('es'), // Spanish (new)
-],
-```
-
-4. Run `flutter gen-l10n` to regenerate the localization files.
+3. Run `flutter gen-l10n` to regenerate the localization files. No code
+   change is needed: `app.dart` uses `AppLocalizations.supportedLocales`,
+   which lists every ARB file.
 
 ### 4. Supported Locales
 

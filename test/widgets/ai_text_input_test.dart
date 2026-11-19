@@ -17,7 +17,7 @@ import 'package:yofardev_ai/core/models/chat.dart';
 import 'package:yofardev_ai/core/models/chat_entry.dart';
 import 'package:yofardev_ai/features/chat/presentation/bloc/chat_cubit.dart';
 import 'package:yofardev_ai/features/chat/presentation/bloc/chat_state.dart';
-import 'package:yofardev_ai/features/chat/widgets/ai_text_input/ai_text_input.dart';
+import 'package:yofardev_ai/features/chat/presentation/widgets/ai_text_input/ai_text_input.dart';
 import 'package:yofardev_ai/core/models/result.dart';
 import 'package:yofardev_ai/core/models/task_llm_config.dart';
 import 'package:yofardev_ai/core/repositories/settings_repository.dart';

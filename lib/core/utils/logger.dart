@@ -36,6 +36,16 @@ class AppLogger {
   /// when debugging that test.
   static bool enabled = true;
 
+  /// ANSI colors render in terminals (`flutter run`, VS Code) but show up as
+  /// raw escape codes in Xcode's console and Android Studio's Logcat; set
+  /// this to `false` there to log plain text.
+  static bool useColors = true;
+
+  static final RegExp _ansiEscape = RegExp('\x1B\\[[0-9;]*m');
+
+  static void _print(String line) =>
+      debugPrint(useColors ? line : line.replaceAll(_ansiEscape, ''));
+
   // ── Per-level color schemes ────────────────────────────────────────────────
 
   static String _timeColor(LogLevel level) => switch (level) {
@@ -169,19 +179,19 @@ class AppLogger {
       ..write('$_dim $_grey│$_reset ')
       ..write('$messageColor$message$_reset');
 
-    debugPrint(buffer.toString());
+    _print(buffer.toString());
 
     if (error != null) {
-      debugPrint('$_italic$_dim${_callerColor(level)}  ┌─ Error$_reset');
-      debugPrint('$_italic${_messageColor(level)}  └─ $error$_reset');
+      _print('$_italic$_dim${_callerColor(level)}  ┌─ Error$_reset');
+      _print('$_italic${_messageColor(level)}  └─ $error$_reset');
     }
 
     if (stackTrace != null) {
-      debugPrint('$_dim$_grey  ┌─ StackTrace$_reset');
+      _print('$_dim$_grey  ┌─ StackTrace$_reset');
       final List<String> stLines = stackTrace.toString().trim().split('\n');
       for (int i = 0; i < stLines.length; i++) {
         final bool isLast = i == stLines.length - 1;
-        debugPrint('$_dim$_grey  ${isLast ? '└─' : '├─'} ${stLines[i]}$_reset');
+        _print('$_dim$_grey  ${isLast ? '└─' : '├─'} ${stLines[i]}$_reset');
       }
     }
   }

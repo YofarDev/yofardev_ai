@@ -18,15 +18,12 @@ output-dir: lib/core/l10n/generated
 # Set to false for null safety (recommended)
 nullable-getter: false
 
-# Generate localization code for allARB files found in arb-dir
-# If false, only generate for locales explicitly listed
-generate-all: true
-
 # Header added to generated files. Flutter 3.50's gen-l10n still emits the
 # GlobalMaterialLocalizations/GlobalCupertinoLocalizations delegates from
 # flutter_localizations, which are deprecated in favour of material_ui and
 # cupertino_ui; silence that in generated code only.
 header: "// ignore_for_file: deprecated_member_use"
 
-# Uncomment to enable detailed logging during generation
-# use-escaping: true
+# Do NOT enable `use-escaping` without rewriting the ARB files: it makes a
+# single quote an escape character, so French text such as "l'application"
+# would lose its apostrophe or fail to parse.

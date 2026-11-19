@@ -77,7 +77,8 @@ while IFS= read -r f; do
   DART_FILES+=("$f")
 done < <(
   find "${SCAN_DIRS[@]}" -type f -name "*.dart" \
-    ! -path "*/l10n/*" \
+    ! -path "$LIB_DIR/core/l10n/generated/*" \
+    ! -path "$LIB_DIR/l10n/generated/*" \
     ! -name "*.g.dart" \
     ! -name "*.freezed.dart" \
     ! -name "*.gen.dart" \
@@ -97,7 +98,7 @@ trap 'rm -f "$SCAN_OUTPUT"' EXIT
 
 DART_FILES="$(printf '%s\n' ${DART_FILES[@]+"${DART_FILES[@]}"})" \
 PROJECT_ROOT="$PROJECT_ROOT" \
-uv run python << 'PYEOF' > "$SCAN_OUTPUT"
+uv run --no-project python << 'PYEOF' > "$SCAN_OUTPUT"
 import os
 import re
 
@@ -153,6 +154,8 @@ def should_skip_value(s):
         return True                            # email pattern
     return False
 
+STRING_LITERAL = re.compile(r"""(['"])(?:(?!\1)[^\\]|\\.)*\1""")
+
 findings = []
 
 for filepath in dart_files:
@@ -169,9 +172,14 @@ for filepath in dart_files:
     for lineno, raw_line in enumerate(lines, start=1):
         line = raw_line.rstrip()
 
-        if "/*" in line:
-            in_block_comment = True
-        if "*/" in line:
+        # Detect comment markers on code only: a "/*" inside a string literal
+        # (e.g. 'docs/*') must not switch block-comment mode on.
+        code = STRING_LITERAL.sub('""', line)
+        code = code.split("//", 1)[0]
+        if "/*" in code:
+            in_block_comment = "*/" not in code.split("/*", 1)[1]
+            continue
+        if "*/" in code:
             in_block_comment = False
             continue
         if in_block_comment:

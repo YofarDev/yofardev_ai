@@ -11,8 +11,8 @@ import 'package:yofardev_ai/core/services/quality/quality_tier_service.dart';
 import 'package:yofardev_ai/core/services/settings_local_datasource.dart';
 import 'package:yofardev_ai/features/avatar/presentation/widgets/rive/rive_avatar_view.dart';
 import 'package:yofardev_ai/features/avatar/presentation/widgets/rive/rive_scene_view.dart';
-import 'package:yofardev_ai/features/home/widgets/home_content_stack.dart';
-import 'package:yofardev_ai/features/home/widgets/stage/stage_caption_bubble.dart';
+import 'package:yofardev_ai/features/home/presentation/widgets/home_content_stack.dart';
+import 'package:yofardev_ai/features/home/presentation/widgets/stage/stage_caption_bubble.dart';
 
 import '../../helpers/rive_test_assets.dart';
 import 'stage_harness.dart';

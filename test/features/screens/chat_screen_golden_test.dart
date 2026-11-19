@@ -1,8 +1,9 @@
+// ftest:isolate
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:golden_toolkit/golden_toolkit.dart';
 
-import 'package:yofardev_ai/features/chat/widgets/modern_chat_bubble.dart';
+import 'package:yofardev_ai/features/chat/presentation/widgets/modern_chat_bubble.dart';
 import '../../helpers/golden_test_helper.dart';
 
 /// Golden tests for complete chat screen scenarios

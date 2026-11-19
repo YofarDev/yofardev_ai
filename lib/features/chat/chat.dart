@@ -6,5 +6,5 @@ export 'presentation/bloc/chat_cubit.dart';
 export 'presentation/bloc/chat_state.dart';
 export 'presentation/bloc/chat_tts_cubit.dart';
 export '../../../../core/repositories/chat_repository.dart';
-export 'widgets/ai_text_input/ai_text_input.dart';
-export 'widgets/floating_stop_button.dart';
+export './presentation/widgets/ai_text_input/ai_text_input.dart';
+export './presentation/widgets/floating_stop_button.dart';

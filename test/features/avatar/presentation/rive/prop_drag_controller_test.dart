@@ -3,11 +3,13 @@ import 'dart:ui';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:yofardev_ai/core/models/avatar_scene.dart';
+import 'package:yofardev_ai/core/models/geometry.dart';
 import 'package:yofardev_ai/core/services/audio/foley_service.dart';
 import 'package:yofardev_ai/features/avatar/domain/models/scene_drag.dart';
 import 'package:yofardev_ai/features/avatar/presentation/rive/prop_drag_controller.dart';
 
 const Size _box = Size(390, 844);
+const Size2 _sceneBox = Size2(390, 844);
 
 /// A fake `SceneVM` number sink.
 class _Sink {
@@ -61,7 +63,10 @@ void main() {
   });
 
   /// The local point of the artboard point [p] (at parallax 0).
-  Offset local(Offset p) => SceneDrags.toLocal(p, _box);
+  Offset local(Vec2 p) {
+    final Vec2 v = SceneDrags.toLocal(p, _sceneBox);
+    return Offset(v.x, v.y);
+  }
 
   _Sink attach(AvatarScene scene) {
     final _Sink sink = _Sink();
@@ -78,7 +83,7 @@ void main() {
     final Offset top = local(handle.rect.center);
     expect(c.start(top, _box), isTrue);
     now += const Duration(milliseconds: 16);
-    c.update(local(handle.rect.center + Offset(0, artboardPx)), _box);
+    c.update(local(handle.rect.center + Vec2(0, artboardPx)), _box);
     pumpFrames();
     if (release) {
       now += const Duration(milliseconds: 16);
@@ -92,7 +97,7 @@ void main() {
       final SceneDragHandle cord = c.handle!;
       expect(c.canStart(local(cord.rect.center), _box), isTrue);
       expect(
-        c.canStart(local(cord.rect.topLeft - const Offset(4, 4)), _box),
+        c.canStart(local(cord.rect.topLeft - const Vec2(4, 4)), _box),
         isFalse,
       );
       expect(
@@ -106,17 +111,17 @@ void main() {
         attach(AvatarScene.livingRoom);
         c.parallax = () => Offset(px, -1);
         final SceneDragHandle cord = c.handle!;
-        final Offset shift = SceneDrags.planeOffset(cord.plane, Offset(px, -1));
+        final Vec2 shift = SceneDrags.planeOffset(cord.plane, Vec2(px, -1));
         // just inside the moved edge, outside the rest rect
-        final Offset lead = px > 0
-            ? Offset(cord.rect.right + shift.dx - 2, cord.rect.center.dy)
-            : Offset(cord.rect.left + shift.dx + 2, cord.rect.center.dy);
+        final Vec2 lead = px > 0
+            ? Vec2(cord.rect.right + shift.x - 2, cord.rect.center.y)
+            : Vec2(cord.rect.left + shift.x + 2, cord.rect.center.y);
         expect(cord.rect.contains(lead), isFalse);
         expect(c.canStart(local(lead), _box), isTrue);
         // the strip it left
-        final Offset left = px > 0
-            ? Offset(cord.rect.left + 2, cord.rect.center.dy)
-            : Offset(cord.rect.right - 2, cord.rect.center.dy);
+        final Vec2 left = px > 0
+            ? Vec2(cord.rect.left + 2, cord.rect.center.y)
+            : Vec2(cord.rect.right - 2, cord.rect.center.y);
         expect(c.canStart(local(left), _box), isFalse);
         expect(
           c.handleCentre(_box),
@@ -182,7 +187,7 @@ void main() {
       final SceneDragHandle cord = c.handle!;
       c.start(local(cord.rect.center), _box);
       expect(c.shouldDropTap(), isFalse, reason: 'not moved yet');
-      c.update(local(cord.rect.center + const Offset(0, 80)), _box);
+      c.update(local(cord.rect.center + const Vec2(0, 80)), _box);
       // Rive reports the tap on pointer-up, before the pan's end
       expect(c.shouldDropTap(), isTrue);
       c.end();
@@ -425,7 +430,7 @@ void main() {
 
     test('a poke: no flare, no first-frame tip jump > 0.1', () {
       attach(AvatarScene.campfire);
-      const Offset tip = Offset(196, 1130);
+      const Vec2 tip = Vec2(196, 1130);
       final Offset a = local(tip);
       expect(c.start(a, _box), isTrue);
       // the handle recognizer accepts past 3 logical px

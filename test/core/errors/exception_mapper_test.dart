@@ -5,6 +5,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:yofardev_ai/core/errors/exception_mapper.dart';
 import 'package:yofardev_ai/core/models/failure.dart';
 
+/// Every repository funnels unknown exceptions through
+/// `mapExceptionToFailure`, so the classification is tested once here rather
+/// than per repository.
 void main() {
   test('TimeoutException maps to NetworkFailure', () {
     expect(

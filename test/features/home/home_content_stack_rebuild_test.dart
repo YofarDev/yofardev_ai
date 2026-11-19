@@ -5,8 +5,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:yofardev_ai/core/design/rive/ui_kit_file.dart';
 import 'package:yofardev_ai/core/models/chat_entry.dart';
 import 'package:yofardev_ai/core/models/avatar_scene.dart';
-import 'package:yofardev_ai/features/home/screens/home_screen.dart';
-import 'package:yofardev_ai/features/home/widgets/home_content_stack.dart';
+import 'package:yofardev_ai/features/home/presentation/screens/home_screen.dart';
+import 'package:yofardev_ai/features/home/presentation/widgets/home_content_stack.dart';
 import 'package:yofardev_ai/features/talking/talking.dart';
 
 import '../../helpers/rive_test_assets.dart';

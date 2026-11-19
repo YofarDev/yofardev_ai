@@ -1,16 +1,18 @@
 import 'dart:io';
-import 'dart:ui';
+import 'package:yofardev_ai/core/models/geometry.dart';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:yofardev_ai/core/models/avatar_scene.dart';
 import 'package:yofardev_ai/features/avatar/domain/models/scene_drag.dart';
 import 'package:yofardev_ai/features/avatar/presentation/rive/avatar_rive_contract.dart';
 
+Offset _off(Vec2 v) => Offset(v.x, v.y);
+
 /// One parsed row of the contract's "Drag handles (v12)" table.
 typedef _Row = ({
   String id,
   String kind,
-  Rect rect,
+  Box2 rect,
   int plane,
   List<DragNumber> numbers,
 });
@@ -78,7 +80,7 @@ Map<String, _Row> _parseDragTable() {
     out[cells[0]] = (
       id: cells[1],
       kind: cells[2],
-      rect: Rect.fromLTRB(rect[0], rect[1], rect[2], rect[3]),
+      rect: Box2.fromLTRB(rect[0], rect[1], rect[2], rect[3]),
       plane: int.parse(cells[4]),
       numbers: numbers,
     );
@@ -137,74 +139,65 @@ void main() {
   });
 
   group('mapping', () {
-    const Size phone = Size(390, 844);
+    const Size2 phone = Size2(390, 844);
 
     test('Fit.cover, centred: the box centre is the artboard centre', () {
       expect(
-        SceneDrags.toArtboard(const Offset(195, 422), phone),
+        _off(SceneDrags.toArtboard(const Vec2(195, 422), phone)),
         offsetMoreOrLessEquals(const Offset(540, 960)),
       );
       // tall box: height-bound scale, the sides cropped evenly
       final double scale = SceneDrags.coverScale(phone);
       expect(scale, closeTo(844 / 1920, 1e-9));
       expect(
-        SceneDrags.toArtboard(Offset.zero, phone).dx,
+        SceneDrags.toArtboard(Vec2.zero, phone).x,
         closeTo((1080 - 390 / scale) / 2, 1e-9),
       );
       // wide box: width-bound, top and bottom cropped
-      const Size desk = Size(1600, 900);
+      const Size2 desk = Size2(1600, 900);
       expect(SceneDrags.coverScale(desk), closeTo(1600 / 1080, 1e-9));
       expect(
-        SceneDrags.toArtboard(const Offset(800, 450), desk),
+        _off(SceneDrags.toArtboard(const Vec2(800, 450), desk)),
         offsetMoreOrLessEquals(const Offset(540, 960)),
       );
     });
 
     test('toLocal is the inverse of toArtboard', () {
-      for (final Size box in const <Size>[
-        Size(390, 844),
-        Size(800, 600),
-        Size(1600, 900),
+      for (final Size2 box in const <Size2>[
+        Size2(390, 844),
+        Size2(800, 600),
+        Size2(1600, 900),
       ]) {
-        for (final Offset p in const <Offset>[
-          Offset(0, 0),
-          Offset(300, 760),
-          Offset(1080, 1920),
+        for (final Vec2 p in const <Vec2>[
+          Vec2(0, 0),
+          Vec2(300, 760),
+          Vec2(1080, 1920),
         ]) {
           expect(
-            SceneDrags.toArtboard(SceneDrags.toLocal(p, box), box),
-            offsetMoreOrLessEquals(p),
+            _off(SceneDrags.toArtboard(SceneDrags.toLocal(p, box), box)),
+            offsetMoreOrLessEquals(Offset(p.x, p.y)),
           );
         }
       }
     });
 
     test('plane offset: gain x (40, 24) x parallax, clamped', () {
-      expect(SceneDrags.planeOffset(0, const Offset(1, 1)), Offset.zero);
-      expect(
-        SceneDrags.planeOffset(3, const Offset(1, -1)),
-        const Offset(20, -12),
-      );
-      expect(
-        SceneDrags.planeOffset(5, const Offset(-2, 2)),
-        const Offset(-40, 24),
-      );
+      expect(SceneDrags.planeOffset(0, const Vec2(1, 1)), Vec2.zero);
+      expect(SceneDrags.planeOffset(3, const Vec2(1, -1)), const Vec2(20, -12));
+      expect(SceneDrags.planeOffset(5, const Vec2(-2, 2)), const Vec2(-40, 24));
     });
 
     test('a handle hit follows its plane at parallax +-1', () {
       final SceneDragHandle cord = SceneDrags.of(AvatarScene.livingRoom)!;
-      final Offset shift = SceneDrags.planeOffset(
-        cord.plane,
-        const Offset(1, 0),
-      );
+      final Vec2 shift = SceneDrags.planeOffset(cord.plane, const Vec2(1, 0));
       // just inside the moved right edge: outside the rest rect
-      final Offset lead = Offset(cord.rect.right + shift.dx - 2, 880);
+      final Vec2 lead = Vec2(cord.rect.right + shift.x - 2, 880);
       expect(cord.rect.contains(lead), isFalse);
-      expect(SceneDrags.hits(cord, lead, const Offset(1, 0)), isTrue);
+      expect(SceneDrags.hits(cord, lead, const Vec2(1, 0)), isTrue);
       // the strip the handle left is no longer it
-      final Offset left = Offset(cord.rect.left + 2, 880);
-      expect(SceneDrags.hits(cord, left, const Offset(1, 0)), isFalse);
-      expect(SceneDrags.hits(cord, left, Offset.zero), isTrue);
+      final Vec2 left = Vec2(cord.rect.left + 2, 880);
+      expect(SceneDrags.hits(cord, left, const Vec2(1, 0)), isFalse);
+      expect(SceneDrags.hits(cord, left, Vec2.zero), isTrue);
     });
   });
 }

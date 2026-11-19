@@ -19,6 +19,48 @@ LIB_DIR="$PROJECT_DIR/lib"
 FEATURES_DIR="$LIB_DIR/features"
 OUT_FILE="$PROJECT_DIR/flutter_analysis.md"
 
+# App package name from pubspec.yaml (empty when unknown).
+APP_PACKAGE="$(sed -n 's/^name:[[:space:]]*\([A-Za-z0-9_]*\).*/\1/p' "$PROJECT_DIR/pubspec.yaml" 2>/dev/null | head -n 1 || true)"
+
+# Collapse "." and ".." segments of a slash-separated path.
+normalize_path() {
+  local out="" seg
+  local IFS='/'
+  for seg in $1; do
+    case "$seg" in
+      ''|.) ;;
+      ..) out="${out%/*}" ;;
+      *) out="$out/$seg" ;;
+    esac
+  done
+  echo "${out#/}"
+}
+
+# Resolve one `grep -n '^import'` line of file $1 to a "features/<f>/<layer>/..."
+# path relative to lib/. Prints nothing for imports that leave lib/features/.
+resolve_feature_import() {
+  local file="$1" line="$2" uri resolved
+  uri=$(echo "$line" | sed -nE "s/^[0-9]+:[[:space:]]*import[[:space:]]+['\"]([^'\"]+)['\"].*/\1/p")
+  [[ -z "$uri" ]] && return 0
+  case "$uri" in
+    package:*)
+      local pkg="${uri#package:}"
+      pkg="${pkg%%/*}"
+      if [[ -n "$APP_PACKAGE" && "$pkg" != "$APP_PACKAGE" ]]; then
+        return 0
+      fi
+      resolved="${uri#package:*/}"
+      ;;
+    dart:*) return 0 ;;
+    *)
+      resolved=$(normalize_path "$(dirname "${file#$LIB_DIR/}")/$uri")
+      ;;
+  esac
+  case "$resolved" in
+    features/*) echo "$resolved" ;;
+  esac
+}
+
 h2() {
   echo ""
   echo "## $*"
@@ -242,7 +284,7 @@ scan_lines() {
     while IFS= read -r f; do
       current=$(echo "$f" | sed "s|$FEATURES_DIR/||" | cut -d'/' -f1)
       while IFS= read -r line; do
-        imported=$(echo "$line" | grep -oE "features/[^'\"]+" || true)
+        imported=$(resolve_feature_import "$f" "$line")
         if [[ -z "$imported" ]]; then
           continue
         fi
@@ -398,7 +440,7 @@ scan_lines() {
       info ""
       while IFS= read -r feat; do
         FEAT_NAME=$(basename "$feat")
-        COUNT=$(find "$TEST_DIR" \( -path "*features/$FEAT_NAME/*" -o -name "*${FEAT_NAME}*_test.dart" \) 2>/dev/null | wc -l | tr -d ' ')
+        COUNT=$(find "$TEST_DIR" -type f -name '*_test.dart' \( -path "*features/$FEAT_NAME/*" -o -name "*${FEAT_NAME}*_test.dart" \) 2>/dev/null | wc -l | tr -d ' ')
         if [[ "$COUNT" -eq 0 ]]; then
           info "- ⚠️ $FEAT_NAME (no obvious feature tests)"
         else

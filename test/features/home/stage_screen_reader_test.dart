@@ -7,7 +7,7 @@ import 'package:yofardev_ai/core/design/rive/ui_kit_file.dart';
 import 'package:yofardev_ai/core/models/avatar_scene.dart';
 import 'package:yofardev_ai/core/services/app_lifecycle_service.dart';
 import 'package:yofardev_ai/features/avatar/avatar.dart';
-import 'package:yofardev_ai/features/home/widgets/home_content_stack.dart';
+import 'package:yofardev_ai/features/home/presentation/widgets/home_content_stack.dart';
 
 import '../../helpers/rive_test_assets.dart';
 import 'stage_harness.dart';

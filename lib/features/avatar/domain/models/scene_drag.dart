@@ -1,5 +1,5 @@
 import 'dart:math' as math;
-import 'dart:ui' show Offset, Rect, Size;
+import '../../../../core/models/geometry.dart';
 
 import '../../../../core/models/avatar_scene.dart';
 
@@ -42,7 +42,7 @@ class SceneDragHandle {
   final DragKind kind;
 
   /// In `Scene` artboard px at parallax 0.
-  final Rect rect;
+  final Box2 rect;
 
   /// The depth plane (0..5) the handle rides: it moves with that plane's
   /// parallax ([SceneDrags.planeOffset]).
@@ -62,7 +62,7 @@ class SceneDragHandle {
 /// and the geometry that places them on screen.
 abstract final class SceneDrags {
   /// The `Scene` artboard (contract: 1080×1920, drawn with `Fit.cover`).
-  static const Size artboard = Size(1080, 1920);
+  static const Size2 artboard = Size2(1080, 1920);
 
   /// `gen_scenes.PARALLAX_GAINS`: each plane's share of the travel.
   static const List<double> parallaxGains = <double>[
@@ -76,27 +76,27 @@ abstract final class SceneDrags {
 
   /// `gen_scenes.PARALLAX_TRAVEL`: px of x / y travel at gain 1 and
   /// parallax ±1.
-  static const Offset parallaxTravel = Offset(40, 24);
+  static const Vec2 parallaxTravel = Vec2(40, 24);
 
   /// How far plane [plane] sits from rest at [parallax] (each axis −1..1),
   /// in artboard px: `gain × 40 × parallaxX`, `gain × 24 × parallaxY`.
-  static Offset planeOffset(int plane, Offset parallax) {
+  static Vec2 planeOffset(int plane, Vec2 parallax) {
     final double gain = parallaxGains[plane.clamp(0, parallaxGains.length - 1)];
-    return Offset(
-      gain * parallaxTravel.dx * parallax.dx.clamp(-1.0, 1.0),
-      gain * parallaxTravel.dy * parallax.dy.clamp(-1.0, 1.0),
+    return Vec2(
+      gain * parallaxTravel.x * parallax.x.clamp(-1.0, 1.0),
+      gain * parallaxTravel.y * parallax.y.clamp(-1.0, 1.0),
     );
   }
 
   /// The scale `Fit.cover` draws the artboard at in a [box].
-  static double coverScale(Size box) =>
+  static double coverScale(Size2 box) =>
       math.max(box.width / artboard.width, box.height / artboard.height);
 
   /// A [local] point of the scene widget ([box] big, the artboard drawn with
   /// `Fit.cover`, centred) in artboard px.
-  static Offset toArtboard(Offset local, Size box) {
+  static Vec2 toArtboard(Vec2 local, Size2 box) {
     final double scale = coverScale(box);
-    final Offset origin = Offset(
+    final Vec2 origin = Vec2(
       (box.width - artboard.width * scale) / 2,
       (box.height - artboard.height * scale) / 2,
     );
@@ -104,9 +104,9 @@ abstract final class SceneDrags {
   }
 
   /// The inverse of [toArtboard].
-  static Offset toLocal(Offset point, Size box) {
+  static Vec2 toLocal(Vec2 point, Size2 box) {
     final double scale = coverScale(box);
-    final Offset origin = Offset(
+    final Vec2 origin = Vec2(
       (box.width - artboard.width * scale) / 2,
       (box.height - artboard.height * scale) / 2,
     );
@@ -159,14 +159,14 @@ abstract final class SceneDrags {
         AvatarScene.livingRoom: SceneDragHandle(
           id: 'cord',
           kind: DragKind.pull,
-          rect: Rect.fromLTRB(270, 770, 370, 940),
+          rect: Box2.fromLTRB(270, 770, 370, 940),
           plane: 4,
           numbers: <DragNumber>[(name: 'cord', value: 0)],
         ),
         AvatarScene.campfire: SceneDragHandle(
           id: 'poke',
           kind: DragKind.poke,
-          rect: Rect.fromLTRB(0, 1040, 330, 1340),
+          rect: Box2.fromLTRB(0, 1040, 330, 1340),
           plane: 4,
           numbers: <DragNumber>[
             (name: 'poke', value: 0),
@@ -177,35 +177,35 @@ abstract final class SceneDrags {
         AvatarScene.beach: SceneDragHandle(
           id: 'sand',
           kind: DragKind.trail,
-          rect: Rect.fromLTRB(830, 1230, 980, 1700),
+          rect: Box2.fromLTRB(830, 1230, 980, 1700),
           plane: 4,
           numbers: _trail,
         ),
         AvatarScene.deepSpace: SceneDragHandle(
           id: 'spin',
           kind: DragKind.spin,
-          rect: Rect.fromLTRB(150, 440, 450, 740),
+          rect: Box2.fromLTRB(150, 440, 450, 740),
           plane: 2,
           numbers: <DragNumber>[(name: 'spin', value: 0)],
         ),
         AvatarScene.cafe: SceneDragHandle(
           id: 'wipe',
           kind: DragKind.trail,
-          rect: Rect.fromLTRB(330, 260, 750, 760),
+          rect: Box2.fromLTRB(330, 260, 750, 760),
           plane: 2,
           numbers: _trail,
         ),
         AvatarScene.rooftop: SceneDragHandle(
           id: 'aim',
           kind: DragKind.aim,
-          rect: Rect.fromLTRB(710, 1011, 978, 1317),
+          rect: Box2.fromLTRB(710, 1011, 978, 1317),
           plane: 4,
           numbers: <DragNumber>[(name: 'aim', value: 0)],
         ),
         AvatarScene.mountainHut: SceneDragHandle(
           id: 'rope',
           kind: DragKind.pull,
-          rect: Rect.fromLTRB(172, 470, 252, 980),
+          rect: Box2.fromLTRB(172, 470, 252, 980),
           plane: 3,
           numbers: <DragNumber>[(name: 'rope', value: 0)],
         ),
@@ -213,21 +213,21 @@ abstract final class SceneDrags {
         AvatarScene.forestCabin: SceneDragHandle(
           id: 'pinwheel',
           kind: DragKind.spin,
-          rect: Rect.fromLTRB(883, 908, 987, 1068),
+          rect: Box2.fromLTRB(883, 908, 987, 1068),
           plane: 3,
           numbers: <DragNumber>[(name: 'pinwheel', value: 0)],
         ),
         AvatarScene.trainCompartment: SceneDragHandle(
           id: 'chain',
           kind: DragKind.pull,
-          rect: Rect.fromLTRB(893, 292, 974, 807),
+          rect: Box2.fromLTRB(893, 292, 974, 807),
           plane: 3,
           numbers: <DragNumber>[(name: 'chain', value: 0)],
         ),
         AvatarScene.library: SceneDragHandle(
           id: 'ladder',
           kind: DragKind.aim,
-          rect: Rect.fromLTRB(671, 278, 1080, 1221),
+          rect: Box2.fromLTRB(671, 278, 1080, 1221),
           plane: 3,
           numbers: <DragNumber>[(name: 'ladder', value: 0)],
         ),
@@ -238,6 +238,6 @@ abstract final class SceneDrags {
 
   /// Whether the artboard point [point] lands on [handle] while the scene's
   /// parallax is [parallax] (the handle rides its plane's offset).
-  static bool hits(SceneDragHandle handle, Offset point, Offset parallax) =>
+  static bool hits(SceneDragHandle handle, Vec2 point, Vec2 parallax) =>
       handle.rect.contains(point - planeOffset(handle.plane, parallax));
 }

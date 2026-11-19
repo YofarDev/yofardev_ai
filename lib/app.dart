@@ -4,6 +4,7 @@ import 'package:nested/nested.dart';
 
 import 'core/di/service_locator.dart';
 import 'core/l10n/app_localization_delegates.dart';
+import 'core/l10n/generated/app_localizations.dart';
 import 'core/services/audio/interruption_service.dart';
 import 'core/design/design.dart';
 import 'core/router/app_router.dart';
@@ -83,7 +84,8 @@ class AppView extends StatelessWidget {
               title: 'Yofardev AI',
               debugShowCheckedModeBanner: false,
               locale: Locale(settings.currentLanguage),
-              supportedLocales: const <Locale>[Locale('fr'), Locale('en')],
+              // Every ARB in lib/core/l10n: a new language needs no code change.
+              supportedLocales: AppLocalizations.supportedLocales,
               // material_ui widgets read material_ui's localizations, so the
               // shared delegate list (not the gen-l10n flutter_localizations
               // one) is what makes non-English locales resolve.

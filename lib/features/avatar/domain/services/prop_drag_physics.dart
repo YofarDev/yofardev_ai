@@ -1,6 +1,6 @@
 import 'dart:collection' show UnmodifiableMapView;
 import 'dart:math' as math;
-import 'dart:ui' show Offset;
+import '../../../../core/models/geometry.dart';
 
 import '../models/scene_drag.dart';
 
@@ -69,8 +69,8 @@ abstract class PropDragPhysics {
   /// its travel at ±1 (`gen_scenes.POKE_RANGE`), artboard px: the tip sits
   /// under the finger, clamped to the box `pokeTip ± pokeRange`
   /// (88, 1050, 304, 1210). A test pins both to `gen_scenes.py`.
-  static const Offset pokeTip = Offset(196, 1130);
-  static const Offset pokeRange = Offset(108, 80);
+  static const Vec2 pokeTip = Vec2(196, 1130);
+  static const Vec2 pokeRange = Vec2(108, 80);
 
   /// poke: the stick slides in over this when a drag starts.
   static const Duration pokeShowIn = Duration(milliseconds: 120);
@@ -161,14 +161,14 @@ abstract class PropDragPhysics {
   }
 
   /// A finger lands on the handle at [p].
-  void start(Offset p, Duration t) {
+  void start(Vec2 p, Duration t) {
     _dragging = true;
     _cues.add(DragCue.start);
     _start(p, t);
   }
 
   /// The finger moved to [p].
-  void move(Offset p, Duration t) {
+  void move(Vec2 p, Duration t) {
     if (_dragging) {
       _move(p, t);
     }
@@ -220,8 +220,8 @@ abstract class PropDragPhysics {
 
   void _accessibilityAction(Duration t);
 
-  void _start(Offset p, Duration t);
-  void _move(Offset p, Duration t);
+  void _start(Vec2 p, Duration t);
+  void _move(Vec2 p, Duration t);
   void _end(Duration t);
   void _halt();
 }
@@ -239,11 +239,11 @@ class _Samples {
       PropDragPhysics.velocityMinSpan.inMicroseconds /
       Duration.microsecondsPerSecond;
 
-  final List<({Duration t, Offset p})> _samples = <({Duration t, Offset p})>[];
+  final List<({Duration t, Vec2 p})> _samples = <({Duration t, Vec2 p})>[];
 
   void clear() => _samples.clear();
 
-  void add(Offset p, Duration t) {
+  void add(Vec2 p, Duration t) {
     _samples.add((t: t, p: p));
     final Duration oldest = t - PropDragPhysics.velocityWindow;
     // keep one sample at or before the window's start, so the window is full
@@ -254,7 +254,7 @@ class _Samples {
 
   /// The path length over the window per second (0 without a span).
   double speed(Duration now) {
-    final List<({Duration t, Offset p})> recent = _recent(now);
+    final List<({Duration t, Vec2 p})> recent = _recent(now);
     if (recent.length < 2) {
       return 0;
     }
@@ -268,22 +268,22 @@ class _Samples {
 
   /// The horizontal velocity over the window, px/s (0 if the finger rested).
   double velocityX(Duration now) {
-    final List<({Duration t, Offset p})> recent = _recent(now);
+    final List<({Duration t, Vec2 p})> recent = _recent(now);
     if (recent.length < 2) {
       return 0;
     }
     final double span = _seconds(recent.first.t, recent.last.t);
-    return span < _minSpan ? 0 : (recent.last.p.dx - recent.first.p.dx) / span;
+    return span < _minSpan ? 0 : (recent.last.p.x - recent.first.p.x) / span;
   }
 
-  List<({Duration t, Offset p})> _recent(Duration now) {
+  List<({Duration t, Vec2 p})> _recent(Duration now) {
     final Duration oldest = now - PropDragPhysics.velocityWindow;
     // the finger rested longer than the window: no velocity
     if (_samples.isEmpty || _samples.last.t < oldest) {
-      return const <({Duration t, Offset p})>[];
+      return const <({Duration t, Vec2 p})>[];
     }
     final int first = _samples.lastIndexWhere(
-      (({Duration t, Offset p}) s) => s.t <= oldest,
+      (({Duration t, Vec2 p}) s) => s.t <= oldest,
     );
     return _samples.sublist(math.max(0, first));
   }
@@ -307,16 +307,16 @@ class _PullPhysics extends PropDragPhysics {
   bool get animating => _releaseAt != null;
 
   @override
-  void _start(Offset p, Duration t) {
+  void _start(Vec2 p, Duration t) {
     // grabbed where the spring is: no jump
     _releaseAt = null;
-    _startY = p.dy - _value * PropDragPhysics.pullTravel;
+    _startY = p.y - _value * PropDragPhysics.pullTravel;
     _fired = false;
   }
 
   @override
-  void _move(Offset p, Duration t) {
-    final double value = ((p.dy - _startY) / PropDragPhysics.pullTravel).clamp(
+  void _move(Vec2 p, Duration t) {
+    final double value = ((p.y - _startY) / PropDragPhysics.pullTravel).clamp(
       0.0,
       1.0,
     );
@@ -359,7 +359,7 @@ class _PullPhysics extends PropDragPhysics {
 
   @override
   void _accessibilityAction(Duration t) {
-    final Offset top = handle.rect.topCenter;
+    final Vec2 top = handle.rect.topCenter;
     start(top, t);
     move(top.translate(0, PropDragPhysics.pullTravel), t);
     end(t);
@@ -394,7 +394,7 @@ class _PokePhysics extends PropDragPhysics {
   bool get animating => _fadeAt != null;
 
   @override
-  void _start(Offset p, Duration t) {
+  void _start(Vec2 p, Duration t) {
     _fresh = true;
     _samples
       ..clear()
@@ -403,22 +403,22 @@ class _PokePhysics extends PropDragPhysics {
       ..[0] = 0
       ..[1] = 0;
     _extreme
-      ..[0] = p.dx
-      ..[1] = p.dy;
+      ..[0] = p.x
+      ..[1] = p.y;
     _aimTip(p);
     _slide(t);
   }
 
   @override
-  void _move(Offset p, Duration t) {
+  void _move(Vec2 p, Duration t) {
     if (_fresh) {
       _fresh = false;
       _samples.clear();
     }
     _samples.add(p, t);
     _aimTip(p);
-    _reversal(0, p.dx);
-    _reversal(1, p.dy);
+    _reversal(0, p.x);
+    _reversal(1, p.y);
     final Duration? last = _lastFlare;
     if (_samples.speed(t) > PropDragPhysics.flareSpeed &&
         (last == null || t - last >= PropDragPhysics.flareCooldown)) {
@@ -447,11 +447,11 @@ class _PokePhysics extends PropDragPhysics {
   }
 
   /// The tip under the finger, −1..1 across the tip box.
-  void _aimTip(Offset p) {
-    const Offset tip = PropDragPhysics.pokeTip;
-    const Offset range = PropDragPhysics.pokeRange;
-    _values[_x] = ((p.dx - tip.dx) / range.dx).clamp(-1.0, 1.0);
-    _values[_y] = ((p.dy - tip.dy) / range.dy).clamp(-1.0, 1.0);
+  void _aimTip(Vec2 p) {
+    const Vec2 tip = PropDragPhysics.pokeTip;
+    const Vec2 range = PropDragPhysics.pokeRange;
+    _values[_x] = ((p.x - tip.x) / range.x).clamp(-1.0, 1.0);
+    _values[_y] = ((p.y - tip.y) / range.y).clamp(-1.0, 1.0);
   }
 
   void _reversal(int axis, double v) {
@@ -517,12 +517,12 @@ class _PokePhysics extends PropDragPhysics {
 
   @override
   void _accessibilityAction(Duration t) {
-    const Offset tip = PropDragPhysics.pokeTip;
-    const Offset range = PropDragPhysics.pokeRange;
+    const Vec2 tip = PropDragPhysics.pokeTip;
+    const Vec2 range = PropDragPhysics.pokeRange;
     start(tip, t);
     // one stir: right, left, back to the middle (two reversals)
-    move(tip.translate(range.dx * 0.6, 0), t);
-    move(tip.translate(-range.dx * 0.6, 0), t);
+    move(tip.translate(range.x * 0.6, 0), t);
+    move(tip.translate(-range.x * 0.6, 0), t);
     move(tip, t);
     final Duration? last = _lastFlare;
     if (last == null || t - last >= PropDragPhysics.flareCooldown) {
@@ -541,7 +541,7 @@ class _TrailPhysics extends PropDragPhysics {
 
   /// Dots laid since the last clear (the ring index is `count % 16`).
   int _count = 0;
-  Offset? _last;
+  Vec2? _last;
 
   /// The fade: from [_fadeFrom] at [_fadeAt] to [_fadeTo] over [_fadeFor];
   /// reaching 1 clears the dots. Null when it rests.
@@ -558,7 +558,7 @@ class _TrailPhysics extends PropDragPhysics {
   bool get animating => _fadeAt != null;
 
   @override
-  void _start(Offset p, Duration t) {
+  void _start(Vec2 p, Duration t) {
     // an old trail nearly gone is dropped; a fresher one clears back
     if (_count > 0 && _fade >= PropDragPhysics.trailDropFade) {
       _clear();
@@ -571,7 +571,7 @@ class _TrailPhysics extends PropDragPhysics {
   }
 
   @override
-  void _move(Offset p, Duration t) => _lay(p);
+  void _move(Vec2 p, Duration t) => _lay(p);
 
   @override
   void _end(Duration t) {
@@ -617,19 +617,19 @@ class _TrailPhysics extends PropDragPhysics {
 
   /// Lays dots from the last one towards [p], [PropDragPhysics.trailSpacing]
   /// apart (evenly, however far the finger jumped), inside the handle.
-  void _lay(Offset p) {
-    final Offset at = Offset(
-      p.dx.clamp(handle.rect.left, handle.rect.right),
-      p.dy.clamp(handle.rect.top, handle.rect.bottom),
+  void _lay(Vec2 p) {
+    final Vec2 at = Vec2(
+      p.x.clamp(handle.rect.left, handle.rect.right),
+      p.y.clamp(handle.rect.top, handle.rect.bottom),
     );
-    final Offset? last = _last;
+    final Vec2? last = _last;
     if (last == null) {
       _dot(at);
       return;
     }
-    Offset from = last;
+    Vec2 from = last;
     for (int i = 0; i < _dots; i++) {
-      final Offset step = at - from;
+      final Vec2 step = at - from;
       final double distance = step.distance;
       if (distance < PropDragPhysics.trailSpacing) {
         break;
@@ -639,10 +639,10 @@ class _TrailPhysics extends PropDragPhysics {
     }
   }
 
-  void _dot(Offset at) {
+  void _dot(Vec2 at) {
     final int slot = _count % _dots;
-    _values['trailX$slot'] = at.dx;
-    _values['trailY$slot'] = at.dy;
+    _values['trailX$slot'] = at.x;
+    _values['trailY$slot'] = at.y;
     _count++;
     _values['trailN'] = math.min(_count, _dots).toDouble();
     _last = at;
@@ -696,8 +696,8 @@ class _TrailPhysics extends PropDragPhysics {
         handle.rect.left +
         math.max(0, (handle.rect.width - length) / 2).toDouble();
     _strokes++;
-    start(Offset(x0, y), t);
-    move(Offset(x0 + length, y), t);
+    start(Vec2(x0, y), t);
+    move(Vec2(x0 + length, y), t);
     end(t);
   }
 }
@@ -723,25 +723,25 @@ class _SpinPhysics extends PropDragPhysics {
   bool get animating => _flingAt != null;
 
   @override
-  void _start(Offset p, Duration t) {
+  void _start(Vec2 p, Duration t) {
     _fresh = true;
     _flingAt = null;
-    _lastX = p.dx;
+    _lastX = p.x;
     _samples
       ..clear()
       ..add(p, t);
   }
 
   @override
-  void _move(Offset p, Duration t) {
+  void _move(Vec2 p, Duration t) {
     if (_fresh) {
       // the pan's accept and the slop it carried: no velocity from it
       _fresh = false;
       _samples.clear();
     }
     _samples.add(p, t);
-    _turnTo(_turns + (p.dx - _lastX) / PropDragPhysics.spinPxPerTurn);
-    _lastX = p.dx;
+    _turnTo(_turns + (p.x - _lastX) / PropDragPhysics.spinPxPerTurn);
+    _lastX = p.x;
   }
 
   @override
@@ -792,7 +792,7 @@ class _SpinPhysics extends PropDragPhysics {
 
   @override
   void _accessibilityAction(Duration t) {
-    final Offset at = handle.rect.center;
+    final Vec2 at = handle.rect.center;
     start(at, t);
     move(
       at.translate(
@@ -816,16 +816,16 @@ class _AimPhysics extends PropDragPhysics {
   bool get animating => false;
 
   @override
-  void _start(Offset p, Duration t) => _lastX = p.dx;
+  void _start(Vec2 p, Duration t) => _lastX = p.x;
 
   @override
-  void _move(Offset p, Duration t) {
+  void _move(Vec2 p, Duration t) {
     final double before = _values[_name]!;
-    final double after = (before + (p.dx - _lastX) / handle.rect.width).clamp(
+    final double after = (before + (p.x - _lastX) / handle.rect.width).clamp(
       -1.0,
       1.0,
     );
-    _lastX = p.dx;
+    _lastX = p.x;
     const int n = PropDragPhysics.aimTicksPerUnit;
     // a tiny epsilon so 0.3 (0.30000000000000004) does not click twice
     int step(double v) => (v * n + 1e-9).floor();
@@ -855,7 +855,7 @@ class _AimPhysics extends PropDragPhysics {
             -1 - 1e-9) {
       _accessibleDir = -_accessibleDir;
     }
-    final Offset at = handle.rect.center;
+    final Vec2 at = handle.rect.center;
     start(at, t);
     move(
       at.translate(

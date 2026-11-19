@@ -15,6 +15,8 @@ import 'package:yofardev_ai/core/models/avatar_scene.dart';
 import 'package:yofardev_ai/core/services/audio/foley_service.dart'
     show DragHaptic;
 import 'package:yofardev_ai/features/avatar/domain/models/scene_drag.dart';
+import 'package:yofardev_ai/core/models/geometry.dart';
+
 import 'package:yofardev_ai/features/avatar/domain/services/prop_drag_physics.dart';
 import 'package:yofardev_ai/features/avatar/presentation/bloc/avatar_state.dart';
 import 'package:yofardev_ai/features/avatar/presentation/rive/avatar_rive_contract.dart';
@@ -24,6 +26,12 @@ import 'package:yofardev_ai/features/avatar/presentation/widgets/rive/mouth_anch
 import 'package:yofardev_ai/features/avatar/presentation/widgets/rive/rive_avatar_view.dart';
 import 'package:yofardev_ai/features/avatar/presentation/widgets/rive/rive_scene_view.dart';
 import 'package:yofardev_ai/features/talking/presentation/bloc/talking_state.dart';
+
+Size2 _sz(Size s) => Size2(s.width, s.height);
+
+Vec2 _vec(Offset o) => Vec2(o.dx, o.dy);
+
+Offset _off(Vec2 v) => Offset(v.x, v.y);
 
 /// Keeps the `.riv` files in line with `rive/CONTRACT.md`: every name in
 /// [AvatarRiveContract] must exist in the shipped assets.
@@ -941,11 +949,11 @@ void main() {
       await tester.pumpWidget(_stageApp(scene, stage, box));
       await _waitLoaded(tester, stage, scene);
       final PropDragController drags = stage.drags;
-      final double scale = SceneDrags.coverScale(box);
+      final double scale = SceneDrags.coverScale(_sz(box));
       final Offset origin = tester.getTopLeft(find.byType(RiveSceneView));
       // Poke is absolute: start on the stick's tip.
       final Offset tip =
-          origin + SceneDrags.toLocal(PropDragPhysics.pokeTip, box);
+          origin + _off(SceneDrags.toLocal(PropDragPhysics.pokeTip, _sz(box)));
       expect(drags.readNumber(AvatarRiveContract.scenePropPoke), 0);
 
       final TestGesture gesture = await tester.startGesture(tip);
@@ -968,7 +976,9 @@ void main() {
       }
       at = await _stepTo(tester, gesture, at, tip + Offset(60, 40) * scale, 6);
       await _live(tester, const Duration(milliseconds: 150));
-      final Offset finger = SceneDrags.toArtboard(at - origin, box);
+      final Offset finger = _off(
+        SceneDrags.toArtboard(_vec(at - origin), _sz(box)),
+      );
       final double pokeX = drags.readNumber(AvatarRiveContract.scenePropPokeX)!;
       final double pokeY = drags.readNumber(AvatarRiveContract.scenePropPokeY)!;
       expect(pokeX, inInclusiveRange(-1, 1));
@@ -976,8 +986,8 @@ void main() {
       expect(
         pokeX,
         closeTo(
-          ((finger.dx - PropDragPhysics.pokeTip.dx) /
-                  PropDragPhysics.pokeRange.dx)
+          ((finger.dx - PropDragPhysics.pokeTip.x) /
+                  PropDragPhysics.pokeRange.x)
               .clamp(-1.0, 1.0),
           0.05,
         ),
@@ -986,8 +996,8 @@ void main() {
       expect(
         pokeY,
         closeTo(
-          ((finger.dy - PropDragPhysics.pokeTip.dy) /
-                  PropDragPhysics.pokeRange.dy)
+          ((finger.dy - PropDragPhysics.pokeTip.y) /
+                  PropDragPhysics.pokeRange.y)
               .clamp(-1.0, 1.0),
           0.05,
         ),
@@ -1026,13 +1036,13 @@ void main() {
       final Size box = _stageBox(tester);
       await tester.pumpWidget(_stageApp(scene, stage, box));
       await _waitLoaded(tester, stage, scene);
-      final Rect rect = SceneDrags.of(scene)!.rect;
+      final Box2 rect = SceneDrags.of(scene)!.rect;
       await _trailStroke(
         tester,
         stage,
         box,
-        Offset(rect.center.dx, rect.top + 40),
-        Offset(rect.center.dx, rect.bottom - 40),
+        Offset(rect.center.x, rect.top + 40),
+        Offset(rect.center.x, rect.bottom - 40),
       );
       // the wave washes the sand (1.2 s), then the trail resets
       await tester.pumpWidget(
@@ -1290,7 +1300,7 @@ void main() {
           stage.drags.readNumber(AvatarRiveContract.scenePropTrailX[i])!,
           stage.drags.readNumber(AvatarRiveContract.scenePropTrailY[i])!,
         );
-        final Offset local = SceneDrags.toLocal(dot, box);
+        final Offset local = _off(SceneDrags.toLocal(_vec(dot), _sz(box)));
         final List<double> before = rest.mean(local);
         final List<double> after = wiped.mean(local);
         log.add(
@@ -1504,7 +1514,7 @@ Future<void> _spinTest(
   await tester.pumpWidget(_stageApp(scene, stage, box));
   await _waitLoaded(tester, stage, scene);
   final PropDragController drags = stage.drags;
-  final double scale = SceneDrags.coverScale(box);
+  final double scale = SceneDrags.coverScale(_sz(box));
   final Offset centre =
       tester.getTopLeft(find.byType(RiveSceneView)) + drags.handleCentre(box)!;
   expect(drags.readNumber(spin), 0);
@@ -1572,8 +1582,8 @@ Future<void> _aimTest(
   await tester.pumpWidget(_stageApp(scene, stage, box));
   await _waitLoaded(tester, stage, scene);
   final PropDragController drags = stage.drags;
-  final double scale = SceneDrags.coverScale(box);
-  final Rect rect = SceneDrags.of(scene)!.rect;
+  final double scale = SceneDrags.coverScale(_sz(box));
+  final Box2 rect = SceneDrags.of(scene)!.rect;
   final Offset centre =
       tester.getTopLeft(find.byType(RiveSceneView)) + drags.handleCentre(box)!;
   expect(drags.readNumber(aim), 0);
@@ -1670,8 +1680,8 @@ Future<void> _trailStroke(
   expect(drags.readNumber(AvatarRiveContract.scenePropTrailN), 0);
   expect(drags.readNumber(AvatarRiveContract.scenePropTrailFade), 1);
   final Offset origin = tester.getTopLeft(find.byType(RiveSceneView));
-  final Offset start = origin + SceneDrags.toLocal(from, box);
-  final Offset end = origin + SceneDrags.toLocal(to, box);
+  final Offset start = origin + _off(SceneDrags.toLocal(_vec(from), _sz(box)));
+  final Offset end = origin + _off(SceneDrags.toLocal(_vec(to), _sz(box)));
   await tester.timedDragFrom(
     start,
     end - start,
@@ -1692,7 +1702,7 @@ Future<void> _trailStroke(
       drags.readNumber(AvatarRiveContract.scenePropTrailY[i])!,
     );
     expect(
-      handle.rect.inflate(0.5).contains(dot),
+      handle.rect.inflate(0.5).contains(_vec(dot)),
       isTrue,
       reason: '${handle.id} dot $i $dot inside ${handle.rect}',
     );
@@ -1743,7 +1753,9 @@ Future<Map<String, Offset>> _scanProps(
     for (double x = step / 2; x < SceneDrags.artboard.width; x += step) {
       final int before = stage.props.length;
       _keepResumed();
-      await tester.tapAt(origin + SceneDrags.toLocal(Offset(x, y), box));
+      await tester.tapAt(
+        origin + _off(SceneDrags.toLocal(Vec2(x, y), _sz(box))),
+      );
       _deliverEvents(tester);
       for (final String id in stage.props.sublist(before)) {
         hits.putIfAbsent(id, () => Offset(x, y));
