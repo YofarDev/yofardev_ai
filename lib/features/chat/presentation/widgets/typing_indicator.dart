@@ -1,6 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 
-import '../design/design.dart';
+import '../../../../core/design/design.dart';
 
 /// Three pulsing dots used as the typing indicator, replacing the v3 Lottie
 /// asset with pure Flutter animation.

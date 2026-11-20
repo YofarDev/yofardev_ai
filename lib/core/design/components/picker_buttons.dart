@@ -1,12 +1,13 @@
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
-import 'package:material_ui/material_ui.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 
-import '../res/app_constants.dart';
+import '../../l10n/generated/app_localizations.dart';
+import '../../res/app_constants.dart';
 import 'app_icon_button.dart';
 
 class PickerButtons extends StatelessWidget {
@@ -16,6 +17,7 @@ class PickerButtons extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final AppLocalizations l10n = AppLocalizations.of(context);
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: <Widget>[
@@ -23,6 +25,7 @@ class PickerButtons extends StatelessWidget {
           AppIconButton(
             onPressed: _onGalleryPickerButtonPressed,
             icon: Icons.image_outlined,
+            semanticLabel: l10n.pickerPickFromGallery,
           ),
 
         if (Platform.isAndroid || Platform.isIOS)
@@ -31,6 +34,7 @@ class PickerButtons extends StatelessWidget {
             child: AppIconButton(
               onPressed: _onTakePhotoButtonPressed,
               icon: Icons.camera_alt_outlined,
+              semanticLabel: l10n.pickerTakePhoto,
             ),
           ),
         const SizedBox(width: 8),

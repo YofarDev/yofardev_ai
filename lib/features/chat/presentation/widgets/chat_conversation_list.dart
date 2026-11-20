@@ -1,5 +1,5 @@
 import 'package:material_ui/material_ui.dart';
-import '../../../../core/widgets/typing_indicator.dart';
+import './typing_indicator.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/models/chat.dart';

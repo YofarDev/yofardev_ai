@@ -130,6 +130,13 @@ void main() {
           ],
           child: MaterialApp(
             theme: AppTheme.dark,
+            localizationsDelegates: const <LocalizationsDelegate<Object>>[
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: AppLocalizations.supportedLocales,
             home: const Scaffold(body: AiTextInput(onlyText: true)),
           ),
         ),

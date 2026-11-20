@@ -238,5 +238,11 @@
   "llmSetupTitle": "Connectez une IA pour commencer à discuter",
   "llmSetupBody": "Ajoutez une clé d'API (compatible OpenAI ou Gemini). Elle reste sur cet appareil.",
   "llmSetupAction": "Configurer",
-  "llmSetupDismiss": "Plus tard"
+  "llmSetupDismiss": "Plus tard",
+  "commonShow": "Afficher",
+  "commonHide": "Masquer",
+  "chatDownloadConversation": "Télécharger la conversation",
+  "functionCallingToggle": "Basculer l'appel de fonctions",
+  "pickerPickFromGallery": "Choisir dans la galerie",
+  "pickerTakePhoto": "Prendre une photo"
 }

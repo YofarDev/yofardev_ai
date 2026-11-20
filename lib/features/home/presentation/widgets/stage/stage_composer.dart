@@ -19,7 +19,6 @@ import '../../../../../core/services/presence/composer_activity_service.dart';
 import '../../../../../core/services/speech/speech_input_service.dart';
 import '../../../../../core/utils/logger.dart';
 import '../../../../../core/utils/platform_utils.dart';
-import '../../../../../core/widgets/picker_buttons.dart';
 import '../../../../chat/chat.dart';
 import '../../../../settings/settings.dart';
 import '../../../../talking/talking.dart';

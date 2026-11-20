@@ -1,5 +1,5 @@
 import 'dart:convert';
-import '../../../../core/widgets/typing_indicator.dart';
+import './typing_indicator.dart';
 import 'dart:io';
 
 import 'package:material_ui/material_ui.dart';

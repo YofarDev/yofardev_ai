@@ -14,7 +14,7 @@ import '../../../../core/errors/exception_mapper.dart';
 import '../../../../core/l10n/failure_localization.dart';
 import '../../../../core/l10n/generated/app_localizations.dart';
 
-import '../../../../core/widgets/app_icon_button.dart';
+import '../../../../core/design/components/components.dart';
 import '../../../../core/models/chat.dart';
 import '../../../../core/models/chat_entry.dart';
 import '../widgets/ai_text_input/ai_text_input.dart';
@@ -265,6 +265,7 @@ class _TopLeftBackButton extends StatelessWidget {
       child: SafeArea(
         child: AppIconButton(
           icon: Icons.arrow_back_ios_new_outlined,
+          semanticLabel: AppLocalizations.of(context).commonBack,
           onPressed: () {
             context.pop();
           },

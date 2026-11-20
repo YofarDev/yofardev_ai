@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 
-import 'app_icon_button.dart';
+import '../../../../core/design/components/components.dart';
+import '../../../../core/l10n/generated/app_localizations.dart';
 
 class FunctionCallingButton extends StatelessWidget {
   final bool isEnabled;
@@ -14,8 +15,10 @@ class FunctionCallingButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final AppLocalizations l10n = AppLocalizations.of(context);
     return AppIconButton(
       icon: isEnabled ? Icons.code : Icons.code_off,
+      semanticLabel: l10n.functionCallingToggle,
       onPressed: () {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

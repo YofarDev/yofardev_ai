@@ -1,6 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 
-import '../design/design.dart';
+import '../../../../core/design/design.dart';
 
 class CurrentPromptText extends StatelessWidget {
   final String prompt;

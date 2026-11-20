@@ -1532,6 +1532,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Later'**
   String get llmSetupDismiss;
+
+  /// No description provided for @commonShow.
+  ///
+  /// In en, this message translates to:
+  /// **'Show'**
+  String get commonShow;
+
+  /// No description provided for @commonHide.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide'**
+  String get commonHide;
+
+  /// No description provided for @chatDownloadConversation.
+  ///
+  /// In en, this message translates to:
+  /// **'Download conversation'**
+  String get chatDownloadConversation;
+
+  /// No description provided for @functionCallingToggle.
+  ///
+  /// In en, this message translates to:
+  /// **'Toggle function calling'**
+  String get functionCallingToggle;
+
+  /// No description provided for @pickerPickFromGallery.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick from gallery'**
+  String get pickerPickFromGallery;
+
+  /// No description provided for @pickerTakePhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Take a photo'**
+  String get pickerTakePhoto;
 }
 
 class _AppLocalizationsDelegate

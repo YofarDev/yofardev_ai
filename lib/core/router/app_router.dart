@@ -38,7 +38,7 @@ import '../../core/services/quality/quality_tier_service.dart';
 import '../../core/services/world/world_state_service.dart';
 import '../../core/services/presence/composer_activity_service.dart';
 import '../../core/services/speech/speech_input_service.dart';
-import '../../core/widgets/constrained_width.dart';
+import '../../core/design/components/components.dart';
 import '../../core/l10n/generated/app_localizations.dart';
 import '../../core/utils/logger.dart';
 import 'route_constants.dart';
