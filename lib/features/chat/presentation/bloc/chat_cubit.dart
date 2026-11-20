@@ -183,6 +183,7 @@ class ChatCubit extends Cubit<ChatState> {
   Future<void> init() async {
     await getCurrentChat();
     await fetchChatsList();
+    if (isClosed) return;
     emit(state.copyWith(initializing: false));
   }
 

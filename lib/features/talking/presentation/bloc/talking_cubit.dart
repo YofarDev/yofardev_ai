@@ -203,8 +203,10 @@ class TalkingCubit extends Cubit<TalkingState> {
 
     try {
       await _repository.generateSpeech(text);
+      if (isClosed) return;
       emit(const TalkingState.speaking());
     } catch (e, st) {
+      if (isClosed) return;
       emit(
         TalkingState.error(
           mapExceptionToFailure(e, stackTrace: st, tag: 'TalkingCubit'),
@@ -230,6 +232,7 @@ class TalkingCubit extends Cubit<TalkingState> {
     _idleCooldownTimer = null;
     _playbackService.cancelAnimation();
     await _repository.stop();
+    if (isClosed) return;
     emit(const TalkingState.idle());
   }
 
