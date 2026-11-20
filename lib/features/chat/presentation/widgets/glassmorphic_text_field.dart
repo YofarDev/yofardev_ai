@@ -1,5 +1,6 @@
 import 'package:material_ui/material_ui.dart';
-import '../../design/design.dart';
+
+import '../../../../core/design/design.dart';
 import 'animated_icon_button.dart';
 
 class GlassmorphicTextField extends StatefulWidget {

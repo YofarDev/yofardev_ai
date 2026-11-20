@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/bloc/latest_request_wins.dart';
 import '../../../../core/models/app_lifecycle_event.dart';
 import '../../../../core/models/avatar_config.dart';
 import '../../../../core/models/avatar_gesture.dart';
@@ -28,7 +29,8 @@ import '../../domain/services/journey_planner.dart';
 import '../../domain/services/performance_director.dart';
 import 'avatar_state.dart';
 
-class AvatarCubit extends Cubit<AvatarState> {
+class AvatarCubit extends Cubit<AvatarState>
+    with LatestRequestWins<AvatarState> {
   AvatarCubit(
     this._avatarRepository,
     this._animationService,
@@ -262,44 +264,52 @@ class AvatarCubit extends Cubit<AvatarState> {
     _emitIfOpen(state.copyWith(scaleFactor: scaleFactor));
   }
 
-  void loadAvatar(String chatId) async {
+  void loadAvatar(String chatId) {
     // Latest request wins: a rapid chat switch must not let the older
-    // getChat result overwrite the newer chat's avatar/scene.
-    final int epoch = ++_loadEpoch;
-    // Another chat: a journey under way belongs to the chat it started in.
-    _abortJourney();
-    _emitIfOpen(state.copyWith(status: AvatarStatus.loading));
-    final Result<Chat> result = await _avatarRepository.getChat(chatId);
-    if (isClosed || epoch != _loadEpoch) return;
-    result.when(
-      err: (Failure failure) {
-        // New chats legitimately miss a saved avatar, but a corrupt or
-        // failing read must not stay silent either.
-        AppLogger.warning(
-          'Avatar load failed for chat $chatId: $failure',
-          tag: 'AvatarCubit',
-        );
-        // This is expected for new chats - no custom avatar saved yet
-        // Only set status to ready if dimensions are initialized
-        if (state.baseOriginalHeight > 0) {
-          _emitIfOpen(state.copyWith(status: AvatarStatus.ready));
-        }
+    // getChat result overwrite the newer chat's avatar/scene (the mixin
+    // drops stale and post-close results).
+    runLatest<Result<Chat>>(
+      () => _avatarRepository.getChat(chatId),
+      onStart: () {
+        // Another chat: a journey under way belongs to the chat it started in.
+        _abortJourney();
+        _emitIfOpen(state.copyWith(status: AvatarStatus.loading));
       },
-      ok: (Chat chat) {
-        // Only set status to ready if dimensions are initialized
-        if (state.baseOriginalHeight > 0) {
-          _emitIfOpen(
-            state.copyWith(
-              avatar: chat.avatar,
-              status: AvatarStatus.ready,
-              scene: chat.avatar.background,
-            ),
-          );
-        } else {
-          _emitIfOpen(
-            state.copyWith(avatar: chat.avatar, scene: chat.avatar.background),
-          );
-        }
+      onResult: (Result<Chat> result) {
+        result.when(
+          err: (Failure failure) {
+            // New chats legitimately miss a saved avatar, but a corrupt or
+            // failing read must not stay silent either.
+            AppLogger.warning(
+              'Avatar load failed for chat $chatId: $failure',
+              tag: 'AvatarCubit',
+            );
+            // This is expected for new chats - no custom avatar saved yet
+            // Only set status to ready if dimensions are initialized
+            if (state.baseOriginalHeight > 0) {
+              _emitIfOpen(state.copyWith(status: AvatarStatus.ready));
+            }
+          },
+          ok: (Chat chat) {
+            // Only set status to ready if dimensions are initialized
+            if (state.baseOriginalHeight > 0) {
+              _emitIfOpen(
+                state.copyWith(
+                  avatar: chat.avatar,
+                  status: AvatarStatus.ready,
+                  scene: chat.avatar.background,
+                ),
+              );
+            } else {
+              _emitIfOpen(
+                state.copyWith(
+                  avatar: chat.avatar,
+                  scene: chat.avatar.background,
+                ),
+              );
+            }
+          },
+        );
       },
     );
   }
@@ -756,7 +766,6 @@ class AvatarCubit extends Cubit<AvatarState> {
 
   /// Bumped by a chat switch: a running journey stops at its next beat.
   int _journeyEpoch = 0;
-  int _loadEpoch = 0;
 
   /// Stops a journey under way (a chat switch): the threshold, the clip and
   /// the preload go, the head returns to the director, the avatar is on

@@ -793,4 +793,22 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get llmSetupDismiss => 'Plus tard';
+
+  @override
+  String get commonShow => 'Afficher';
+
+  @override
+  String get commonHide => 'Masquer';
+
+  @override
+  String get chatDownloadConversation => 'Télécharger la conversation';
+
+  @override
+  String get functionCallingToggle => 'Basculer l\'appel de fonctions';
+
+  @override
+  String get pickerPickFromGallery => 'Choisir dans la galerie';
+
+  @override
+  String get pickerTakePhoto => 'Prendre une photo';
 }

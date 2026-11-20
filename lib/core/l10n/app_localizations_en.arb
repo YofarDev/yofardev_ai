@@ -478,5 +478,11 @@
   "llmSetupTitle": "Connect an AI to start chatting",
   "llmSetupBody": "Add an API key (OpenAI-compatible or Gemini). It stays on this device.",
   "llmSetupAction": "Set up",
-  "llmSetupDismiss": "Later"
+  "llmSetupDismiss": "Later",
+  "commonShow": "Show",
+  "commonHide": "Hide",
+  "chatDownloadConversation": "Download conversation",
+  "functionCallingToggle": "Toggle function calling",
+  "pickerPickFromGallery": "Pick from gallery",
+  "pickerTakePhoto": "Take a photo"
 }
